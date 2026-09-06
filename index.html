@@ -129,6 +129,34 @@
 
   .user-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:18px;}
   .edit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:4px;}
+
+  /* ---------- Alert banner ---------- */
+  .alert-item{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-radius:10px;margin-bottom:8px;font-size:13.5px;}
+  .alert-item.red{background:rgba(224,69,63,.14);border:1px solid rgba(224,69,63,.35);color:#ffb3ae;}
+  .alert-item.yellow{background:rgba(217,167,39,.14);border:1px solid rgba(217,167,39,.35);color:#f0d38a;}
+  .alert-item.green{background:rgba(95,191,122,.12);border:1px solid rgba(95,191,122,.3);color:#8fe0a8;}
+  .alert-item .dot-icon{flex-shrink:0;margin-top:2px;font-size:15px;}
+  .alert-item b{color:var(--ink);}
+
+  /* ---------- Goal progress bars ---------- */
+  .goal-row{margin-bottom:18px;}
+  .goal-row .goal-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:13.5px;}
+  .goal-row .goal-head .biz{font-weight:600;}
+  .goal-row .goal-head .pct{font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-variant-numeric:tabular-nums;}
+  .goal-track{height:10px;background:var(--panel-2);border-radius:6px;overflow:hidden;}
+  .goal-fill{height:100%;border-radius:6px;transition:width .4s ease;}
+  .goal-foot{font-size:11.5px;color:var(--muted);margin-top:5px;}
+
+  /* ---------- Exec summary strip ---------- */
+  .exec-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+
+  /* ---------- Ledger tables (expenses/assets) ---------- */
+  .ledger-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px;}
+  .ledger-form .field{margin-bottom:0;}
+  @media (max-width:900px){
+    .exec-strip{grid-template-columns:repeat(2,1fr);}
+    .ledger-form{grid-template-columns:1fr;}
+  }
   .user-form .field{margin-bottom:0;}
   .field select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:13.5px;font-family:inherit;}
   .del-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
@@ -198,6 +226,8 @@
     </div>
   </div>
 
+  <div id="alertBanner"></div>
+
   <div class="kpi-row">
     <div class="kpi"><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
     <div class="kpi"><div class="label">Active students (BW + NS)</div><div class="value" id="kpiStudents">530</div><div class="delta">Baccarat Win + Nexstack combined</div></div>
@@ -207,6 +237,7 @@
 
   <div class="tabs" id="tabBar">
     <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed">Overview</button>
+    <button class="tab" data-view="executive" data-roles="admin" style="--accent:#2f6fed">Executive</button>
     <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f">Master Baccarat</button>
     <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a">Baccarat Win</button>
     <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0">Nexstack</button>
@@ -234,6 +265,71 @@
       <div class="stat"><div class="label">Baccarat Win</div><div class="value" id="ovBwRevenue">₱0.85M</div><div class="foot" id="ovBwFoot">320 students enrolled</div></div>
       <div class="stat"><div class="label">Nexstack</div><div class="value" id="ovNsRevenue">₱1.10M</div><div class="foot" id="ovNsFoot">210 students enrolled</div></div>
       <div class="stat"><div class="label">Prokora</div><div class="value" id="ovPkRevenue">₱1.60M</div><div class="foot" id="ovPkFoot">14 projects delivered</div></div>
+    </div>
+  </div>
+
+  <!-- EXECUTIVE OVERVIEW (admin only) -->
+  <div class="view" id="executive">
+    <div class="exec-strip">
+      <div class="stat"><div class="label">Total cash on hand</div><div class="value" id="execCashTotal">₱0.00</div><div class="foot">Across all 4 businesses</div></div>
+      <div class="stat"><div class="label">Expenses this month</div><div class="value" id="execExpenseMonth">₱0.00</div><div class="foot" id="execExpenseCount">0 entries</div></div>
+      <div class="stat"><div class="label">Net position</div><div class="value" id="execNetPosition">₱0.00</div><div class="foot">Cash + assets − expenses this month</div></div>
+      <div class="stat"><div class="label">Avg goal progress</div><div class="value" id="execGoalAvg">0%</div><div class="foot" id="execGoalFoot">Across businesses with a goal set</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card" style="--accent:#2f6fed">
+        <h3><span class="dot"></span>Sales goal tracker</h3>
+        <div class="sub">Target vs. actual revenue for the period currently selected</div>
+        <div id="goalTrackerList"></div>
+      </div>
+      <div class="card" style="--accent:#2f6fed">
+        <h3><span class="dot"></span>Cash on hand</h3>
+        <div class="sub">Manual entry per business — updates the total above</div>
+        <div id="cashInputList"></div>
+        <button class="btn small" onclick="saveGoalsAndCash()">Save goals & cash</button>
+        <span id="execSaveConfirm" style="margin-left:10px;font-size:12px;color:#5fbf7a;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Expenses</h3>
+      <div class="sub">Running list across all businesses, auto-totaled by month</div>
+      <div class="ledger-form">
+        <div class="field"><label>Date</label><input type="date" id="expDate"></div>
+        <div class="field"><label>Category</label><input type="text" id="expCategory" placeholder="e.g. Rent, Payroll"></div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" id="expAmount" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Business</label>
+          <select id="expBusiness">
+            <option value="mb">Master Baccarat</option>
+            <option value="bw">Baccarat Win</option>
+            <option value="ns">Nexstack</option>
+            <option value="pk">Prokora</option>
+          </select>
+        </div>
+        <button class="btn small" onclick="addExpense()">+ Add</button>
+      </div>
+      <table id="expenseTable"><tr><th>Date</th><th>Category</th><th>Business</th><th>Amount</th><th></th></tr></table>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;">
+      <h3><span class="dot"></span>Assets</h3>
+      <div class="sub">Equipment, property, or anything of value the business owns</div>
+      <div class="ledger-form" style="grid-template-columns:1.4fr 1fr 1fr auto;">
+        <div class="field"><label>Name</label><input type="text" id="assetName" placeholder="e.g. Streaming rig, Laptop"></div>
+        <div class="field"><label>Value (₱)</label><input type="text" inputmode="decimal" id="assetValue" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Business</label>
+          <select id="assetBusiness">
+            <option value="mb">Master Baccarat</option>
+            <option value="bw">Baccarat Win</option>
+            <option value="ns">Nexstack</option>
+            <option value="pk">Prokora</option>
+          </select>
+        </div>
+        <button class="btn small" onclick="addAsset()">+ Add</button>
+      </div>
+      <table id="assetTable"><tr><th>Name</th><th>Business</th><th>Value</th><th></th></tr></table>
+      <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="assetTotal">Total: ₱0.00</div>
     </div>
   </div>
 
@@ -600,16 +696,27 @@
     }
   };
 
+  const defaultExec = {
+    goals: { mb:0, bw:0, ns:0, pk:0 },
+    cash: { mb:0, bw:0, ns:0, pk:0 },
+    thresholds: { mb:0, bw:0, ns:0, pk:0 },
+    expenses: [],
+    assets: []
+  };
+
   const defaultData = {
-    dataVersion: 2,
+    dataVersion: 3,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
       '2026-01-01_2026-08-31': Object.assign(JSON.parse(JSON.stringify(sampleSnapshot)), { savedAt:null })
-    }
+    },
+    exec: JSON.parse(JSON.stringify(defaultExec))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
+  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
+  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4' };
 
   function periodKey(start, end){ return `${start}_${end}`; }
 
@@ -644,11 +751,16 @@
       if(!parsed.dataVersion || parsed.dataVersion < 2){
         parsed = migrateUnitsToFullPesos(parsed);
       }
+      // Add the exec ledger (goals/cash/expenses/assets) for anyone who saved before it existed
+      if(!parsed.exec){
+        parsed.exec = JSON.parse(JSON.stringify(defaultExec));
+      }
+      parsed.dataVersion = 3;
       return parsed;
     }catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
   }
   function saveDashboardData(){
-    dashboardData.dataVersion = 2;
+    dashboardData.dataVersion = 3;
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); return true; }
     catch(e){ console.error('Could not save dashboard data', e); return false; }
   }
@@ -771,6 +883,12 @@
 
     renderCharts();
     if(document.getElementById('editdata')) populateEditForm();
+    if(currentUser && currentUser.role === 'admin'){
+      renderExecutive(snap);
+      renderAlerts(snap);
+    } else {
+      document.getElementById('alertBanner').innerHTML = '';
+    }
   }
 
   /* ---------------- Charts (destroyed + recreated whenever data changes) ---------------- */
@@ -812,6 +930,195 @@
     scaledLine('chartMBTrend', [0.42,0.46,0.51,0.49,0.55,0.58,0.6,0.59], mbTot, '#e0453f');
     scaledLine('chartBWTrend', [28,32,35,38,40,44,48,55], bw.students, '#b8323a');
     scaledLine('chartNSTrend', [16,20,22,24,26,30,34,38], ns.students, '#1c9fe0');
+  }
+
+  /* ---------------- Executive Overview (admin only): goals, cash, expenses, assets ---------------- */
+  function bizRevenue(snap, biz){
+    if(biz === 'mb') return mbTotal(snap);
+    if(biz === 'pk') return pkRevenue(snap);
+    return snap[biz].revenue || 0;
+  }
+
+  function expensesThisMonth(){
+    const now = new Date();
+    const ym = `${now.getFullYear()}-${now.getMonth()}`;
+    return dashboardData.exec.expenses.filter(e=>{
+      const d = new Date(e.date + 'T00:00:00');
+      return `${d.getFullYear()}-${d.getMonth()}` === ym;
+    });
+  }
+
+  function renderExecutive(snap){
+    const exec = dashboardData.exec;
+    const bizKeys = ['mb','bw','ns','pk'];
+
+    // Goal tracker
+    const goalPcts = [];
+    document.getElementById('goalTrackerList').innerHTML = bizKeys.map(biz=>{
+      const target = exec.goals[biz] || 0;
+      const actual = bizRevenue(snap, biz);
+      const pct = target > 0 ? Math.round(actual/target*100) : null;
+      if(pct !== null) goalPcts.push(pct);
+      const barColor = bizColors[biz];
+      const barWidth = pct === null ? 0 : Math.min(100, pct);
+      return `
+        <div class="goal-row">
+          <div class="goal-head">
+            <span class="biz">${bizNames[biz]}</span>
+            <span class="pct" style="color:${barColor}">${pct === null ? 'No goal set' : pct + '%'}</span>
+          </div>
+          <div class="goal-track"><div class="goal-fill" style="width:${barWidth}%;background:${barColor};"></div></div>
+          <div class="goal-foot">${fmtPeso(actual)} of ${target>0 ? fmtPeso(target) : '— target not set'}</div>
+          <div class="field" style="margin-top:8px;max-width:220px;">
+            <label style="font-size:11px;">Set target (₱)</label>
+            <input type="text" inputmode="decimal" class="currency-field" id="goal_${biz}" value="${target.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onblur="formatCurrencyField(this)">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Cash + threshold inputs
+    document.getElementById('cashInputList').innerHTML = bizKeys.map(biz=>`
+      <div style="display:flex;gap:10px;align-items:end;margin-bottom:14px;flex-wrap:wrap;">
+        <div class="field" style="flex:1;min-width:140px;margin-bottom:0;">
+          <label>${bizNames[biz]} cash (₱)</label>
+          <input type="text" inputmode="decimal" class="currency-field" id="cash_${biz}" value="${(exec.cash[biz]||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onblur="formatCurrencyField(this)">
+        </div>
+        <div class="field" style="width:130px;margin-bottom:0;">
+          <label style="font-size:11px;">Alert below (₱)</label>
+          <input type="text" inputmode="decimal" class="currency-field" id="threshold_${biz}" value="${(exec.thresholds[biz]||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" onblur="formatCurrencyField(this)">
+        </div>
+      </div>
+    `).join('');
+
+    // Summary strip
+    const cashTotal = bizKeys.reduce((a,b)=>a+(exec.cash[b]||0),0);
+    const assetTotal = exec.assets.reduce((a,x)=>a+(x.value||0),0);
+    const monthExpenses = expensesThisMonth();
+    const expenseTotal = monthExpenses.reduce((a,x)=>a+(x.amount||0),0);
+    document.getElementById('execCashTotal').textContent = fmtPeso(cashTotal);
+    document.getElementById('execExpenseMonth').textContent = fmtPeso(expenseTotal);
+    document.getElementById('execExpenseCount').textContent = `${monthExpenses.length} ${monthExpenses.length===1?'entry':'entries'} this month`;
+    document.getElementById('execNetPosition').textContent = fmtPeso(cashTotal + assetTotal - expenseTotal);
+    document.getElementById('execGoalAvg').textContent = goalPcts.length ? `${Math.round(goalPcts.reduce((a,b)=>a+b,0)/goalPcts.length)}%` : '—';
+    document.getElementById('execGoalFoot').textContent = goalPcts.length ? `${goalPcts.length} of 4 businesses have a goal set` : 'No goals set yet';
+
+    // Expense table
+    const sortedExpenses = [...dashboardData.exec.expenses].sort((a,b)=> b.date.localeCompare(a.date));
+    document.getElementById('expenseTable').innerHTML = '<tr><th>Date</th><th>Category</th><th>Business</th><th>Amount</th><th></th></tr>' +
+      (sortedExpenses.length
+        ? sortedExpenses.map(e=>`<tr><td>${e.date}</td><td>${e.category}</td><td>${bizNames[e.business]||e.business}</td><td class="num-cell">${fmtPeso(e.amount)}</td><td><button class="del-btn" onclick="removeExpense('${e.id}')">Remove</button></td></tr>`).join('')
+        : '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px;">No expenses logged yet.</td></tr>');
+
+    // Asset table
+    document.getElementById('assetTable').innerHTML = '<tr><th>Name</th><th>Business</th><th>Value</th><th></th></tr>' +
+      (exec.assets.length
+        ? exec.assets.map(a=>`<tr><td>${a.name}</td><td>${bizNames[a.business]||a.business}</td><td class="num-cell">${fmtPeso(a.value)}</td><td><button class="del-btn" onclick="removeAsset('${a.id}')">Remove</button></td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:16px;">No assets logged yet.</td></tr>');
+    document.getElementById('assetTotal').textContent = `Total: ${fmtPeso(assetTotal)}`;
+  }
+
+  function saveGoalsAndCash(){
+    ['mb','bw','ns','pk'].forEach(biz=>{
+      dashboardData.exec.goals[biz] = clampNonNeg(parseCurrency(document.getElementById(`goal_${biz}`).value));
+      dashboardData.exec.cash[biz] = clampNonNeg(parseCurrency(document.getElementById(`cash_${biz}`).value));
+      dashboardData.exec.thresholds[biz] = clampNonNeg(parseCurrency(document.getElementById(`threshold_${biz}`).value));
+    });
+    saveDashboardData();
+    renderAll();
+    const el = document.getElementById('execSaveConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  function addExpense(){
+    const date = document.getElementById('expDate').value;
+    const category = document.getElementById('expCategory').value.trim();
+    const amount = parseCurrency(document.getElementById('expAmount').value);
+    const business = document.getElementById('expBusiness').value;
+    if(!date || !category || amount <= 0){
+      alert('Please fill in date, category, and a valid amount.');
+      return;
+    }
+    dashboardData.exec.expenses.push({ id: 'e'+Date.now(), date, category, amount, business });
+    saveDashboardData();
+    document.getElementById('expDate').value = '';
+    document.getElementById('expCategory').value = '';
+    document.getElementById('expAmount').value = '';
+    renderAll();
+  }
+
+  function removeExpense(id){
+    dashboardData.exec.expenses = dashboardData.exec.expenses.filter(e=>e.id !== id);
+    saveDashboardData();
+    renderAll();
+  }
+
+  function addAsset(){
+    const name = document.getElementById('assetName').value.trim();
+    const value = parseCurrency(document.getElementById('assetValue').value);
+    const business = document.getElementById('assetBusiness').value;
+    if(!name || value <= 0){
+      alert('Please fill in a name and a valid value.');
+      return;
+    }
+    dashboardData.exec.assets.push({ id: 'a'+Date.now(), name, value, business });
+    saveDashboardData();
+    document.getElementById('assetName').value = '';
+    document.getElementById('assetValue').value = '';
+    renderAll();
+  }
+
+  function removeAsset(id){
+    dashboardData.exec.assets = dashboardData.exec.assets.filter(a=>a.id !== id);
+    saveDashboardData();
+    renderAll();
+  }
+
+  /* ---------------- Alert Dashboard (admin only) ---------------- */
+  function renderAlerts(snap){
+    const exec = dashboardData.exec;
+    const alerts = []; // { level: 'red'|'yellow'|'green', text }
+
+    // Rule 1: cash below threshold per business
+    ['mb','bw','ns','pk'].forEach(biz=>{
+      const threshold = exec.thresholds[biz] || 0;
+      const cash = exec.cash[biz] || 0;
+      if(threshold > 0 && cash < threshold){
+        alerts.push({ level:'red', text:`<b>${bizNames[biz]}</b> cash on hand (${fmtPeso(cash)}) is below your ${fmtPeso(threshold)} alert threshold.` });
+      }
+    });
+
+    // Rule 2: sales goal pace behind schedule (needs a reporting period with dates + a goal set)
+    const cp = dashboardData.currentPeriod;
+    const startD = new Date(cp.start + 'T00:00:00');
+    const endD = new Date(cp.end + 'T00:00:00');
+    const today = new Date();
+    const totalSpan = endD - startD;
+    if(totalSpan > 0 && today >= startD){
+      const elapsedPct = Math.min(100, Math.max(0, ((today - startD) / totalSpan) * 100));
+      const remainingPct = 100 - elapsedPct;
+      ['mb','bw','ns','pk'].forEach(biz=>{
+        const target = exec.goals[biz] || 0;
+        if(target <= 0) return;
+        const actual = bizRevenue(snap, biz);
+        const goalPct = (actual / target) * 100;
+        if(goalPct < 70 && remainingPct < 30){
+          alerts.push({ level:'yellow', text:`<b>${bizNames[biz]}</b> is at ${Math.round(goalPct)}% of its goal with only ${Math.round(remainingPct)}% of the period left.` });
+        }
+      });
+    }
+
+    // Rules for Team / Operations / Calendar (unpaid commissions, overdue tasks, upcoming events)
+    // aren't wired up yet since those modules haven't been built — they'll activate automatically
+    // once that data exists, without needing to touch this function again.
+
+    const banner = document.getElementById('alertBanner');
+    if(!alerts.length){
+      banner.innerHTML = `<div class="alert-item green"><span class="dot-icon">✓</span><span>All clear — no cash, pace, or threshold alerts right now.</span></div>`;
+      return;
+    }
+    banner.innerHTML = alerts.map(a=>`<div class="alert-item ${a.level}"><span class="dot-icon">${a.level==='red'?'⚠':'●'}</span><span>${a.text}</span></div>`).join('');
   }
 
   /* ---------------- Edit Data form (works on a draft copy until Save is clicked) ---------------- */
