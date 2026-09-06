@@ -343,20 +343,20 @@
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Saved periods</h4>
       <div id="historyList"></div>
 
-      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱ millions)</h4>
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱)</h4>
       <div class="edit-grid">
-        <div class="field"><label>22Win</label><input type="number" step="0.01" min="0" id="edit_mb_22Win"></div>
-        <div class="field"><label>Jolibet</label><input type="number" step="0.01" min="0" id="edit_mb_Jolibet"></div>
-        <div class="field"><label>1xBet</label><input type="number" step="0.01" min="0" id="edit_mb_1xBet"></div>
-        <div class="field"><label>Tab66</label><input type="number" step="0.01" min="0" id="edit_mb_Tab66"></div>
-        <div class="field"><label>747</label><input type="number" step="0.01" min="0" id="edit_mb_747"></div>
+        <div class="field"><label>22Win</label><input type="text" inputmode="decimal" class="currency-field" id="edit_mb_22Win" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Jolibet</label><input type="text" inputmode="decimal" class="currency-field" id="edit_mb_Jolibet" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>1xBet</label><input type="text" inputmode="decimal" class="currency-field" id="edit_mb_1xBet" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Tab66</label><input type="text" inputmode="decimal" class="currency-field" id="edit_mb_Tab66" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>747</label><input type="text" inputmode="decimal" class="currency-field" id="edit_mb_747" onblur="formatCurrencyField(this)"></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Baccarat Win</h4>
       <div class="edit-grid">
         <div class="field"><label>Students enrolled</label><input type="number" min="0" id="edit_bw_students"></div>
         <div class="field"><label>Completion rate (%)</label><input type="number" min="0" max="100" id="edit_bw_completion"></div>
-        <div class="field"><label>Tuition revenue (₱ millions)</label><input type="number" step="0.01" min="0" id="edit_bw_revenue"></div>
+        <div class="field"><label>Tuition revenue (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="edit_bw_revenue" onblur="formatCurrencyField(this)"></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Nexstack</h4>
@@ -364,12 +364,12 @@
         <div class="field"><label>Students enrolled</label><input type="number" min="0" id="edit_ns_students"></div>
         <div class="field"><label>Completion rate (%)</label><input type="number" min="0" max="100" id="edit_ns_completion"></div>
         <div class="field"><label>Job placement rate (%)</label><input type="number" min="0" max="100" id="edit_ns_placement"></div>
-        <div class="field"><label>Revenue (₱ millions)</label><input type="number" step="0.01" min="0" id="edit_ns_revenue"></div>
+        <div class="field"><label>Revenue (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="edit_ns_revenue" onblur="formatCurrencyField(this)"></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Prokora — projects</h4>
       <table id="pkEditTable">
-        <tr><th>Client</th><th>Scope</th><th>Value (₱ thousands)</th><th>Status</th><th></th></tr>
+        <tr><th>Client</th><th>Scope</th><th>Value (₱)</th><th>Status</th><th></th></tr>
       </table>
       <button class="btn small" style="margin-top:10px;" onclick="addProjectRow()">+ Add project</button>
 
@@ -585,22 +585,23 @@
   }
 
   const sampleSnapshot = {
-    mb: { '22Win':1.35, 'Jolibet':1.05, '1xBet':0.89, 'Tab66':0.56, '747':0.38 },
-    bw: { students:320, completion:82, revenue:0.85 },
-    ns: { students:210, completion:76, placement:68, revenue:1.10 },
+    mb: { '22Win':1350000, 'Jolibet':1050000, '1xBet':890000, 'Tab66':560000, '747':380000 },
+    bw: { students:320, completion:82, revenue:850000 },
+    ns: { students:210, completion:76, placement:68, revenue:1100000 },
     pk: {
       projects: [
-        { client:'Meridian Retail', scope:'Inventory system', value:180, status:'dev' },
-        { client:'Coastal Clinic Group', scope:'Patient portal', value:210, status:'dev' },
-        { client:'Harborline Logistics', scope:'Fleet tracking dashboard', value:150, status:'dev' },
-        { client:'Del Rio Realty', scope:'Listings platform', value:120, status:'done' },
-        { client:'Fresco Foods', scope:'POS integration', value:95, status:'done' },
-        { client:'Northgate School', scope:'Enrollment system', value:88, status:'done' },
+        { client:'Meridian Retail', scope:'Inventory system', value:180000, status:'dev' },
+        { client:'Coastal Clinic Group', scope:'Patient portal', value:210000, status:'dev' },
+        { client:'Harborline Logistics', scope:'Fleet tracking dashboard', value:150000, status:'dev' },
+        { client:'Del Rio Realty', scope:'Listings platform', value:120000, status:'done' },
+        { client:'Fresco Foods', scope:'POS integration', value:95000, status:'done' },
+        { client:'Northgate School', scope:'Enrollment system', value:88000, status:'done' },
       ]
     }
   };
 
   const defaultData = {
+    dataVersion: 2,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -612,24 +613,42 @@
 
   function periodKey(start, end){ return `${start}_${end}`; }
 
+  // Converts every history snapshot's money fields from the old "millions/thousands" units
+  // to plain full-peso numbers. Only needed for data saved before dataVersion 2.
+  function migrateUnitsToFullPesos(data){
+    Object.values(data.history || {}).forEach(snap=>{
+      if(snap.mb) Object.keys(snap.mb).forEach(k => { snap.mb[k] = (snap.mb[k]||0) * 1000000; });
+      if(snap.bw) snap.bw.revenue = (snap.bw.revenue||0) * 1000000;
+      if(snap.ns) snap.ns.revenue = (snap.ns.revenue||0) * 1000000;
+      if(snap.pk && snap.pk.projects) snap.pk.projects.forEach(p => { p.value = (p.value||0) * 1000; });
+    });
+    data.dataVersion = 2;
+    return data;
+  }
+
   function loadDashboardData(){
     try{
       const saved = localStorage.getItem(DATA_KEY);
       if(!saved) return JSON.parse(JSON.stringify(defaultData));
-      const parsed = JSON.parse(saved);
+      let parsed = JSON.parse(saved);
       // Migrate old single-snapshot format (no .history) into the new per-period history format
       if(parsed && parsed.mb && !parsed.history){
         const migratedKey = periodKey(parsed.periodStart || '2026-01-01', parsed.periodEnd || '2026-08-31');
-        return {
+        parsed = {
           lastUpdated: parsed.lastUpdated || null,
           currentPeriod: { start: parsed.periodStart || '2026-01-01', end: parsed.periodEnd || '2026-08-31' },
           history: { [migratedKey]: { mb: parsed.mb, bw: parsed.bw, ns: parsed.ns, pk: parsed.pk, savedAt: parsed.lastUpdated || null } }
         };
       }
+      // Migrate old millions/thousands units to plain full-peso numbers
+      if(!parsed.dataVersion || parsed.dataVersion < 2){
+        parsed = migrateUnitsToFullPesos(parsed);
+      }
       return parsed;
     }catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
   }
   function saveDashboardData(){
+    dashboardData.dataVersion = 2;
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); return true; }
     catch(e){ console.error('Could not save dashboard data', e); return false; }
   }
@@ -644,8 +663,14 @@
   }
 
   const statusLabel = { dev:'In development', done:'Delivered', live:'In progress', pause:'On hold' };
-  const fmtM = n => `₱${(n*1000000).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
-  const fmtK = n => `₱${(n*1000).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+  const fmtPeso = n => `₱${(n||0).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+  // parses a comma-formatted string the user typed back into a plain number
+  const parseCurrency = val => parseFloat(String(val).replace(/,/g,'')) || 0;
+  // re-formats a currency text field with commas when the user leaves it
+  function formatCurrencyField(el){
+    const n = parseCurrency(el.value);
+    el.value = n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
 
   function formatPeriod(startStr, endStr){
     if(!startStr || !endStr) return 'YTD 2026 · Jan – Aug';
@@ -661,14 +686,14 @@
   }
 
   function mbTotal(snap){ return Object.values(snap.mb).reduce((a,b)=>a+b,0); }
-  function pkRevenueM(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0) / 1000; }
+  function pkRevenue(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
 
   /* ---------------- Render everything from the active snapshot ---------------- */
   function renderAll(){
     const snap = getCurrentSnapshot();
     const mb = snap.mb, bw = snap.bw, ns = snap.ns, pk = snap.pk;
     const mbTot = mbTotal(snap);
-    const pkRev = pkRevenueM(snap);
+    const pkRev = pkRevenue(snap);
     const combined = mbTot + bw.revenue + ns.revenue + pkRev;
     const activeStudents = bw.students + ns.students;
     const pkDelivered = pk.projects.filter(p=>p.status==='done').length;
@@ -676,7 +701,7 @@
     const pkAvg = pk.projects.length ? pk.projects.reduce((a,p)=>a+p.value,0)/pk.projects.length : 0;
 
     // KPI row
-    document.getElementById('kpiRevenue').textContent = fmtM(combined);
+    document.getElementById('kpiRevenue').textContent = fmtPeso(combined);
     document.getElementById('kpiStudents').textContent = activeStudents;
     document.getElementById('kpiProjects').textContent = pkDelivered;
     document.getElementById('kpiProjectsFoot').textContent = `${pkInProgress} currently in build`;
@@ -685,35 +710,35 @@
     document.getElementById('kpiPlatformList').textContent = livePlatforms.length ? livePlatforms.join(' · ') : 'No platforms active yet';
 
     // Overview
-    document.getElementById('ovBarSub').textContent = `Share of ${fmtM(combined)} combined YTD revenue`;
-    document.getElementById('ovMbRevenue').textContent = fmtM(mbTot);
-    document.getElementById('ovBwRevenue').textContent = fmtM(bw.revenue);
+    document.getElementById('ovBarSub').textContent = `Share of ${fmtPeso(combined)} combined YTD revenue`;
+    document.getElementById('ovMbRevenue').textContent = fmtPeso(mbTot);
+    document.getElementById('ovBwRevenue').textContent = fmtPeso(bw.revenue);
     document.getElementById('ovBwFoot').textContent = `${bw.students} students enrolled`;
-    document.getElementById('ovNsRevenue').textContent = fmtM(ns.revenue);
+    document.getElementById('ovNsRevenue').textContent = fmtPeso(ns.revenue);
     document.getElementById('ovNsFoot').textContent = `${ns.students} students enrolled`;
-    document.getElementById('ovPkRevenue').textContent = fmtM(pkRev);
+    document.getElementById('ovPkRevenue').textContent = fmtPeso(pkRev);
     document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
 
     // Master Baccarat
     const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
     const [topName, topVal] = mbEntries[0] || ['—',0];
-    document.getElementById('mbRevenueStat').textContent = fmtM(mbTot);
+    document.getElementById('mbRevenueStat').textContent = fmtPeso(mbTot);
     document.getElementById('mbTopPlatform').textContent = topName;
-    document.getElementById('mbTopPlatformFoot').textContent = `${fmtM(topVal)} · ${mbTot? Math.round(topVal/mbTot*100):0}% of revenue`;
+    document.getElementById('mbTopPlatformFoot').textContent = `${fmtPeso(topVal)} · ${mbTot? Math.round(topVal/mbTot*100):0}% of revenue`;
     document.getElementById('mbPlatformCount').textContent = mbEntries.length;
     document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
-    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtM(mbTot)} total`;
+    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbTot)} total`;
     const mbMax = mbEntries.length ? mbEntries[0][1] : 1;
     document.getElementById('mbBarlist').innerHTML = mbEntries.map(([name,val])=>`
-      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtM(val)} · ${mbTot? Math.round(val/mbTot*100):0}%</div></div>
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtPeso(val)} · ${mbTot? Math.round(val/mbTot*100):0}%</div></div>
     `).join('');
 
     // Baccarat Win
     document.getElementById('bwStudentsStat').textContent = bw.students;
     document.getElementById('bwCompletionStat').textContent = `${bw.completion}%`;
     document.getElementById('bwCompletionFoot').textContent = `${Math.round(bw.students*bw.completion/100)} of ${bw.students} finished`;
-    document.getElementById('bwRevenueStat').textContent = fmtM(bw.revenue);
-    document.getElementById('bwAvgFoot').textContent = bw.students ? `Avg ₱${Math.round(bw.revenue*1000000/bw.students).toLocaleString()} per student` : 'No students yet';
+    document.getElementById('bwRevenueStat').textContent = fmtPeso(bw.revenue);
+    document.getElementById('bwAvgFoot').textContent = bw.students ? `Avg ₱${Math.round(bw.revenue/bw.students).toLocaleString()} per student` : 'No students yet';
 
     // Nexstack
     document.getElementById('nsStudentsStat').textContent = ns.students;
@@ -722,14 +747,14 @@
     document.getElementById('nsPlacementStat').textContent = `${ns.placement}%`;
 
     // Prokora
-    document.getElementById('pkRevenueStat').textContent = fmtM(pkRev);
+    document.getElementById('pkRevenueStat').textContent = fmtPeso(pkRev);
     document.getElementById('pkDeliveredStat').textContent = pkDelivered;
     document.getElementById('pkDeliveredFoot').textContent = `${pkInProgress} currently in build`;
-    document.getElementById('pkAvgStat').textContent = fmtK(pkAvg);
+    document.getElementById('pkAvgStat').textContent = fmtPeso(pkAvg);
     const pkTable = document.getElementById('pkTable');
     pkTable.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>' +
       (pk.projects.length
-        ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td class="num-cell">${fmtK(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
+        ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td class="num-cell">${fmtPeso(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
 
     // Period label
@@ -760,7 +785,7 @@
 
     const snap = getCurrentSnapshot();
     const mb = snap.mb, bw = snap.bw, ns = snap.ns;
-    const mbTot = mbTotal(snap), pkRev = pkRevenueM(snap);
+    const mbTot = mbTotal(snap), pkRev = pkRevenue(snap);
 
     function scaledLine(canvasId, shape, newTotal, color){
       const oldSum = shape.reduce((a,b)=>a+b,0) || 1;
@@ -768,14 +793,14 @@
       charts[canvasId] = new Chart(document.getElementById(canvasId), {
         type:'line',
         data:{ labels:months, datasets:[{ data:scaled, borderColor:color, backgroundColor:color+'22', tension:.35, fill:true, pointRadius:3, pointBackgroundColor:color, borderWidth:2 }]},
-        options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}}, y:{grid:{color:grid}, beginAtZero:true} } }
+        options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}}, y:{grid:{color:grid}, beginAtZero:true, ticks:{ callback: v => Number(v).toLocaleString('en-US') }} } }
       });
     }
 
     charts.chartOverviewBar = new Chart(document.getElementById('chartOverviewBar'), {
       type:'bar',
       data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[mbTot,pkRev,ns.revenue,bw.revenue], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0','#b8323a'], borderRadius:6 }]},
-      options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}, title:{display:true,text:'₱ millions'}}, y:{grid:{display:false}} } }
+      options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}, title:{display:true,text:'₱'}, ticks:{ callback: v => Number(v).toLocaleString('en-US') }}, y:{grid:{display:false}} } }
     });
 
     charts.chartOverviewDonut = new Chart(document.getElementById('chartOverviewDonut'), {
@@ -803,18 +828,18 @@
   function loadSnapshotIntoForm(snap){
     editingSnapshot = JSON.parse(JSON.stringify(snap));
     const mb = editingSnapshot.mb, bw = editingSnapshot.bw, ns = editingSnapshot.ns;
-    document.getElementById('edit_mb_22Win').value = mb['22Win'];
-    document.getElementById('edit_mb_Jolibet').value = mb['Jolibet'];
-    document.getElementById('edit_mb_1xBet').value = mb['1xBet'];
-    document.getElementById('edit_mb_Tab66').value = mb['Tab66'];
-    document.getElementById('edit_mb_747').value = mb['747'];
+    document.getElementById('edit_mb_22Win').value = fmtPeso(mb['22Win']).slice(1);
+    document.getElementById('edit_mb_Jolibet').value = fmtPeso(mb['Jolibet']).slice(1);
+    document.getElementById('edit_mb_1xBet').value = fmtPeso(mb['1xBet']).slice(1);
+    document.getElementById('edit_mb_Tab66').value = fmtPeso(mb['Tab66']).slice(1);
+    document.getElementById('edit_mb_747').value = fmtPeso(mb['747']).slice(1);
     document.getElementById('edit_bw_students').value = bw.students;
     document.getElementById('edit_bw_completion').value = bw.completion;
-    document.getElementById('edit_bw_revenue').value = bw.revenue;
+    document.getElementById('edit_bw_revenue').value = fmtPeso(bw.revenue).slice(1);
     document.getElementById('edit_ns_students').value = ns.students;
     document.getElementById('edit_ns_completion').value = ns.completion;
     document.getElementById('edit_ns_placement').value = ns.placement;
-    document.getElementById('edit_ns_revenue').value = ns.revenue;
+    document.getElementById('edit_ns_revenue').value = fmtPeso(ns.revenue).slice(1);
     renderProjectEditRows();
   }
 
@@ -835,13 +860,13 @@
 
   function renderProjectEditRows(){
     const table = document.getElementById('pkEditTable');
-    table.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value (₱K)</th><th>Status</th><th></th></tr>';
+    table.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value (₱)</th><th>Status</th><th></th></tr>';
     editingSnapshot.pk.projects.forEach((p, i)=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><input type="text" value="${p.client}" data-idx="${i}" data-field="client" style="width:100%;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
         <td><input type="text" value="${p.scope}" data-idx="${i}" data-field="scope" style="width:100%;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
-        <td><input type="number" value="${p.value}" data-idx="${i}" data-field="value" style="width:90px;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
+        <td><input type="text" inputmode="decimal" value="${(p.value||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" data-idx="${i}" data-field="value" onblur="formatCurrencyField(this)" style="width:120px;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
         <td>
           <select data-idx="${i}" data-field="status" style="padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;">
             <option value="dev" ${p.status==='dev'?'selected':''}>In development</option>
@@ -943,25 +968,25 @@
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
 
-    editingSnapshot.mb['22Win'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_22Win').value) || 0);
-    editingSnapshot.mb['Jolibet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0);
-    editingSnapshot.mb['1xBet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_1xBet').value) || 0);
-    editingSnapshot.mb['Tab66'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Tab66').value) || 0);
-    editingSnapshot.mb['747'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_747').value) || 0);
+    editingSnapshot.mb['22Win'] = clampNonNeg(parseCurrency(document.getElementById('edit_mb_22Win').value));
+    editingSnapshot.mb['Jolibet'] = clampNonNeg(parseCurrency(document.getElementById('edit_mb_Jolibet').value));
+    editingSnapshot.mb['1xBet'] = clampNonNeg(parseCurrency(document.getElementById('edit_mb_1xBet').value));
+    editingSnapshot.mb['Tab66'] = clampNonNeg(parseCurrency(document.getElementById('edit_mb_Tab66').value));
+    editingSnapshot.mb['747'] = clampNonNeg(parseCurrency(document.getElementById('edit_mb_747').value));
     editingSnapshot.bw.students = clampNonNeg(parseInt(document.getElementById('edit_bw_students').value) || 0);
     editingSnapshot.bw.completion = clampPct(parseFloat(document.getElementById('edit_bw_completion').value) || 0);
-    editingSnapshot.bw.revenue = clampNonNeg(parseFloat(document.getElementById('edit_bw_revenue').value) || 0);
+    editingSnapshot.bw.revenue = clampNonNeg(parseCurrency(document.getElementById('edit_bw_revenue').value));
     editingSnapshot.ns.students = clampNonNeg(parseInt(document.getElementById('edit_ns_students').value) || 0);
     editingSnapshot.ns.completion = clampPct(parseFloat(document.getElementById('edit_ns_completion').value) || 0);
     editingSnapshot.ns.placement = clampPct(parseFloat(document.getElementById('edit_ns_placement').value) || 0);
-    editingSnapshot.ns.revenue = clampNonNeg(parseFloat(document.getElementById('edit_ns_revenue').value) || 0);
+    editingSnapshot.ns.revenue = clampNonNeg(parseCurrency(document.getElementById('edit_ns_revenue').value));
 
     // pull edited project fields straight from the table's inputs/selects
     document.querySelectorAll('#pkEditTable [data-idx]').forEach(el=>{
       const idx = parseInt(el.dataset.idx);
       const field = el.dataset.field;
       if(!editingSnapshot.pk.projects[idx]) return;
-      editingSnapshot.pk.projects[idx][field] = field === 'value' ? clampNonNeg(parseFloat(el.value)||0) : el.value;
+      editingSnapshot.pk.projects[idx][field] = field === 'value' ? clampNonNeg(parseCurrency(el.value)) : el.value;
     });
 
     editingSnapshot.savedAt = Date.now();
