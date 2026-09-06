@@ -21,6 +21,35 @@
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans', sans-serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:1240px;margin:0 auto;padding:28px 24px 64px;}
+  .app-shell{display:flex;min-height:100vh;}
+  .main-content{flex:1;max-width:1240px;margin:0 auto;padding:28px 24px 64px;min-width:0;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{width:220px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width .2s ease;}
+  .sidebar.collapsed{width:68px;}
+  .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 18px 20px;margin-bottom:10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
+  .sidebar-brand-text{font-family:'Fraunces',serif;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;transition:opacity .15s ease;}
+  .sidebar.collapsed .sidebar-brand-text{opacity:0;width:0;}
+  .sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;}
+  .sidebar-nav .tab{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:10px 10px;border-radius:8px;font-size:13.5px;font-weight:500;
+    color:var(--muted);background:none;border:none;cursor:pointer;white-space:nowrap;overflow:hidden;
+    transition:background .15s ease, color .15s ease;
+  }
+  .sidebar-nav .tab:hover{background:var(--panel-2);color:var(--ink);}
+  .sidebar-nav .tab.active{background:var(--gold-soft);color:var(--ink);}
+  .sidebar-nav .tab.active::after{display:none;} /* no underline in sidebar mode */
+  .sidebar-nav .nav-icon{flex-shrink:0;width:16px;text-align:center;color:var(--accent,var(--gold));font-size:13px;}
+  .sidebar-nav .nav-label{transition:opacity .15s ease;}
+  .sidebar.collapsed .nav-label{opacity:0;width:0;}
+  .sidebar-divider{height:1px;background:var(--line);margin:10px 14px;}
+  @media (max-width:900px){
+    .sidebar{position:fixed;left:0;z-index:50;box-shadow:2px 0 12px rgba(0,0,0,.4);}
+    .sidebar:not(.collapsed){width:220px;}
+    .sidebar.collapsed{width:0;padding:20px 0;overflow:hidden;border-right:none;}
+    .main-content{padding:20px 16px 48px;}
+  }
 
   /* ---------- Login screen ---------- */
   #loginScreen{
@@ -206,15 +235,36 @@
 </div>
 
 <!-- ===================== DASHBOARD ===================== -->
-<div class="app" id="dashboard" style="display:none;">
+<div class="app-shell" id="dashboard" style="display:none;">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand" onclick="toggleSidebar()" title="Click to collapse/expand">
+      <div class="brand-mark">MK</div>
+      <span class="sidebar-brand-text">MasterKennedy</span>
+    </div>
+    <nav class="sidebar-nav" id="tabBar">
+      <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Overview</span></button>
+      <button class="tab" data-view="executive" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▣</span><span class="nav-label">Executive</span></button>
+      <button class="tab" data-view="executive" data-scroll-to="goalTrackerSection" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◎</span><span class="nav-label">Goal Tracker</span></button>
+      <button class="tab" data-view="finance" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▦</span><span class="nav-label">Finance</span></button>
+      <button class="tab" data-view="calendar" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
+      <button class="tab" data-view="team" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◈</span><span class="nav-label">Team</span></button>
+      <div class="sidebar-divider"></div>
+      <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f"><span class="nav-icon">●</span><span class="nav-label">Master Baccarat</span></button>
+      <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a"><span class="nav-icon">●</span><span class="nav-label">Baccarat Win</span></button>
+      <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0"><span class="nav-icon">●</span><span class="nav-label">Nexstack</span></button>
+      <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4"><span class="nav-icon">●</span><span class="nav-label">Prokora</span></button>
+      <div class="sidebar-divider"></div>
+      <button class="tab" data-view="editdata" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Edit Data</span></button>
+      <button class="tab" data-view="users" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">⚇</span><span class="nav-label">Users</span></button>
+    </nav>
+  </aside>
+
+  <div class="main-content">
 
   <div class="masthead">
     <div class="brand">
-      <div class="brand-mark">MK</div>
-      <div>
-        <h1>MasterKennedy</h1>
-        <p>Master Baccarat · Baccarat Win · Nexstack · Prokora</p>
-      </div>
+      <p style="margin:0;">Master Baccarat · Baccarat Win · Nexstack · Prokora</p>
     </div>
     <div class="masthead-right">
       <div class="period" id="periodBadge">YTD 2026 · Jan – Aug</div>
@@ -234,17 +284,6 @@
     <div class="kpi"><div class="label">Active students (BW + NS)</div><div class="value" id="kpiStudents">530</div><div class="delta">Baccarat Win + Nexstack combined</div></div>
     <div class="kpi"><div class="label">Gaming platforms live</div><div class="value" id="kpiPlatformCount">5</div><div class="delta" id="kpiPlatformList">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
     <div class="kpi"><div class="label">Prokora projects delivered</div><div class="value" id="kpiProjects">14</div><div class="delta" id="kpiProjectsFoot">3 currently in build</div></div>
-  </div>
-
-  <div class="tabs" id="tabBar">
-    <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed">Overview</button>
-    <button class="tab" data-view="executive" data-roles="admin" style="--accent:#2f6fed">Executive</button>
-    <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f">Master Baccarat</button>
-    <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a">Baccarat Win</button>
-    <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0">Nexstack</button>
-    <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4">Prokora</button>
-    <button class="tab" data-view="editdata" data-roles="admin" style="--accent:#2f6fed">Edit Data</button>
-    <button class="tab" data-view="users" data-roles="admin" style="--accent:#2f6fed">Users</button>
   </div>
 
   <!-- OVERVIEW -->
@@ -279,7 +318,7 @@
     </div>
 
     <div class="grid-2" style="margin-bottom:16px;">
-      <div class="card" style="--accent:#2f6fed">
+      <div class="card" id="goalTrackerSection" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Sales goal tracker</h3>
         <div class="sub">Target vs. actual revenue for the period currently selected</div>
         <div id="goalTrackerList"></div>
@@ -503,10 +542,47 @@
     </div>
   </div>
 
+  <!-- FINANCE (placeholder — coming soon) -->
+  <div class="view" id="finance">
+    <div class="card" style="--accent:#2f6fed">
+      <h3><span class="dot"></span>Finance</h3>
+      <div class="sub">Coming soon</div>
+      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;">
+        This will show a per-business profit &amp; loss view (revenue minus expenses), filterable by month, quarter, or year,
+        pulled from the numbers you enter in Edit Data and Executive → Expenses. It's next in line to be built.
+      </p>
+    </div>
+  </div>
+
+  <!-- CALENDAR (placeholder — coming soon) -->
+  <div class="view" id="calendar">
+    <div class="card" style="--accent:#2f6fed">
+      <h3><span class="dot"></span>Calendar</h3>
+      <div class="sub">Coming soon</div>
+      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;">
+        A shared month/week view for livestream schedules, client meetings, and PCEC commitments, taggable by business.
+        Admin will see everything; other accounts will see only events tagged to their business.
+      </p>
+    </div>
+  </div>
+
+  <!-- TEAM (placeholder — coming soon) -->
+  <div class="view" id="team">
+    <div class="card" style="--accent:#2f6fed">
+      <h3><span class="dot"></span>Team</h3>
+      <div class="sub">Coming soon</div>
+      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;">
+        Employee list per business and a commission tracker (name, deal reference, commission %, amount owed, paid status).
+        Once this exists, the alert banner will automatically start flagging unpaid commissions older than a set number of days.
+      </p>
+    </div>
+  </div>
+
   <div class="note">
     <b>Note:</b> use the Edit Data tab to enter your real numbers — everything below updates instantly once you save.
   </div>
 
+  </div>
 </div>
 
 <script>
@@ -659,15 +735,36 @@
     link.textContent = isHidden ? 'Hide test accounts' : 'Show test accounts';
   }
 
-  /* ---------------- Tabs ---------------- */
+  /* ---------------- Tabs (sidebar nav items) ---------------- */
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
+      // "active" highlight only makes sense per-view, not per-button, since two buttons
+      // (Executive + Goal Tracker) can point at the same view.
       document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-      tab.classList.add('active');
+      document.querySelectorAll(`.tab[data-view="${tab.dataset.view}"]`).forEach(t=>t.classList.add('active'));
       document.getElementById(tab.dataset.view).classList.add('active');
+      if(tab.dataset.scrollTo){
+        setTimeout(()=>{
+          const el = document.getElementById(tab.dataset.scrollTo);
+          if(el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 50);
+      }
+      // On narrow screens, collapse the sidebar after choosing a page so it doesn't cover the content.
+      if(window.innerWidth <= 900){
+        document.getElementById('sidebar').classList.add('collapsed');
+      }
     });
   });
+
+  function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  }
+
+  // Sidebar starts collapsed by default on narrow (phone-sized) screens.
+  if(window.innerWidth <= 900){
+    document.getElementById('sidebar').classList.add('collapsed');
+  }
 
   /* ---------------- Dashboard data (editable, saved per-browser, one snapshot per date range) ---------------- */
   const DATA_KEY = 'mk_dashboard_data';
