@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MasterKennedy — Business Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#10131a; --panel:#171c26; --panel-2:#1d2330; --line:#2a3140;
+    --ink:#eceef3; --muted:#8b93a6;
+    --gold:#c9a227; --gold-soft:rgba(201,162,39,.14);
+    --wine:#9c3347; --wine-soft:rgba(156,51,71,.14);
+    --teal:#2fa0a0; --teal-soft:rgba(47,160,160,.14);
+    --indigo:#5468e0; --indigo-soft:rgba(84,104,224,.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans', sans-serif;-webkit-font-smoothing:antialiased;}
+  .app{max-width:1240px;margin:0 auto;padding:28px 24px 64px;}
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 30% 20%, #1b2130 0%, #10131a 60%);
+    padding:24px;
+  }
+  .login-card{
+    width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:32px 28px;
+  }
+  .login-card .brand-mark{margin:0 auto 16px;}
+  .login-card h1{font-family:'Fraunces',serif;font-size:22px;font-weight:600;text-align:center;margin:0 0 4px;}
+  .login-card p.sub{text-align:center;color:var(--muted);font-size:13px;margin:0 0 24px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .field input{
+    width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--ink);font-size:14px;font-family:inherit;
+  }
+  .field input:focus{outline:none;border-color:var(--gold);}
+  .btn{
+    width:100%;padding:11px;border-radius:8px;border:none;cursor:pointer;
+    background:var(--gold);color:#14161c;font-weight:600;font-size:14px;font-family:inherit;
+    margin-top:6px;
+  }
+  .btn.secondary{background:var(--panel-2);color:var(--ink);border:1px solid var(--line);}
+  .btn.small{width:auto;padding:7px 14px;font-size:12.5px;}
+  .login-error{color:#d97757;font-size:12.5px;margin:-6px 0 12px;min-height:14px;}
+  .login-hint{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px;line-height:1.6;}
+  .login-hint b{color:var(--ink);}
+
+  /* ---------- Masthead ---------- */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(155deg,var(--gold),#8a6f16);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#12151c;flex-shrink:0;}
+  .brand h1{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0;letter-spacing:.2px;}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:13px;}
+  .masthead-right{display:flex;align-items:center;gap:14px;}
+  .period{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:8px;}
+  .who{display:flex;align-items:center;gap:10px;font-size:13px;}
+  .who .role-badge{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:6px;background:var(--gold-soft);color:var(--gold);}
+  .logout-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;}
+  .logout-btn:hover{color:var(--ink);border-color:var(--muted);}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .kpi .label{color:var(--muted);font-size:12.5px;margin-bottom:8px;}
+  .kpi .value{font-family:'Fraunces',serif;font-size:26px;font-weight:600;}
+  .kpi .delta{font-size:12.5px;margin-top:6px;color:#5fbf7a;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line);overflow-x:auto;}
+  .tab{font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;color:var(--muted);background:none;border:none;cursor:pointer;padding:10px 16px;position:relative;white-space:nowrap;}
+  .tab.active{color:var(--ink);}
+  .tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent,var(--gold));}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .card h3{margin:0 0 14px;font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent,var(--gold));}
+  .card .sub{color:var(--muted);font-size:12.5px;margin-top:-8px;margin-bottom:14px;}
+
+  .stat{background:var(--panel-2);border-radius:10px;padding:14px 16px;}
+  .stat .label{color:var(--muted);font-size:12px;}
+  .stat .value{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin-top:5px;}
+  .stat .foot{font-size:11.5px;color:var(--muted);margin-top:4px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);}
+  td{padding:10px 10px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:500;}
+  .pill.live{background:var(--teal-soft);color:var(--teal);}
+  .pill.done{background:rgba(95,191,122,.14);color:#5fbf7a;}
+  .pill.dev{background:var(--indigo-soft);color:var(--indigo);}
+  .pill.pause{background:rgba(139,147,166,.14);color:var(--muted);}
+  .pill.admin{background:var(--gold-soft);color:var(--gold);}
+
+  .barlist .row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .barlist .row .name{width:78px;font-size:13px;flex-shrink:0;}
+  .barlist .row .track{flex:1;height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden;}
+  .barlist .row .fill{height:100%;border-radius:6px;background:var(--accent,var(--gold));}
+  .barlist .row .num{width:96px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);flex-shrink:0;}
+
+  canvas{max-height:260px;}
+
+  .note{margin-top:28px;padding:14px 18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:12.5px;line-height:1.6;}
+  .note b{color:var(--ink);}
+
+  .user-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:18px;}
+  .user-form .field{margin-bottom:0;}
+  .field select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:13.5px;font-family:inherit;}
+  .del-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
+  .del-btn:hover{color:#d97757;border-color:#d97757;}
+
+  @media (max-width:900px){
+    .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .user-form{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand-mark" style="width:44px;height:44px;font-size:18px;">MK</div>
+    <h1>MasterKennedy</h1>
+    <p class="sub">Sign in to view your dashboard</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="loginUser" autocomplete="username" placeholder="e.g. admin">
+    </div>
+    <div class="field">
+      <label>Password <span id="togglePass" style="float:right;cursor:pointer;color:var(--gold);font-size:11.5px;">Show</span></label>
+      <input type="password" id="loginPass" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <button class="btn" onclick="attemptLogin()">Sign in</button>
+    <div class="login-hint">
+      <b>Demo accounts</b> — change these before sharing this file:<br>
+      admin / admin123 (full access)<br>
+      masterbaccarat / mb2026 · baccaratwin / bw2026<br>
+      nexstack / ns2026 · prokora / pk2026
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div class="app" id="dashboard" style="display:none;">
+
+  <div class="masthead">
+    <div class="brand">
+      <div class="brand-mark">MK</div>
+      <div>
+        <h1>MasterKennedy</h1>
+        <p>Master Baccarat · Baccarat Win · Nexstack · Prokora</p>
+      </div>
+    </div>
+    <div class="masthead-right">
+      <div class="period">YTD 2026 · Jan – Aug</div>
+      <div class="who">
+        <span id="whoName">—</span>
+        <span class="role-badge" id="whoRole">—</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi"><div class="label">Combined revenue</div><div class="value">₱7.75M</div><div class="delta">↑ 18.4% vs prior period</div></div>
+    <div class="kpi"><div class="label">Active students (BW + NS)</div><div class="value">530</div><div class="delta">↑ 62 this quarter</div></div>
+    <div class="kpi"><div class="label">Gaming platforms live</div><div class="value">5</div><div class="delta">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
+    <div class="kpi"><div class="label">Prokora projects delivered</div><div class="value">14</div><div class="delta">3 currently in build</div></div>
+  </div>
+
+  <div class="tabs" id="tabBar">
+    <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#c9a227">Overview</button>
+    <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#c9a227">Master Baccarat</button>
+    <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#9c3347">Baccarat Win</button>
+    <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#2fa0a0">Nexstack</button>
+    <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#5468e0">Prokora</button>
+    <button class="tab" data-view="users" data-roles="admin" style="--accent:#c9a227">Users</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="view active" id="overview">
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card" style="--accent:#c9a227">
+        <h3><span class="dot"></span>Revenue by business unit</h3>
+        <div class="sub">Share of ₱7.75M combined YTD revenue</div>
+        <canvas id="chartOverviewBar"></canvas>
+      </div>
+      <div class="card" style="--accent:#c9a227">
+        <h3><span class="dot"></span>Revenue mix</h3>
+        <div class="sub">Gaming vs. education vs. IT services</div>
+        <canvas id="chartOverviewDonut"></canvas>
+      </div>
+    </div>
+    <div class="grid-4">
+      <div class="stat"><div class="label">Master Baccarat</div><div class="value">₱4.20M</div><div class="foot">5 platforms · gaming revenue</div></div>
+      <div class="stat"><div class="label">Baccarat Win</div><div class="value">₱0.85M</div><div class="foot">320 students enrolled</div></div>
+      <div class="stat"><div class="label">Nexstack</div><div class="value">₱1.10M</div><div class="foot">210 students enrolled</div></div>
+      <div class="stat"><div class="label">Prokora</div><div class="value">₱1.60M</div><div class="foot">14 projects delivered</div></div>
+    </div>
+  </div>
+
+  <!-- MASTER BACCARAT -->
+  <div class="view" id="mb">
+    <div class="grid-3">
+      <div class="stat"><div class="label">Total gaming revenue</div><div class="value">₱4.20M</div><div class="foot">↑ 14.2% vs prior period</div></div>
+      <div class="stat"><div class="label">Top platform</div><div class="value">22Win</div><div class="foot">₱1.35M · 32% of revenue</div></div>
+      <div class="stat"><div class="label">Active platforms</div><div class="value">5</div><div class="foot">22Win, Jolibet, 1xBet, Tab66, 747</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="--accent:#c9a227">
+        <h3><span class="dot"></span>Monthly gaming revenue</h3>
+        <div class="sub">Jan – Aug 2026, all platforms combined</div>
+        <canvas id="chartMBTrend"></canvas>
+      </div>
+      <div class="card" style="--accent:#c9a227">
+        <h3><span class="dot"></span>Revenue by platform</h3>
+        <div class="sub">YTD, ₱4.20M total</div>
+        <div class="barlist" style="--accent:#c9a227">
+          <div class="row"><div class="name">22Win</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">₱1.35M · 32%</div></div>
+          <div class="row"><div class="name">Jolibet</div><div class="track"><div class="fill" style="width:78%"></div></div><div class="num">₱1.05M · 25%</div></div>
+          <div class="row"><div class="name">1xBet</div><div class="track"><div class="fill" style="width:66%"></div></div><div class="num">₱0.89M · 21%</div></div>
+          <div class="row"><div class="name">Tab66</div><div class="track"><div class="fill" style="width:41%"></div></div><div class="num">₱0.56M · 13%</div></div>
+          <div class="row"><div class="name">747</div><div class="track"><div class="fill" style="width:28%"></div></div><div class="num">₱0.38M · 9%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACCARAT WIN -->
+  <div class="view" id="bw">
+    <div class="grid-3">
+      <div class="stat"><div class="label">Students enrolled YTD</div><div class="value">320</div><div class="foot">↑ 28 this quarter</div></div>
+      <div class="stat"><div class="label">Course completion rate</div><div class="value">82%</div><div class="foot">262 of 320 finished</div></div>
+      <div class="stat"><div class="label">Tuition revenue</div><div class="value">₱0.85M</div><div class="foot">Avg ₱2,656 per student</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="--accent:#9c3347">
+        <h3><span class="dot"></span>Monthly enrollments</h3>
+        <div class="sub">New students per month, 2026</div>
+        <canvas id="chartBWTrend"></canvas>
+      </div>
+      <div class="card" style="--accent:#9c3347">
+        <h3><span class="dot"></span>Cohort snapshot</h3>
+        <div class="sub">Current active batches</div>
+        <table>
+          <tr><th>Batch</th><th>Students</th><th>Progress</th><th>Status</th></tr>
+          <tr><td>Batch 14</td><td>42</td><td>90%</td><td><span class="pill done">Near complete</span></td></tr>
+          <tr><td>Batch 15</td><td>38</td><td>55%</td><td><span class="pill live">In progress</span></td></tr>
+          <tr><td>Batch 16</td><td>45</td><td>20%</td><td><span class="pill live">In progress</span></td></tr>
+          <tr><td>Batch 17</td><td>30</td><td>0%</td><td><span class="pill pause">Starting soon</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXSTACK -->
+  <div class="view" id="ns">
+    <div class="grid-3">
+      <div class="stat"><div class="label">Students enrolled YTD</div><div class="value">210</div><div class="foot">↑ 34 this quarter</div></div>
+      <div class="stat"><div class="label">Completion rate</div><div class="value">76%</div><div class="foot">160 of 210 finished</div></div>
+      <div class="stat"><div class="label">Job placement rate</div><div class="value">68%</div><div class="foot">Within 3 months of completion</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card" style="--accent:#2fa0a0">
+        <h3><span class="dot"></span>Monthly enrollments</h3>
+        <div class="sub">New students per month, 2026</div>
+        <canvas id="chartNSTrend"></canvas>
+      </div>
+      <div class="card" style="--accent:#2fa0a0">
+        <h3><span class="dot"></span>Program breakdown</h3>
+        <div class="sub">Students by track, YTD</div>
+        <div class="barlist" style="--accent:#2fa0a0">
+          <div class="row"><div class="name">Web Dev</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">86 students</div></div>
+          <div class="row"><div class="name">Data & AI</div><div class="track"><div class="fill" style="width:70%"></div></div><div class="num">60 students</div></div>
+          <div class="row"><div class="name">Design</div><div class="track"><div class="fill" style="width:47%"></div></div><div class="num">40 students</div></div>
+          <div class="row"><div class="name">Cloud/DevOps</div><div class="track"><div class="fill" style="width:28%"></div></div><div class="num">24 students</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROKORA -->
+  <div class="view" id="pk">
+    <div class="grid-3">
+      <div class="stat"><div class="label">Revenue YTD</div><div class="value">₱1.60M</div><div class="foot">↑ 22% vs prior period</div></div>
+      <div class="stat"><div class="label">Projects delivered</div><div class="value">14</div><div class="foot">3 currently in build</div></div>
+      <div class="stat"><div class="label">Avg project value</div><div class="value">₱94K</div><div class="foot">Across delivered + active work</div></div>
+    </div>
+    <div class="card" style="--accent:#5468e0">
+      <h3><span class="dot"></span>Project pipeline</h3>
+      <div class="sub">Active and recently delivered engagements</div>
+      <table>
+        <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
+        <tr><td>Meridian Retail</td><td>Inventory system</td><td>₱180K</td><td><span class="pill dev">In development</span></td></tr>
+        <tr><td>Coastal Clinic Group</td><td>Patient portal</td><td>₱210K</td><td><span class="pill dev">In development</span></td></tr>
+        <tr><td>Harborline Logistics</td><td>Fleet tracking dashboard</td><td>₱150K</td><td><span class="pill dev">In development</span></td></tr>
+        <tr><td>Del Rio Realty</td><td>Listings platform</td><td>₱120K</td><td><span class="pill done">Delivered</span></td></tr>
+        <tr><td>Fresco Foods</td><td>POS integration</td><td>₱95K</td><td><span class="pill done">Delivered</span></td></tr>
+        <tr><td>Northgate School</td><td>Enrollment system</td><td>₱88K</td><td><span class="pill done">Delivered</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- USERS (admin only) -->
+  <div class="view" id="users">
+    <div class="card" style="--accent:#c9a227">
+      <h3><span class="dot"></span>Manage users</h3>
+      <div class="sub">This static build has no backend, so accounts live in the page's code. Additions here only last for this browser tab — reset the page and they're gone. To make an account permanent, edit the <code>defaultUsers</code> list in the HTML file and re-upload it to your host.</div>
+      <div class="user-form">
+        <div class="field"><label>Username</label><input type="text" id="newUser"></div>
+        <div class="field"><label>Password</label><input type="text" id="newPass"></div>
+        <div class="field"><label>Access</label>
+          <select id="newRole">
+            <option value="admin">Admin (all businesses)</option>
+            <option value="mb">Master Baccarat only</option>
+            <option value="bw">Baccarat Win only</option>
+            <option value="ns">Nexstack only</option>
+            <option value="pk">Prokora only</option>
+          </select>
+        </div>
+        <button class="btn small" onclick="addUser()">Add user</button>
+      </div>
+      <table id="usersTable">
+        <tr><th>Username</th><th>Access</th><th>Password</th><th></th></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Note:</b> figures shown are sample placeholders so you can see the layout in action. Send me your actual revenue, enrollment, and project numbers and I'll drop them in.
+  </div>
+
+</div>
+
+<script>
+  /* ---------------- User store (shared, plain-text — not real security) ---------------- */
+  const USERS_KEY = 'apex_users';
+  const defaultUsers = [
+    { username:'admin', password:'admin123', role:'admin' },
+    { username:'masterbaccarat', password:'mb2026', role:'mb' },
+    { username:'baccaratwin', password:'bw2026', role:'bw' },
+    { username:'nexstack', password:'ns2026', role:'ns' },
+    { username:'prokora', password:'pk2026', role:'pk' },
+  ];
+  const roleLabels = { admin:'Admin · full access', mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
+  let currentUser = null;
+  let chartsInitialized = false;
+  // Portable build: no backend/storage available on static hosting (Netlify/Vercel/GitHub Pages),
+  // so the account list lives here in the code and resets to this list on every page load.
+  // To change accounts, edit the defaultUsers array above and re-upload this file.
+  let cachedUsers = defaultUsers.slice();
+
+  async function loadUsers(){ return cachedUsers; }
+  async function saveUsers(users){ cachedUsers = users; return true; }
+  async function ensureUsersSeeded(){ return cachedUsers; }
+
+  async function attemptLogin(){
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = '';
+    const users = await ensureUsersSeeded();
+    const match = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+    if(!match){
+      errEl.textContent = 'Incorrect username or password.';
+      return;
+    }
+    currentUser = match;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('whoName').textContent = match.username;
+    document.getElementById('whoRole').textContent = roleLabels[match.role] || match.role;
+    applyRoleVisibility(match.role);
+    if(!chartsInitialized){ initCharts(); chartsInitialized = true; }
+    if(match.role === 'admin'){ renderUsersTable(users); }
+  }
+
+  function logout(){
+    currentUser = null;
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').textContent = '';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    // reset to overview tab for next login
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.querySelector('.tab[data-view="overview"]').classList.add('active');
+    document.getElementById('overview').classList.add('active');
+  }
+
+  function applyRoleVisibility(role){
+    document.querySelectorAll('.tab').forEach(tab=>{
+      const allowed = tab.dataset.roles.split(',');
+      tab.style.display = allowed.includes(role) ? '' : 'none';
+    });
+    // if current active view isn't allowed for this role, fall back to a tab they can see
+    const activeTab = document.querySelector('.tab.active');
+    if(activeTab && activeTab.style.display === 'none'){
+      const firstVisible = Array.from(document.querySelectorAll('.tab')).find(t => t.style.display !== 'none');
+      if(firstVisible) firstVisible.click();
+    }
+  }
+
+  async function addUser(){
+    const username = document.getElementById('newUser').value.trim();
+    const password = document.getElementById('newPass').value.trim();
+    const role = document.getElementById('newRole').value;
+    if(!username || !password) return;
+    let users = (cachedUsers || defaultUsers).slice();
+    if(users.some(u => u.username.toLowerCase() === username.toLowerCase())){
+      alert('That username already exists.');
+      return;
+    }
+    users.push({ username, password, role });
+    const persisted = await saveUsers(users);
+    document.getElementById('newUser').value = '';
+    document.getElementById('newPass').value = '';
+    renderUsersTable(users);
+    if(!persisted){ alert('User added for this session, but it could not be saved to shared storage — it may not be there next time this loads.'); }
+  }
+
+  async function deleteUser(username){
+    let users = (cachedUsers || defaultUsers).filter(u => u.username !== username);
+    const persisted = await saveUsers(users);
+    renderUsersTable(users);
+    if(!persisted){ alert('Removed for this session, but the change could not be saved to shared storage.'); }
+  }
+
+  function renderUsersTable(users){
+    const table = document.getElementById('usersTable');
+    table.innerHTML = '<tr><th>Username</th><th>Access</th><th>Password</th><th></th></tr>';
+    users.forEach(u=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${u.username}</td><td><span class="pill admin">${roleLabels[u.role] || u.role}</span></td><td style="font-family:'IBM Plex Mono',monospace;color:var(--muted);">${u.password}</td><td><button class="del-btn" onclick="deleteUser('${u.username}')">Remove</button></td>`;
+      table.appendChild(tr);
+    });
+  }
+
+  document.getElementById('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
+  document.getElementById('loginUser').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
+  document.getElementById('togglePass').addEventListener('click', ()=>{
+    const input = document.getElementById('loginPass');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    document.getElementById('togglePass').textContent = isHidden ? 'Hide' : 'Show';
+  });
+
+  /* ---------------- Tabs ---------------- */
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.view).classList.add('active');
+    });
+  });
+
+  /* ---------------- Charts (created once, after first login) ---------------- */
+  function initCharts(){
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
+    const muted = '#8b93a6';
+    const grid = '#2a3140';
+    Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+    Chart.defaults.color = muted;
+
+    function baseLine(ctx, data, color){
+      return new Chart(ctx, {
+        type:'line',
+        data:{ labels:months, datasets:[{ data, borderColor:color, backgroundColor:color+'22', tension:.35, fill:true, pointRadius:3, pointBackgroundColor:color, borderWidth:2 }]},
+        options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}}, y:{grid:{color:grid}, beginAtZero:true} } }
+      });
+    }
+
+    new Chart(document.getElementById('chartOverviewBar'), {
+      type:'bar',
+      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[4.20,1.60,1.10,0.85], backgroundColor:['#c9a227','#5468e0','#2fa0a0','#9c3347'], borderRadius:6 }]},
+      options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}, title:{display:true,text:'₱ millions'}}, y:{grid:{display:false}} } }
+    });
+
+    new Chart(document.getElementById('chartOverviewDonut'), {
+      type:'doughnut',
+      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[4.20,1.60,1.95], backgroundColor:['#c9a227','#5468e0','#2fa0a0'], borderWidth:0 }]},
+      options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:10,padding:14,font:{size:11.5}}}} }
+    });
+
+    baseLine(document.getElementById('chartMBTrend'), [0.42,0.46,0.51,0.49,0.55,0.58,0.6,0.59], '#c9a227');
+    baseLine(document.getElementById('chartBWTrend'), [28,32,35,38,40,44,48,55], '#9c3347');
+    baseLine(document.getElementById('chartNSTrend'), [16,20,22,24,26,30,34,38], '#2fa0a0');
+  }
+
+  ensureUsersSeeded();
+</script>
+</body>
+</html>
