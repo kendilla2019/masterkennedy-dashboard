@@ -73,7 +73,7 @@
   .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;transition:border-color .2s ease;}
   .kpi .label{color:var(--muted);font-size:12.5px;margin-bottom:8px;}
-  .kpi .value{font-family:'Fraunces',serif;font-size:26px;font-weight:600;transition:opacity .2s ease;}
+  .kpi .value{font-family:'IBM Plex Mono',monospace;font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;transition:opacity .2s ease;}
   .kpi .delta{font-size:12.5px;margin-top:6px;color:#5fbf7a;}
 
   .tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line);overflow-x:auto;}
@@ -101,12 +101,13 @@
 
   .stat{background:var(--panel-2);border-radius:10px;padding:14px 16px;}
   .stat .label{color:var(--muted);font-size:12px;}
-  .stat .value{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin-top:5px;}
+  .stat .value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:5px;}
   .stat .foot{font-size:11.5px;color:var(--muted);margin-top:4px;}
 
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);}
   td{padding:10px 10px;border-bottom:1px solid var(--line);}
+  td.num-cell{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--ink);}
   tr:last-child td{border-bottom:none;}
   .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:500;}
   .pill.live{background:var(--teal-soft);color:var(--teal);}
@@ -685,7 +686,7 @@
     const pkTable = document.getElementById('pkTable');
     pkTable.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>' +
       (pk.projects.length
-        ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td>${fmtK(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
+        ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td class="num-cell">${fmtK(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
 
     // Period label
