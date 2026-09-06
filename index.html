@@ -25,12 +25,16 @@
   .main-content{flex:1;max-width:1240px;margin:0 auto;padding:28px 24px 64px;min-width:0;}
 
   /* ---------- Sidebar ---------- */
-  .sidebar{width:220px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width .2s ease;}
+  .sidebar{width:220px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width .2s ease;display:flex;flex-direction:column;}
   .sidebar.collapsed{width:68px;}
   .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 18px 20px;margin-bottom:10px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
-  .sidebar-brand-text{font-family:'Fraunces',serif;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;transition:opacity .15s ease;}
+  .sidebar-brand-text{white-space:nowrap;overflow:hidden;transition:opacity .15s ease;}
+  .sidebar-brand-text .name{font-family:'Fraunces',serif;font-weight:600;font-size:17px;display:block;}
+  .sidebar-brand-text .subtitle{font-size:11px;color:var(--muted);display:block;margin-top:1px;}
   .sidebar.collapsed .sidebar-brand-text{opacity:0;width:0;}
-  .sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;}
+  .sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:0 10px;flex:1;}
+  .sidebar-tagline{margin:16px 12px 4px;padding:16px 14px;border-radius:12px;background:linear-gradient(155deg,var(--gold),#16306b);color:#f4f7ff;font-size:12.5px;line-height:1.5;font-weight:600;transition:opacity .15s ease;}
+  .sidebar.collapsed .sidebar-tagline{opacity:0;pointer-events:none;height:0;margin:0;padding:0;overflow:hidden;}
   .sidebar-nav .tab{
     display:flex;align-items:center;gap:12px;width:100%;text-align:left;
     padding:10px 10px;border-radius:8px;font-size:13.5px;font-weight:500;
@@ -38,7 +42,8 @@
     transition:background .15s ease, color .15s ease;
   }
   .sidebar-nav .tab:hover{background:var(--panel-2);color:var(--ink);}
-  .sidebar-nav .tab.active{background:var(--gold-soft);color:var(--ink);}
+  .sidebar-nav .tab.active{background:var(--gold);color:#f4f7ff;font-weight:600;}
+  .sidebar-nav .tab.active .nav-icon{color:#f4f7ff;}
   .sidebar-nav .tab.active::after{display:none;} /* no underline in sidebar mode */
   .sidebar-nav .nav-icon{flex-shrink:0;width:16px;text-align:center;color:var(--accent,var(--gold));font-size:13px;}
   .sidebar-nav .nav-label{transition:opacity .15s ease;}
@@ -240,7 +245,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand" onclick="toggleSidebar()" title="Click to collapse/expand">
       <div class="brand-mark">MK</div>
-      <span class="sidebar-brand-text">MasterKennedy</span>
+      <span class="sidebar-brand-text"><span class="name">MasterKennedy</span><span class="subtitle">Business Dashboard</span></span>
     </div>
     <nav class="sidebar-nav" id="tabBar">
       <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Overview</span></button>
@@ -258,6 +263,7 @@
       <button class="tab" data-view="editdata" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Edit Data</span></button>
       <button class="tab" data-view="users" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">⚇</span><span class="nav-label">Users</span></button>
     </nav>
+    <div class="sidebar-tagline">"One dashboard.<br>Every business.<br>Total control."</div>
   </aside>
 
   <div class="main-content">
