@@ -115,6 +115,7 @@
   .note b{color:var(--ink);}
 
   .user-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:18px;}
+  .edit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:4px;}
   .user-form .field{margin-bottom:0;}
   .field select{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-size:13.5px;font-family:inherit;}
   .del-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
@@ -181,10 +182,10 @@
   </div>
 
   <div class="kpi-row">
-    <div class="kpi"><div class="label">Combined revenue</div><div class="value">₱7.75M</div><div class="delta">↑ 18.4% vs prior period</div></div>
-    <div class="kpi"><div class="label">Active students (BW + NS)</div><div class="value">530</div><div class="delta">↑ 62 this quarter</div></div>
+    <div class="kpi"><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
+    <div class="kpi"><div class="label">Active students (BW + NS)</div><div class="value" id="kpiStudents">530</div><div class="delta">Baccarat Win + Nexstack combined</div></div>
     <div class="kpi"><div class="label">Gaming platforms live</div><div class="value">5</div><div class="delta">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
-    <div class="kpi"><div class="label">Prokora projects delivered</div><div class="value">14</div><div class="delta">3 currently in build</div></div>
+    <div class="kpi"><div class="label">Prokora projects delivered</div><div class="value" id="kpiProjects">14</div><div class="delta" id="kpiProjectsFoot">3 currently in build</div></div>
   </div>
 
   <div class="tabs" id="tabBar">
@@ -193,6 +194,7 @@
     <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a">Baccarat Win</button>
     <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0">Nexstack</button>
     <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4">Prokora</button>
+    <button class="tab" data-view="editdata" data-roles="admin" style="--accent:#2f6fed">Edit Data</button>
     <button class="tab" data-view="users" data-roles="admin" style="--accent:#2f6fed">Users</button>
   </div>
 
@@ -201,7 +203,7 @@
     <div class="grid-2" style="margin-bottom:16px;">
       <div class="card" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Revenue by business unit</h3>
-        <div class="sub">Share of ₱7.75M combined YTD revenue</div>
+        <div class="sub" id="ovBarSub">Share of ₱7.75M combined YTD revenue</div>
         <canvas id="chartOverviewBar"></canvas>
       </div>
       <div class="card" style="--accent:#2f6fed">
@@ -211,19 +213,19 @@
       </div>
     </div>
     <div class="grid-4">
-      <div class="stat"><div class="label">Master Baccarat</div><div class="value">₱4.20M</div><div class="foot">5 platforms · gaming revenue</div></div>
-      <div class="stat"><div class="label">Baccarat Win</div><div class="value">₱0.85M</div><div class="foot">320 students enrolled</div></div>
-      <div class="stat"><div class="label">Nexstack</div><div class="value">₱1.10M</div><div class="foot">210 students enrolled</div></div>
-      <div class="stat"><div class="label">Prokora</div><div class="value">₱1.60M</div><div class="foot">14 projects delivered</div></div>
+      <div class="stat"><div class="label">Master Baccarat</div><div class="value" id="ovMbRevenue">₱4.20M</div><div class="foot">5 platforms · gaming revenue</div></div>
+      <div class="stat"><div class="label">Baccarat Win</div><div class="value" id="ovBwRevenue">₱0.85M</div><div class="foot" id="ovBwFoot">320 students enrolled</div></div>
+      <div class="stat"><div class="label">Nexstack</div><div class="value" id="ovNsRevenue">₱1.10M</div><div class="foot" id="ovNsFoot">210 students enrolled</div></div>
+      <div class="stat"><div class="label">Prokora</div><div class="value" id="ovPkRevenue">₱1.60M</div><div class="foot" id="ovPkFoot">14 projects delivered</div></div>
     </div>
   </div>
 
   <!-- MASTER BACCARAT -->
   <div class="view" id="mb">
     <div class="grid-3">
-      <div class="stat"><div class="label">Total gaming revenue</div><div class="value">₱4.20M</div><div class="foot">↑ 14.2% vs prior period</div></div>
-      <div class="stat"><div class="label">Top platform</div><div class="value">22Win</div><div class="foot">₱1.35M · 32% of revenue</div></div>
-      <div class="stat"><div class="label">Active platforms</div><div class="value">5</div><div class="foot">22Win, Jolibet, 1xBet, Tab66, 747</div></div>
+      <div class="stat"><div class="label">Total gaming revenue</div><div class="value" id="mbRevenueStat">₱4.20M</div><div class="foot">Sum across all platforms</div></div>
+      <div class="stat"><div class="label">Top platform</div><div class="value" id="mbTopPlatform">22Win</div><div class="foot" id="mbTopPlatformFoot">₱1.35M · 32% of revenue</div></div>
+      <div class="stat"><div class="label">Active platforms</div><div class="value" id="mbPlatformCount">5</div><div class="foot" id="mbPlatformList">22Win, Jolibet, 1xBet, Tab66, 747</div></div>
     </div>
     <div class="grid-2">
       <div class="card" style="--accent:#e0453f">
@@ -233,14 +235,8 @@
       </div>
       <div class="card" style="--accent:#e0453f">
         <h3><span class="dot"></span>Revenue by platform</h3>
-        <div class="sub">YTD, ₱4.20M total</div>
-        <div class="barlist" style="--accent:#e0453f">
-          <div class="row"><div class="name">22Win</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">₱1.35M · 32%</div></div>
-          <div class="row"><div class="name">Jolibet</div><div class="track"><div class="fill" style="width:78%"></div></div><div class="num">₱1.05M · 25%</div></div>
-          <div class="row"><div class="name">1xBet</div><div class="track"><div class="fill" style="width:66%"></div></div><div class="num">₱0.89M · 21%</div></div>
-          <div class="row"><div class="name">Tab66</div><div class="track"><div class="fill" style="width:41%"></div></div><div class="num">₱0.56M · 13%</div></div>
-          <div class="row"><div class="name">747</div><div class="track"><div class="fill" style="width:28%"></div></div><div class="num">₱0.38M · 9%</div></div>
-        </div>
+        <div class="sub" id="mbBarlistSub">YTD, ₱4.20M total</div>
+        <div class="barlist" style="--accent:#e0453f" id="mbBarlist"></div>
       </div>
     </div>
   </div>
@@ -248,9 +244,9 @@
   <!-- BACCARAT WIN -->
   <div class="view" id="bw">
     <div class="grid-3">
-      <div class="stat"><div class="label">Students enrolled YTD</div><div class="value">320</div><div class="foot">↑ 28 this quarter</div></div>
-      <div class="stat"><div class="label">Course completion rate</div><div class="value">82%</div><div class="foot">262 of 320 finished</div></div>
-      <div class="stat"><div class="label">Tuition revenue</div><div class="value">₱0.85M</div><div class="foot">Avg ₱2,656 per student</div></div>
+      <div class="stat"><div class="label">Students enrolled YTD</div><div class="value" id="bwStudentsStat">320</div><div class="foot">Baccarat Win enrollment</div></div>
+      <div class="stat"><div class="label">Course completion rate</div><div class="value" id="bwCompletionStat">82%</div><div class="foot" id="bwCompletionFoot">262 of 320 finished</div></div>
+      <div class="stat"><div class="label">Tuition revenue</div><div class="value" id="bwRevenueStat">₱0.85M</div><div class="foot" id="bwAvgFoot">Avg ₱2,656 per student</div></div>
     </div>
     <div class="grid-2">
       <div class="card" style="--accent:#b8323a">
@@ -275,9 +271,9 @@
   <!-- NEXSTACK -->
   <div class="view" id="ns">
     <div class="grid-3">
-      <div class="stat"><div class="label">Students enrolled YTD</div><div class="value">210</div><div class="foot">↑ 34 this quarter</div></div>
-      <div class="stat"><div class="label">Completion rate</div><div class="value">76%</div><div class="foot">160 of 210 finished</div></div>
-      <div class="stat"><div class="label">Job placement rate</div><div class="value">68%</div><div class="foot">Within 3 months of completion</div></div>
+      <div class="stat"><div class="label">Students enrolled YTD</div><div class="value" id="nsStudentsStat">210</div><div class="foot">Nexstack enrollment</div></div>
+      <div class="stat"><div class="label">Completion rate</div><div class="value" id="nsCompletionStat">76%</div><div class="foot" id="nsCompletionFoot">160 of 210 finished</div></div>
+      <div class="stat"><div class="label">Job placement rate</div><div class="value" id="nsPlacementStat">68%</div><div class="foot">Within 3 months of completion</div></div>
     </div>
     <div class="grid-2">
       <div class="card" style="--accent:#1c9fe0">
@@ -301,22 +297,58 @@
   <!-- PROKORA -->
   <div class="view" id="pk">
     <div class="grid-3">
-      <div class="stat"><div class="label">Revenue YTD</div><div class="value">₱1.60M</div><div class="foot">↑ 22% vs prior period</div></div>
-      <div class="stat"><div class="label">Projects delivered</div><div class="value">14</div><div class="foot">3 currently in build</div></div>
-      <div class="stat"><div class="label">Avg project value</div><div class="value">₱94K</div><div class="foot">Across delivered + active work</div></div>
+      <div class="stat"><div class="label">Revenue YTD</div><div class="value" id="pkRevenueStat">₱1.60M</div><div class="foot">Across all projects</div></div>
+      <div class="stat"><div class="label">Projects delivered</div><div class="value" id="pkDeliveredStat">14</div><div class="foot" id="pkDeliveredFoot">3 currently in build</div></div>
+      <div class="stat"><div class="label">Avg project value</div><div class="value" id="pkAvgStat">₱94K</div><div class="foot">Across delivered + active work</div></div>
     </div>
     <div class="card" style="--accent:#1a4fc4">
       <h3><span class="dot"></span>Project pipeline</h3>
       <div class="sub">Active and recently delivered engagements</div>
-      <table>
+      <table id="pkTable">
         <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
-        <tr><td>Meridian Retail</td><td>Inventory system</td><td>₱180K</td><td><span class="pill dev">In development</span></td></tr>
-        <tr><td>Coastal Clinic Group</td><td>Patient portal</td><td>₱210K</td><td><span class="pill dev">In development</span></td></tr>
-        <tr><td>Harborline Logistics</td><td>Fleet tracking dashboard</td><td>₱150K</td><td><span class="pill dev">In development</span></td></tr>
-        <tr><td>Del Rio Realty</td><td>Listings platform</td><td>₱120K</td><td><span class="pill done">Delivered</span></td></tr>
-        <tr><td>Fresco Foods</td><td>POS integration</td><td>₱95K</td><td><span class="pill done">Delivered</span></td></tr>
-        <tr><td>Northgate School</td><td>Enrollment system</td><td>₱88K</td><td><span class="pill done">Delivered</span></td></tr>
       </table>
+    </div>
+  </div>
+
+  <!-- EDIT DATA (admin only) -->
+  <div class="view" id="editdata">
+    <div class="card" style="--accent:#2f6fed">
+      <h3><span class="dot"></span>Edit dashboard data</h3>
+      <div class="sub">Type real numbers below and click Save — every KPI, chart, and stat updates immediately. Saved in this browser only: re-save here after re-uploading the file elsewhere, and have each admin who uses a different browser save their own copy too.</div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱ millions)</h4>
+      <div class="edit-grid">
+        <div class="field"><label>22Win</label><input type="number" step="0.01" id="edit_mb_22Win"></div>
+        <div class="field"><label>Jolibet</label><input type="number" step="0.01" id="edit_mb_Jolibet"></div>
+        <div class="field"><label>1xBet</label><input type="number" step="0.01" id="edit_mb_1xBet"></div>
+        <div class="field"><label>Tab66</label><input type="number" step="0.01" id="edit_mb_Tab66"></div>
+        <div class="field"><label>747</label><input type="number" step="0.01" id="edit_mb_747"></div>
+      </div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Baccarat Win</h4>
+      <div class="edit-grid">
+        <div class="field"><label>Students enrolled</label><input type="number" id="edit_bw_students"></div>
+        <div class="field"><label>Completion rate (%)</label><input type="number" id="edit_bw_completion"></div>
+        <div class="field"><label>Tuition revenue (₱ millions)</label><input type="number" step="0.01" id="edit_bw_revenue"></div>
+      </div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Nexstack</h4>
+      <div class="edit-grid">
+        <div class="field"><label>Students enrolled</label><input type="number" id="edit_ns_students"></div>
+        <div class="field"><label>Completion rate (%)</label><input type="number" id="edit_ns_completion"></div>
+        <div class="field"><label>Job placement rate (%)</label><input type="number" id="edit_ns_placement"></div>
+      </div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Prokora — projects</h4>
+      <table id="pkEditTable">
+        <tr><th>Client</th><th>Scope</th><th>Value (₱ thousands)</th><th>Status</th><th></th></tr>
+      </table>
+      <button class="btn small" style="margin-top:10px;" onclick="addProjectRow()">+ Add project</button>
+
+      <div style="margin-top:26px;border-top:1px solid var(--line);padding-top:20px;">
+        <button class="btn" style="width:auto;padding:11px 26px;" onclick="saveEditedData()">Save changes</button>
+        <span id="saveConfirm" style="margin-left:12px;color:#5fbf7a;font-size:12.5px;"></span>
+      </div>
     </div>
   </div>
 
@@ -346,7 +378,7 @@
   </div>
 
   <div class="note">
-    <b>Note:</b> figures shown are sample placeholders so you can see the layout in action. Send me your actual revenue, enrollment, and project numbers and I'll drop them in.
+    <b>Note:</b> use the Edit Data tab to enter your real numbers — everything below updates instantly once you save.
   </div>
 
 </div>
@@ -364,7 +396,6 @@
   ];
   const roleLabels = { admin:'Admin · full access', mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
   let currentUser = null;
-  let chartsInitialized = false;
   // Portable build: no backend/storage available on static hosting (Netlify/Vercel/GitHub Pages),
   // so the account list lives here in the code and resets to this list on every page load.
   // To change accounts, edit the defaultUsers array above and re-upload this file.
@@ -400,7 +431,7 @@
     document.getElementById('whoName').textContent = match.username;
     document.getElementById('whoRole').textContent = roleLabels[match.role] || match.role;
     applyRoleVisibility(match.role);
-    if(!chartsInitialized){ initCharts(); chartsInitialized = true; }
+    renderAll();
     if(match.role === 'admin'){ renderUsersTable(cachedUsers); }
   }
 
@@ -497,40 +528,231 @@
     });
   });
 
-  /* ---------------- Charts (created once, after first login) ---------------- */
-  function initCharts(){
+  /* ---------------- Dashboard data (editable, saved per-browser) ---------------- */
+  const DATA_KEY = 'mk_dashboard_data';
+  const defaultData = {
+    mb: { '22Win':1.35, 'Jolibet':1.05, '1xBet':0.89, 'Tab66':0.56, '747':0.38 },
+    bw: { students:320, completion:82, revenue:0.85 },
+    ns: { students:210, completion:76, placement:68 },
+    pk: {
+      projects: [
+        { client:'Meridian Retail', scope:'Inventory system', value:180, status:'dev' },
+        { client:'Coastal Clinic Group', scope:'Patient portal', value:210, status:'dev' },
+        { client:'Harborline Logistics', scope:'Fleet tracking dashboard', value:150, status:'dev' },
+        { client:'Del Rio Realty', scope:'Listings platform', value:120, status:'done' },
+        { client:'Fresco Foods', scope:'POS integration', value:95, status:'done' },
+        { client:'Northgate School', scope:'Enrollment system', value:88, status:'done' },
+      ]
+    }
+  };
+  let dashboardData = null;
+  let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
+
+  function loadDashboardData(){
+    try{
+      const saved = localStorage.getItem(DATA_KEY);
+      return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+    }catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
+  }
+  function saveDashboardData(){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); return true; }
+    catch(e){ console.error('Could not save dashboard data', e); return false; }
+  }
+
+  const statusLabel = { dev:'In development', done:'Delivered', live:'In progress', pause:'On hold' };
+  const fmtM = n => `₱${n.toFixed(2)}M`;
+  const fmtK = n => `₱${Math.round(n)}K`;
+
+  function mbTotal(){ return Object.values(dashboardData.mb).reduce((a,b)=>a+b,0); }
+  function pkRevenueM(){ return dashboardData.pk.projects.reduce((a,p)=>a+p.value,0) / 1000; }
+
+  /* ---------------- Render everything from dashboardData ---------------- */
+  function renderAll(){
+    const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns, pk = dashboardData.pk;
+    const mbTot = mbTotal();
+    const pkRev = pkRevenueM();
+    const combined = mbTot + bw.revenue + ns.revenue + pkRev;
+    const activeStudents = bw.students + ns.students;
+    const pkDelivered = pk.projects.filter(p=>p.status==='done').length;
+    const pkInProgress = pk.projects.filter(p=>p.status!=='done').length;
+    const pkAvg = pk.projects.length ? pk.projects.reduce((a,p)=>a+p.value,0)/pk.projects.length : 0;
+
+    // KPI row
+    document.getElementById('kpiRevenue').textContent = fmtM(combined);
+    document.getElementById('kpiStudents').textContent = activeStudents;
+    document.getElementById('kpiProjects').textContent = pkDelivered;
+    document.getElementById('kpiProjectsFoot').textContent = `${pkInProgress} currently in build`;
+
+    // Overview
+    document.getElementById('ovBarSub').textContent = `Share of ${fmtM(combined)} combined YTD revenue`;
+    document.getElementById('ovMbRevenue').textContent = fmtM(mbTot);
+    document.getElementById('ovBwRevenue').textContent = fmtM(bw.revenue);
+    document.getElementById('ovBwFoot').textContent = `${bw.students} students enrolled`;
+    document.getElementById('ovNsRevenue').textContent = fmtM(ns.revenue);
+    document.getElementById('ovNsFoot').textContent = `${ns.students} students enrolled`;
+    document.getElementById('ovPkRevenue').textContent = fmtM(pkRev);
+    document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
+
+    // Master Baccarat
+    const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
+    const [topName, topVal] = mbEntries[0] || ['—',0];
+    document.getElementById('mbRevenueStat').textContent = fmtM(mbTot);
+    document.getElementById('mbTopPlatform').textContent = topName;
+    document.getElementById('mbTopPlatformFoot').textContent = `${fmtM(topVal)} · ${mbTot? Math.round(topVal/mbTot*100):0}% of revenue`;
+    document.getElementById('mbPlatformCount').textContent = mbEntries.length;
+    document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
+    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtM(mbTot)} total`;
+    const mbMax = mbEntries.length ? mbEntries[0][1] : 1;
+    document.getElementById('mbBarlist').innerHTML = mbEntries.map(([name,val])=>`
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtM(val)} · ${mbTot? Math.round(val/mbTot*100):0}%</div></div>
+    `).join('');
+
+    // Baccarat Win
+    document.getElementById('bwStudentsStat').textContent = bw.students;
+    document.getElementById('bwCompletionStat').textContent = `${bw.completion}%`;
+    document.getElementById('bwCompletionFoot').textContent = `${Math.round(bw.students*bw.completion/100)} of ${bw.students} finished`;
+    document.getElementById('bwRevenueStat').textContent = fmtM(bw.revenue);
+    document.getElementById('bwAvgFoot').textContent = bw.students ? `Avg ₱${Math.round(bw.revenue*1000000/bw.students).toLocaleString()} per student` : 'No students yet';
+
+    // Nexstack
+    document.getElementById('nsStudentsStat').textContent = ns.students;
+    document.getElementById('nsCompletionStat').textContent = `${ns.completion}%`;
+    document.getElementById('nsCompletionFoot').textContent = `${Math.round(ns.students*ns.completion/100)} of ${ns.students} finished`;
+    document.getElementById('nsPlacementStat').textContent = `${ns.placement}%`;
+
+    // Prokora
+    document.getElementById('pkRevenueStat').textContent = fmtM(pkRev);
+    document.getElementById('pkDeliveredStat').textContent = pkDelivered;
+    document.getElementById('pkDeliveredFoot').textContent = `${pkInProgress} currently in build`;
+    document.getElementById('pkAvgStat').textContent = fmtK(pkAvg);
+    const pkTable = document.getElementById('pkTable');
+    pkTable.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>' +
+      pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td>${fmtK(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('');
+
+    renderCharts();
+    if(document.getElementById('editdata')) populateEditForm();
+  }
+
+  /* ---------------- Charts (destroyed + recreated whenever data changes) ---------------- */
+  function renderCharts(){
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
-    const muted = '#8b93a6';
     const grid = '#2a3140';
     Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
-    Chart.defaults.color = muted;
+    Chart.defaults.color = '#8b93a6';
 
-    function baseLine(ctx, data, color){
-      return new Chart(ctx, {
+    Object.values(charts).forEach(c => c && c.destroy());
+    charts = {};
+
+    const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
+    const mbTot = mbTotal(), pkRev = pkRevenueM();
+
+    function scaledLine(canvasId, shape, newTotal, color){
+      const oldSum = shape.reduce((a,b)=>a+b,0) || 1;
+      const scaled = shape.map(v => newTotal * (v/oldSum));
+      charts[canvasId] = new Chart(document.getElementById(canvasId), {
         type:'line',
-        data:{ labels:months, datasets:[{ data, borderColor:color, backgroundColor:color+'22', tension:.35, fill:true, pointRadius:3, pointBackgroundColor:color, borderWidth:2 }]},
+        data:{ labels:months, datasets:[{ data:scaled, borderColor:color, backgroundColor:color+'22', tension:.35, fill:true, pointRadius:3, pointBackgroundColor:color, borderWidth:2 }]},
         options:{ plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}}, y:{grid:{color:grid}, beginAtZero:true} } }
       });
     }
 
-    new Chart(document.getElementById('chartOverviewBar'), {
+    charts.chartOverviewBar = new Chart(document.getElementById('chartOverviewBar'), {
       type:'bar',
-      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[4.20,1.60,1.10,0.85], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0','#b8323a'], borderRadius:6 }]},
+      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[mbTot,pkRev,ns.revenue,bw.revenue], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0','#b8323a'], borderRadius:6 }]},
       options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}, title:{display:true,text:'₱ millions'}}, y:{grid:{display:false}} } }
     });
 
-    new Chart(document.getElementById('chartOverviewDonut'), {
+    charts.chartOverviewDonut = new Chart(document.getElementById('chartOverviewDonut'), {
       type:'doughnut',
-      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[4.20,1.60,1.95], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0'], borderWidth:0 }]},
+      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[mbTot,pkRev,ns.revenue+bw.revenue], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0'], borderWidth:0 }]},
       options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:10,padding:14,font:{size:11.5}}}} }
     });
 
-    baseLine(document.getElementById('chartMBTrend'), [0.42,0.46,0.51,0.49,0.55,0.58,0.6,0.59], '#e0453f');
-    baseLine(document.getElementById('chartBWTrend'), [28,32,35,38,40,44,48,55], '#b8323a');
-    baseLine(document.getElementById('chartNSTrend'), [16,20,22,24,26,30,34,38], '#1c9fe0');
+    scaledLine('chartMBTrend', [0.42,0.46,0.51,0.49,0.55,0.58,0.6,0.59], mbTot, '#e0453f');
+    scaledLine('chartBWTrend', [28,32,35,38,40,44,48,55], bw.students, '#b8323a');
+    scaledLine('chartNSTrend', [16,20,22,24,26,30,34,38], ns.students, '#1c9fe0');
+  }
+
+  /* ---------------- Edit Data form ---------------- */
+  function populateEditForm(){
+    const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
+    document.getElementById('edit_mb_22Win').value = mb['22Win'];
+    document.getElementById('edit_mb_Jolibet').value = mb['Jolibet'];
+    document.getElementById('edit_mb_1xBet').value = mb['1xBet'];
+    document.getElementById('edit_mb_Tab66').value = mb['Tab66'];
+    document.getElementById('edit_mb_747').value = mb['747'];
+    document.getElementById('edit_bw_students').value = bw.students;
+    document.getElementById('edit_bw_completion').value = bw.completion;
+    document.getElementById('edit_bw_revenue').value = bw.revenue;
+    document.getElementById('edit_ns_students').value = ns.students;
+    document.getElementById('edit_ns_completion').value = ns.completion;
+    document.getElementById('edit_ns_placement').value = ns.placement;
+    renderProjectEditRows();
+  }
+
+  function renderProjectEditRows(){
+    const table = document.getElementById('pkEditTable');
+    table.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value (₱K)</th><th>Status</th><th></th></tr>';
+    dashboardData.pk.projects.forEach((p, i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" value="${p.client}" data-idx="${i}" data-field="client" style="width:100%;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
+        <td><input type="text" value="${p.scope}" data-idx="${i}" data-field="scope" style="width:100%;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
+        <td><input type="number" value="${p.value}" data-idx="${i}" data-field="value" style="width:90px;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
+        <td>
+          <select data-idx="${i}" data-field="status" style="padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;">
+            <option value="dev" ${p.status==='dev'?'selected':''}>In development</option>
+            <option value="done" ${p.status==='done'?'selected':''}>Delivered</option>
+            <option value="live" ${p.status==='live'?'selected':''}>In progress</option>
+            <option value="pause" ${p.status==='pause'?'selected':''}>On hold</option>
+          </select>
+        </td>
+        <td><button class="del-btn" onclick="removeProjectRow(${i})">Remove</button></td>
+      `;
+      table.appendChild(tr);
+    });
+  }
+
+  function addProjectRow(){
+    dashboardData.pk.projects.push({ client:'New client', scope:'Project scope', value:0, status:'dev' });
+    renderProjectEditRows();
+  }
+
+  function removeProjectRow(i){
+    dashboardData.pk.projects.splice(i, 1);
+    renderProjectEditRows();
+  }
+
+  function saveEditedData(){
+    dashboardData.mb['22Win'] = parseFloat(document.getElementById('edit_mb_22Win').value) || 0;
+    dashboardData.mb['Jolibet'] = parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0;
+    dashboardData.mb['1xBet'] = parseFloat(document.getElementById('edit_mb_1xBet').value) || 0;
+    dashboardData.mb['Tab66'] = parseFloat(document.getElementById('edit_mb_Tab66').value) || 0;
+    dashboardData.mb['747'] = parseFloat(document.getElementById('edit_mb_747').value) || 0;
+    dashboardData.bw.students = parseInt(document.getElementById('edit_bw_students').value) || 0;
+    dashboardData.bw.completion = parseFloat(document.getElementById('edit_bw_completion').value) || 0;
+    dashboardData.bw.revenue = parseFloat(document.getElementById('edit_bw_revenue').value) || 0;
+    dashboardData.ns.students = parseInt(document.getElementById('edit_ns_students').value) || 0;
+    dashboardData.ns.completion = parseFloat(document.getElementById('edit_ns_completion').value) || 0;
+    dashboardData.ns.placement = parseFloat(document.getElementById('edit_ns_placement').value) || 0;
+
+    // pull edited project fields straight from the table's inputs/selects
+    document.querySelectorAll('#pkEditTable [data-idx]').forEach(el=>{
+      const idx = parseInt(el.dataset.idx);
+      const field = el.dataset.field;
+      if(!dashboardData.pk.projects[idx]) return;
+      dashboardData.pk.projects[idx][field] = field === 'value' ? (parseFloat(el.value)||0) : el.value;
+    });
+
+    const persisted = saveDashboardData();
+    renderAll();
+    const confirmEl = document.getElementById('saveConfirm');
+    confirmEl.textContent = persisted ? 'Saved ✓' : 'Saved for this session (browser storage unavailable)';
+    setTimeout(()=>{ confirmEl.textContent = ''; }, 3000);
   }
 
   ensureUsersSeeded();
+  dashboardData = loadDashboardData();
   tryAutoLogin();
 </script>
 </body>
