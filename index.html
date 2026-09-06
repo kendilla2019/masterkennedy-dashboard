@@ -185,6 +185,21 @@
   /* ---------- Exec summary strip ---------- */
   .exec-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
 
+  /* ---------- Calendar ---------- */
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-daylabel{text-align:center;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;padding-bottom:4px;}
+  .cal-cell{min-height:78px;background:var(--panel-2);border-radius:8px;padding:6px;border:1px solid transparent;display:flex;flex-direction:column;gap:3px;}
+  .cal-cell.empty{background:transparent;}
+  .cal-cell.today{border-color:var(--gold);}
+  .cal-cell .cal-daynum{font-size:11.5px;color:var(--muted);font-weight:600;}
+  .cal-cell.today .cal-daynum{color:var(--gold);}
+  .cal-event-pill{font-size:10px;padding:2px 5px;border-radius:4px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+  .cal-more{font-size:10px;color:var(--muted);padding-left:5px;}
+  @media (max-width:900px){
+    .cal-cell{min-height:52px;}
+    .cal-event-pill{font-size:9px;}
+  }
+
   /* ---------- Ledger tables (expenses/assets) ---------- */
   .ledger-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px;}
   .ledger-form .field{margin-bottom:0;}
@@ -560,15 +575,44 @@
     </div>
   </div>
 
-  <!-- CALENDAR (placeholder — coming soon) -->
+  <!-- CALENDAR -->
   <div class="view" id="calendar">
-    <div class="card" style="--accent:#2f6fed">
-      <h3><span class="dot"></span>Calendar</h3>
-      <div class="sub">Coming soon</div>
-      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;">
-        A shared month/week view for livestream schedules, client meetings, and PCEC commitments, taggable by business.
-        Admin will see everything; other accounts will see only events tagged to their business.
-      </p>
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;" id="calAddEventCard">
+      <h3><span class="dot"></span>Add event</h3>
+      <div class="sub">Livestream schedule, client meetings, PCEC commitments — tag it by business so the right accounts see it</div>
+      <div class="edit-grid" style="grid-template-columns:1.2fr 1fr 1fr 1fr auto;align-items:end;">
+        <div class="field"><label>Title</label><input type="text" id="calTitle" placeholder="e.g. Livestream, Client call"></div>
+        <div class="field"><label>Date</label><input type="date" id="calDate"></div>
+        <div class="field"><label>Time (optional)</label><input type="time" id="calTime"></div>
+        <div class="field"><label>Business</label>
+          <select id="calBusiness">
+            <option value="general">General / PCEC</option>
+            <option value="mb">Master Baccarat</option>
+            <option value="bw">Baccarat Win</option>
+            <option value="ns">Nexstack</option>
+            <option value="pk">Prokora</option>
+          </select>
+        </div>
+        <button class="btn small" onclick="addCalendarEvent()">+ Add</button>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <h3 style="margin:0;"><span class="dot"></span><span id="calMonthLabel">Month Year</span></h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn secondary small" onclick="calPrevMonth()">‹ Prev</button>
+          <button class="btn secondary small" onclick="calGoToday()">Today</button>
+          <button class="btn secondary small" onclick="calNextMonth()">Next ›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;">
+      <h3><span class="dot"></span>Upcoming events</h3>
+      <div class="sub">Next events from today onward</div>
+      <div id="calUpcomingList"></div>
     </div>
   </div>
 
@@ -809,18 +853,20 @@
   };
 
   const defaultData = {
-    dataVersion: 3,
+    dataVersion: 4,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
       '2026-01-01_2026-08-31': Object.assign(JSON.parse(JSON.stringify(sampleSnapshot)), { savedAt:null })
     },
-    exec: JSON.parse(JSON.stringify(defaultExec))
+    exec: JSON.parse(JSON.stringify(defaultExec)),
+    calendar: { events: [] }
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
-  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
-  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4' };
+  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora', general:'General / PCEC' };
+  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4', general:'#2f6fed' };
+  let calViewDate = new Date(); // which month the calendar is currently showing
 
   // Shared database: every account (admin, masterbaccarat, baccaratwin, nexstack, prokora)
   // reads and writes this same Supabase table, so data stays in sync across devices.
@@ -867,7 +913,11 @@
     if(!parsed.exec){
       parsed.exec = JSON.parse(JSON.stringify(defaultExec));
     }
-    parsed.dataVersion = 3;
+    // Add the calendar for anyone who saved before it existed
+    if(!parsed.calendar){
+      parsed.calendar = { events: [] };
+    }
+    parsed.dataVersion = 4;
     return parsed;
   }
 
@@ -895,7 +945,7 @@
   }
 
   async function saveDashboardData(){
-    dashboardData.dataVersion = 3;
+    dashboardData.dataVersion = 4;
     let sharedSaveOk = false;
     if(sb){
       try{
@@ -1030,6 +1080,7 @@
 
     renderCharts();
     if(document.getElementById('editdata')) populateEditForm();
+    renderCalendar();
     if(currentUser && currentUser.role === 'admin'){
       renderExecutive(snap);
       renderAlerts(snap);
@@ -1266,6 +1317,102 @@
       return;
     }
     banner.innerHTML = alerts.map(a=>`<div class="alert-item ${a.level}"><span class="dot-icon">${a.level==='red'?'⚠':'●'}</span><span>${a.text}</span></div>`).join('');
+  }
+
+  /* ---------------- Calendar ---------------- */
+  function isoDate(y, m, d){
+    return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+
+  function visibleCalendarEvents(){
+    const events = dashboardData.calendar.events;
+    if(!currentUser) return [];
+    if(currentUser.role === 'admin') return events;
+    // Non-admin accounts see their own business's events plus company-wide "general" ones.
+    return events.filter(e => e.business === currentUser.role || e.business === 'general');
+  }
+
+  function renderCalendar(){
+    if(!document.getElementById('calGrid')) return; // view not in DOM yet on some role combos — safe no-op
+    const year = calViewDate.getFullYear();
+    const month = calViewDate.getMonth();
+    document.getElementById('calMonthLabel').textContent = calViewDate.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+
+    // Only admin can add/remove events — other accounts get a read-only calendar.
+    const addCard = document.getElementById('calAddEventCard');
+    if(addCard) addCard.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
+
+    const events = visibleCalendarEvents();
+    const eventsByDate = {};
+    events.forEach(e => { (eventsByDate[e.date] = eventsByDate[e.date] || []).push(e); });
+
+    const firstOfMonth = new Date(year, month, 1);
+    const startWeekday = firstOfMonth.getDay(); // 0 = Sunday
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = new Date().toISOString().slice(0,10);
+
+    const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-daylabel">${d}</div>`).join('');
+
+    let cells = '';
+    for(let i=0; i<startWeekday; i++) cells += '<div class="cal-cell empty"></div>';
+    for(let d=1; d<=daysInMonth; d++){
+      const dateStr = isoDate(year, month, d);
+      const dayEvents = (eventsByDate[dateStr] || []).sort((a,b)=> (a.time||'').localeCompare(b.time||''));
+      const isToday = dateStr === todayStr;
+      const maxShown = 3;
+      const shown = dayEvents.slice(0, maxShown).map(e=>
+        `<div class="cal-event-pill" style="background:${bizColors[e.business]||bizColors.general}" title="${e.title}${e.time?' · '+e.time:''}">${e.time?e.time+' ':''}${e.title}</div>`
+      ).join('');
+      const more = dayEvents.length > maxShown ? `<div class="cal-more">+${dayEvents.length - maxShown} more</div>` : '';
+      cells += `<div class="cal-cell${isToday?' today':''}"><div class="cal-daynum">${d}</div>${shown}${more}</div>`;
+    }
+    document.getElementById('calGrid').innerHTML = dayLabels + cells;
+
+    // Upcoming events list (today onward), across all months, easier to scan and delete than hunting through the grid
+    const upcoming = events.filter(e => e.date >= todayStr).sort((a,b)=> a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||'')).slice(0, 15);
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    document.getElementById('calUpcomingList').innerHTML = upcoming.length
+      ? upcoming.map(e=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <span style="width:8px;height:8px;border-radius:50%;background:${bizColors[e.business]||bizColors.general};flex-shrink:0;"></span>
+              <span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.title}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+              <span style="font-size:11.5px;color:var(--muted);">${e.date}${e.time?' · '+e.time:''} · ${bizNames[e.business]||e.business}</span>
+              ${isAdmin ? `<button class="del-btn" onclick="removeCalendarEvent('${e.id}')">Remove</button>` : ''}
+            </div>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No upcoming events.</div>';
+  }
+
+  function calPrevMonth(){ calViewDate.setMonth(calViewDate.getMonth() - 1); renderCalendar(); }
+  function calNextMonth(){ calViewDate.setMonth(calViewDate.getMonth() + 1); renderCalendar(); }
+  function calGoToday(){ calViewDate = new Date(); renderCalendar(); }
+
+  async function addCalendarEvent(){
+    const title = document.getElementById('calTitle').value.trim();
+    const date = document.getElementById('calDate').value;
+    const time = document.getElementById('calTime').value;
+    const business = document.getElementById('calBusiness').value;
+    if(!title || !date){
+      alert('Please fill in at least a title and a date.');
+      return;
+    }
+    dashboardData.calendar.events.push({ id: 'cal'+Date.now(), title, date, time, business });
+    await saveDashboardData();
+    document.getElementById('calTitle').value = '';
+    document.getElementById('calDate').value = '';
+    document.getElementById('calTime').value = '';
+    calViewDate = new Date(date + 'T00:00:00'); // jump the grid to show the month you just added to
+    renderCalendar();
+  }
+
+  async function removeCalendarEvent(id){
+    dashboardData.calendar.events = dashboardData.calendar.events.filter(e => e.id !== id);
+    await saveDashboardData();
+    renderCalendar();
   }
 
   /* ---------------- Edit Data form (works on a draft copy until Save is clicked) ---------------- */
