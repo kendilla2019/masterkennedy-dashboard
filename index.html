@@ -331,13 +331,17 @@
   <div class="view" id="editdata">
     <div class="card" style="--accent:#2f6fed">
       <h3><span class="dot"></span>Edit dashboard data</h3>
-      <div class="sub">Type real numbers below and click Save — every KPI, chart, and stat updates immediately. Saved in this browser only: re-save here after re-uploading the file elsewhere, and have each admin who uses a different browser save their own copy too.</div>
+      <div class="sub">Each date range you pick keeps its own saved data — switch dates to view or edit a different period's numbers without losing older ones. Saved in this browser only: re-save here after re-uploading the file elsewhere, and have each admin who uses a different browser save their own copy too.</div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Reporting period</h4>
       <div class="edit-grid" style="max-width:400px;">
-        <div class="field"><label>Start date</label><input type="date" id="edit_period_start"></div>
-        <div class="field"><label>End date</label><input type="date" id="edit_period_end"></div>
+        <div class="field"><label>Start date</label><input type="date" id="edit_period_start" onchange="onPeriodDateChange()"></div>
+        <div class="field"><label>End date</label><input type="date" id="edit_period_end" onchange="onPeriodDateChange()"></div>
       </div>
+      <div id="periodFormNotice" style="font-size:12.5px;color:var(--muted);margin-top:6px;"></div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Saved periods</h4>
+      <div id="historyList"></div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱ millions)</h4>
       <div class="edit-grid">
@@ -360,6 +364,7 @@
         <div class="field"><label>Students enrolled</label><input type="number" min="0" id="edit_ns_students"></div>
         <div class="field"><label>Completion rate (%)</label><input type="number" min="0" max="100" id="edit_ns_completion"></div>
         <div class="field"><label>Job placement rate (%)</label><input type="number" min="0" max="100" id="edit_ns_placement"></div>
+        <div class="field"><label>Revenue (₱ millions)</label><input type="number" step="0.01" min="0" id="edit_ns_revenue"></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Prokora — projects</h4>
@@ -567,15 +572,22 @@
     });
   });
 
-  /* ---------------- Dashboard data (editable, saved per-browser) ---------------- */
+  /* ---------------- Dashboard data (editable, saved per-browser, one snapshot per date range) ---------------- */
   const DATA_KEY = 'mk_dashboard_data';
-  const defaultData = {
-    lastUpdated: null,
-    periodStart: '2026-01-01',
-    periodEnd: '2026-08-31',
+
+  function emptySnapshot(){
+    return {
+      mb: { '22Win':0, 'Jolibet':0, '1xBet':0, 'Tab66':0, '747':0 },
+      bw: { students:0, completion:0, revenue:0 },
+      ns: { students:0, completion:0, placement:0, revenue:0 },
+      pk: { projects: [] }
+    };
+  }
+
+  const sampleSnapshot = {
     mb: { '22Win':1.35, 'Jolibet':1.05, '1xBet':0.89, 'Tab66':0.56, '747':0.38 },
     bw: { students:320, completion:82, revenue:0.85 },
-    ns: { students:210, completion:76, placement:68 },
+    ns: { students:210, completion:76, placement:68, revenue:1.10 },
     pk: {
       projects: [
         { client:'Meridian Retail', scope:'Inventory system', value:180, status:'dev' },
@@ -587,18 +599,48 @@
       ]
     }
   };
+
+  const defaultData = {
+    lastUpdated: null,
+    currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
+    history: {
+      '2026-01-01_2026-08-31': Object.assign(JSON.parse(JSON.stringify(sampleSnapshot)), { savedAt:null })
+    }
+  };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
+
+  function periodKey(start, end){ return `${start}_${end}`; }
 
   function loadDashboardData(){
     try{
       const saved = localStorage.getItem(DATA_KEY);
-      return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+      if(!saved) return JSON.parse(JSON.stringify(defaultData));
+      const parsed = JSON.parse(saved);
+      // Migrate old single-snapshot format (no .history) into the new per-period history format
+      if(parsed && parsed.mb && !parsed.history){
+        const migratedKey = periodKey(parsed.periodStart || '2026-01-01', parsed.periodEnd || '2026-08-31');
+        return {
+          lastUpdated: parsed.lastUpdated || null,
+          currentPeriod: { start: parsed.periodStart || '2026-01-01', end: parsed.periodEnd || '2026-08-31' },
+          history: { [migratedKey]: { mb: parsed.mb, bw: parsed.bw, ns: parsed.ns, pk: parsed.pk, savedAt: parsed.lastUpdated || null } }
+        };
+      }
+      return parsed;
     }catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
   }
   function saveDashboardData(){
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); return true; }
     catch(e){ console.error('Could not save dashboard data', e); return false; }
+  }
+
+  // Returns the snapshot for the currently selected period, or a fresh blank one if that
+  // exact date range has never been saved before.
+  function getCurrentSnapshot(){
+    const key = periodKey(dashboardData.currentPeriod.start, dashboardData.currentPeriod.end);
+    const snap = dashboardData.history[key] || emptySnapshot();
+    if(snap.ns && typeof snap.ns.revenue !== 'number') snap.ns.revenue = 0; // safety for data saved before this field existed
+    return snap;
   }
 
   const statusLabel = { dev:'In development', done:'Delivered', live:'In progress', pause:'On hold' };
@@ -618,14 +660,15 @@
       : `${startLabel}, ${start.getFullYear()} – ${endLabel}`;
   }
 
-  function mbTotal(){ return Object.values(dashboardData.mb).reduce((a,b)=>a+b,0); }
-  function pkRevenueM(){ return dashboardData.pk.projects.reduce((a,p)=>a+p.value,0) / 1000; }
+  function mbTotal(snap){ return Object.values(snap.mb).reduce((a,b)=>a+b,0); }
+  function pkRevenueM(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0) / 1000; }
 
-  /* ---------------- Render everything from dashboardData ---------------- */
+  /* ---------------- Render everything from the active snapshot ---------------- */
   function renderAll(){
-    const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns, pk = dashboardData.pk;
-    const mbTot = mbTotal();
-    const pkRev = pkRevenueM();
+    const snap = getCurrentSnapshot();
+    const mb = snap.mb, bw = snap.bw, ns = snap.ns, pk = snap.pk;
+    const mbTot = mbTotal(snap);
+    const pkRev = pkRevenueM(snap);
     const combined = mbTot + bw.revenue + ns.revenue + pkRev;
     const activeStudents = bw.students + ns.students;
     const pkDelivered = pk.projects.filter(p=>p.status==='done').length;
@@ -690,7 +733,7 @@
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
 
     // Period label
-    document.getElementById('periodBadge').textContent = formatPeriod(dashboardData.periodStart, dashboardData.periodEnd);
+    document.getElementById('periodBadge').textContent = formatPeriod(dashboardData.currentPeriod.start, dashboardData.currentPeriod.end);
 
     // Last updated badge
     const lu = document.getElementById('lastUpdatedBadge');
@@ -715,8 +758,9 @@
     Object.values(charts).forEach(c => c && c.destroy());
     charts = {};
 
-    const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
-    const mbTot = mbTotal(), pkRev = pkRevenueM();
+    const snap = getCurrentSnapshot();
+    const mb = snap.mb, bw = snap.bw, ns = snap.ns;
+    const mbTot = mbTotal(snap), pkRev = pkRevenueM(snap);
 
     function scaledLine(canvasId, shape, newTotal, color){
       const oldSum = shape.reduce((a,b)=>a+b,0) || 1;
@@ -745,11 +789,20 @@
     scaledLine('chartNSTrend', [16,20,22,24,26,30,34,38], ns.students, '#1c9fe0');
   }
 
-  /* ---------------- Edit Data form ---------------- */
+  /* ---------------- Edit Data form (works on a draft copy until Save is clicked) ---------------- */
+  let editingSnapshot = null;
+
   function populateEditForm(){
-    const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
-    document.getElementById('edit_period_start').value = dashboardData.periodStart || '2026-01-01';
-    document.getElementById('edit_period_end').value = dashboardData.periodEnd || '2026-08-31';
+    const cp = dashboardData.currentPeriod;
+    document.getElementById('edit_period_start').value = cp.start;
+    document.getElementById('edit_period_end').value = cp.end;
+    loadSnapshotIntoForm(dashboardData.history[periodKey(cp.start, cp.end)] || emptySnapshot());
+    renderHistoryList();
+  }
+
+  function loadSnapshotIntoForm(snap){
+    editingSnapshot = JSON.parse(JSON.stringify(snap));
+    const mb = editingSnapshot.mb, bw = editingSnapshot.bw, ns = editingSnapshot.ns;
     document.getElementById('edit_mb_22Win').value = mb['22Win'];
     document.getElementById('edit_mb_Jolibet').value = mb['Jolibet'];
     document.getElementById('edit_mb_1xBet').value = mb['1xBet'];
@@ -761,13 +814,29 @@
     document.getElementById('edit_ns_students').value = ns.students;
     document.getElementById('edit_ns_completion').value = ns.completion;
     document.getElementById('edit_ns_placement').value = ns.placement;
+    document.getElementById('edit_ns_revenue').value = ns.revenue;
     renderProjectEditRows();
+  }
+
+  // Called when either date picker changes — loads that period's saved data into the form
+  // (or a blank template if that exact date range has never been saved) without touching
+  // what the rest of the dashboard is currently showing until Save is clicked.
+  function onPeriodDateChange(){
+    const start = document.getElementById('edit_period_start').value;
+    const end = document.getElementById('edit_period_end').value;
+    if(!start || !end) return;
+    const existing = dashboardData.history[periodKey(start, end)];
+    loadSnapshotIntoForm(existing || emptySnapshot());
+    const notice = document.getElementById('periodFormNotice');
+    notice.textContent = existing
+      ? `Editing saved data for ${formatPeriod(start, end)}.`
+      : `No data saved yet for ${formatPeriod(start, end)} — fields below are blank. Fill them in and click Save to create this period.`;
   }
 
   function renderProjectEditRows(){
     const table = document.getElementById('pkEditTable');
     table.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value (₱K)</th><th>Status</th><th></th></tr>';
-    dashboardData.pk.projects.forEach((p, i)=>{
+    editingSnapshot.pk.projects.forEach((p, i)=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><input type="text" value="${p.client}" data-idx="${i}" data-field="client" style="width:100%;padding:6px 8px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-family:inherit;font-size:13px;"></td>
@@ -788,13 +857,71 @@
   }
 
   function addProjectRow(){
-    dashboardData.pk.projects.push({ client:'New client', scope:'Project scope', value:0, status:'dev' });
+    editingSnapshot.pk.projects.push({ client:'New client', scope:'Project scope', value:0, status:'dev' });
     renderProjectEditRows();
   }
 
   function removeProjectRow(i){
-    dashboardData.pk.projects.splice(i, 1);
+    editingSnapshot.pk.projects.splice(i, 1);
     renderProjectEditRows();
+  }
+
+  /* ---------------- Period history list ---------------- */
+  function renderHistoryList(){
+    const container = document.getElementById('historyList');
+    const cp = dashboardData.currentPeriod;
+    const activeKey = periodKey(cp.start, cp.end);
+    const keys = Object.keys(dashboardData.history).sort().reverse();
+    if(!keys.length){
+      container.innerHTML = '<div style="color:var(--muted);font-size:13px;">No saved periods yet.</div>';
+      return;
+    }
+    container.innerHTML = keys.map(key=>{
+      const [start, end] = key.split('_');
+      const entry = dashboardData.history[key];
+      const isActive = key === activeKey;
+      const savedLabel = entry.savedAt ? new Date(entry.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'sample data';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:8px;background:${isActive?'var(--gold-soft)':'var(--panel-2)'};margin-bottom:8px;">
+          <div>
+            <div style="font-size:13.5px;font-weight:600;">${formatPeriod(start,end)}${isActive?' <span style="font-weight:400;color:var(--gold);font-size:11.5px;">(currently viewing)</span>':''}</div>
+            <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">Saved: ${savedLabel}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            ${isActive ? '' : `<button class="btn small" onclick="viewHistoryPeriod('${key}')">View</button>`}
+            <button class="del-btn" onclick="deleteHistoryPeriod('${key}')">Delete</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function viewHistoryPeriod(key){
+    const [start, end] = key.split('_');
+    dashboardData.currentPeriod = { start, end };
+    saveDashboardData();
+    renderAll();
+    populateEditForm();
+    document.getElementById('periodFormNotice').textContent = `Now viewing and editing ${formatPeriod(start,end)}.`;
+  }
+
+  function deleteHistoryPeriod(key){
+    if(!confirm('Delete all saved data for this period? This cannot be undone.')) return;
+    delete dashboardData.history[key];
+    const remainingKeys = Object.keys(dashboardData.history).sort().reverse();
+    const cp = dashboardData.currentPeriod;
+    if(key === periodKey(cp.start, cp.end)){
+      if(remainingKeys.length){
+        const [start, end] = remainingKeys[0].split('_');
+        dashboardData.currentPeriod = { start, end };
+      } else {
+        // nothing left at all — restore the original sample period so the dashboard isn't empty
+        dashboardData = JSON.parse(JSON.stringify(defaultData));
+      }
+    }
+    saveDashboardData();
+    renderAll();
+    populateEditForm();
   }
 
   function clampPct(n){ return Math.min(100, Math.max(0, n)); }
@@ -803,7 +930,11 @@
   function saveEditedData(){
     const startVal = document.getElementById('edit_period_start').value;
     const endVal = document.getElementById('edit_period_end').value;
-    if(startVal && endVal && startVal > endVal){
+    if(!startVal || !endVal){
+      alert('Please choose both a start and end date.');
+      return;
+    }
+    if(startVal > endVal){
       alert('End date must be on or after the start date.');
       return;
     }
@@ -812,37 +943,41 @@
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
 
-    dashboardData.periodStart = startVal || dashboardData.periodStart;
-    dashboardData.periodEnd = endVal || dashboardData.periodEnd;
-    dashboardData.mb['22Win'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_22Win').value) || 0);
-    dashboardData.mb['Jolibet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0);
-    dashboardData.mb['1xBet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_1xBet').value) || 0);
-    dashboardData.mb['Tab66'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Tab66').value) || 0);
-    dashboardData.mb['747'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_747').value) || 0);
-    dashboardData.bw.students = clampNonNeg(parseInt(document.getElementById('edit_bw_students').value) || 0);
-    dashboardData.bw.completion = clampPct(parseFloat(document.getElementById('edit_bw_completion').value) || 0);
-    dashboardData.bw.revenue = clampNonNeg(parseFloat(document.getElementById('edit_bw_revenue').value) || 0);
-    dashboardData.ns.students = clampNonNeg(parseInt(document.getElementById('edit_ns_students').value) || 0);
-    dashboardData.ns.completion = clampPct(parseFloat(document.getElementById('edit_ns_completion').value) || 0);
-    dashboardData.ns.placement = clampPct(parseFloat(document.getElementById('edit_ns_placement').value) || 0);
+    editingSnapshot.mb['22Win'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_22Win').value) || 0);
+    editingSnapshot.mb['Jolibet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0);
+    editingSnapshot.mb['1xBet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_1xBet').value) || 0);
+    editingSnapshot.mb['Tab66'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Tab66').value) || 0);
+    editingSnapshot.mb['747'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_747').value) || 0);
+    editingSnapshot.bw.students = clampNonNeg(parseInt(document.getElementById('edit_bw_students').value) || 0);
+    editingSnapshot.bw.completion = clampPct(parseFloat(document.getElementById('edit_bw_completion').value) || 0);
+    editingSnapshot.bw.revenue = clampNonNeg(parseFloat(document.getElementById('edit_bw_revenue').value) || 0);
+    editingSnapshot.ns.students = clampNonNeg(parseInt(document.getElementById('edit_ns_students').value) || 0);
+    editingSnapshot.ns.completion = clampPct(parseFloat(document.getElementById('edit_ns_completion').value) || 0);
+    editingSnapshot.ns.placement = clampPct(parseFloat(document.getElementById('edit_ns_placement').value) || 0);
+    editingSnapshot.ns.revenue = clampNonNeg(parseFloat(document.getElementById('edit_ns_revenue').value) || 0);
 
     // pull edited project fields straight from the table's inputs/selects
     document.querySelectorAll('#pkEditTable [data-idx]').forEach(el=>{
       const idx = parseInt(el.dataset.idx);
       const field = el.dataset.field;
-      if(!dashboardData.pk.projects[idx]) return;
-      dashboardData.pk.projects[idx][field] = field === 'value' ? clampNonNeg(parseFloat(el.value)||0) : el.value;
+      if(!editingSnapshot.pk.projects[idx]) return;
+      editingSnapshot.pk.projects[idx][field] = field === 'value' ? clampNonNeg(parseFloat(el.value)||0) : el.value;
     });
 
+    editingSnapshot.savedAt = Date.now();
+    const key = periodKey(startVal, endVal);
+    dashboardData.history[key] = editingSnapshot;
+    dashboardData.currentPeriod = { start: startVal, end: endVal };
     dashboardData.lastUpdated = Date.now();
 
     // small delay purely so "Saving…" is visible — makes the click feel acknowledged, not ignored
     setTimeout(()=>{
       const persisted = saveDashboardData();
       renderAll();
+      populateEditForm();
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save changes';
-      showSaveConfirm(persisted ? 'Saved ✓' : 'Saved for this session (browser storage unavailable)');
+      showSaveConfirm(persisted ? `Saved ✓ (${formatPeriod(startVal,endVal)})` : 'Saved for this session (browser storage unavailable)');
     }, 220);
   }
 
@@ -854,10 +989,11 @@
   }
 
   function resetToSampleData(){
-    if(!confirm('Reset all numbers back to the original sample data? This cannot be undone.')) return;
+    if(!confirm('Reset EVERYTHING back to the original sample data? This deletes all saved periods and cannot be undone.')) return;
     dashboardData = JSON.parse(JSON.stringify(defaultData));
     saveDashboardData();
     renderAll();
+    populateEditForm();
     showSaveConfirm('Reset to sample data ✓');
   }
 
