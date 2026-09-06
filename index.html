@@ -11,10 +11,10 @@
   :root{
     --bg:#10131a; --panel:#171c26; --panel-2:#1d2330; --line:#2a3140;
     --ink:#eceef3; --muted:#8b93a6;
-    --gold:#c9a227; --gold-soft:rgba(201,162,39,.14);
-    --wine:#9c3347; --wine-soft:rgba(156,51,71,.14);
-    --teal:#2fa0a0; --teal-soft:rgba(47,160,160,.14);
-    --indigo:#5468e0; --indigo-soft:rgba(84,104,224,.14);
+    --gold:#2f6fed; --gold-soft:rgba(47,111,237,.14);
+    --wine:#b8323a; --wine-soft:rgba(184,50,58,.14);
+    --teal:#1c9fe0; --teal-soft:rgba(28,159,224,.14);
+    --indigo:#1a4fc4; --indigo-soft:rgba(26,79,196,.14);
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans', sans-serif;-webkit-font-smoothing:antialiased;}
@@ -42,7 +42,7 @@
   .field input:focus{outline:none;border-color:var(--gold);}
   .btn{
     width:100%;padding:11px;border-radius:8px;border:none;cursor:pointer;
-    background:var(--gold);color:#14161c;font-weight:600;font-size:14px;font-family:inherit;
+    background:var(--gold);color:#f4f7ff;font-weight:600;font-size:14px;font-family:inherit;
     margin-top:6px;
   }
   .btn.secondary{background:var(--panel-2);color:var(--ink);border:1px solid var(--line);}
@@ -54,7 +54,7 @@
   /* ---------- Masthead ---------- */
   .masthead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:22px;}
   .brand{display:flex;align-items:center;gap:12px;}
-  .brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(155deg,var(--gold),#8a6f16);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#12151c;flex-shrink:0;}
+  .brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(155deg,var(--gold),#16306b);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#f4f7ff;flex-shrink:0;}
   .brand h1{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0;letter-spacing:.2px;}
   .brand p{margin:2px 0 0;color:var(--muted);font-size:13px;}
   .masthead-right{display:flex;align-items:center;gap:14px;}
@@ -188,23 +188,23 @@
   </div>
 
   <div class="tabs" id="tabBar">
-    <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#c9a227">Overview</button>
-    <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#c9a227">Master Baccarat</button>
-    <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#9c3347">Baccarat Win</button>
-    <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#2fa0a0">Nexstack</button>
-    <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#5468e0">Prokora</button>
-    <button class="tab" data-view="users" data-roles="admin" style="--accent:#c9a227">Users</button>
+    <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed">Overview</button>
+    <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f">Master Baccarat</button>
+    <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a">Baccarat Win</button>
+    <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0">Nexstack</button>
+    <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4">Prokora</button>
+    <button class="tab" data-view="users" data-roles="admin" style="--accent:#2f6fed">Users</button>
   </div>
 
   <!-- OVERVIEW -->
   <div class="view active" id="overview">
     <div class="grid-2" style="margin-bottom:16px;">
-      <div class="card" style="--accent:#c9a227">
+      <div class="card" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Revenue by business unit</h3>
         <div class="sub">Share of ₱7.75M combined YTD revenue</div>
         <canvas id="chartOverviewBar"></canvas>
       </div>
-      <div class="card" style="--accent:#c9a227">
+      <div class="card" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Revenue mix</h3>
         <div class="sub">Gaming vs. education vs. IT services</div>
         <canvas id="chartOverviewDonut"></canvas>
@@ -226,15 +226,15 @@
       <div class="stat"><div class="label">Active platforms</div><div class="value">5</div><div class="foot">22Win, Jolibet, 1xBet, Tab66, 747</div></div>
     </div>
     <div class="grid-2">
-      <div class="card" style="--accent:#c9a227">
+      <div class="card" style="--accent:#e0453f">
         <h3><span class="dot"></span>Monthly gaming revenue</h3>
         <div class="sub">Jan – Aug 2026, all platforms combined</div>
         <canvas id="chartMBTrend"></canvas>
       </div>
-      <div class="card" style="--accent:#c9a227">
+      <div class="card" style="--accent:#e0453f">
         <h3><span class="dot"></span>Revenue by platform</h3>
         <div class="sub">YTD, ₱4.20M total</div>
-        <div class="barlist" style="--accent:#c9a227">
+        <div class="barlist" style="--accent:#e0453f">
           <div class="row"><div class="name">22Win</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">₱1.35M · 32%</div></div>
           <div class="row"><div class="name">Jolibet</div><div class="track"><div class="fill" style="width:78%"></div></div><div class="num">₱1.05M · 25%</div></div>
           <div class="row"><div class="name">1xBet</div><div class="track"><div class="fill" style="width:66%"></div></div><div class="num">₱0.89M · 21%</div></div>
@@ -253,12 +253,12 @@
       <div class="stat"><div class="label">Tuition revenue</div><div class="value">₱0.85M</div><div class="foot">Avg ₱2,656 per student</div></div>
     </div>
     <div class="grid-2">
-      <div class="card" style="--accent:#9c3347">
+      <div class="card" style="--accent:#b8323a">
         <h3><span class="dot"></span>Monthly enrollments</h3>
         <div class="sub">New students per month, 2026</div>
         <canvas id="chartBWTrend"></canvas>
       </div>
-      <div class="card" style="--accent:#9c3347">
+      <div class="card" style="--accent:#b8323a">
         <h3><span class="dot"></span>Cohort snapshot</h3>
         <div class="sub">Current active batches</div>
         <table>
@@ -280,15 +280,15 @@
       <div class="stat"><div class="label">Job placement rate</div><div class="value">68%</div><div class="foot">Within 3 months of completion</div></div>
     </div>
     <div class="grid-2">
-      <div class="card" style="--accent:#2fa0a0">
+      <div class="card" style="--accent:#1c9fe0">
         <h3><span class="dot"></span>Monthly enrollments</h3>
         <div class="sub">New students per month, 2026</div>
         <canvas id="chartNSTrend"></canvas>
       </div>
-      <div class="card" style="--accent:#2fa0a0">
+      <div class="card" style="--accent:#1c9fe0">
         <h3><span class="dot"></span>Program breakdown</h3>
         <div class="sub">Students by track, YTD</div>
-        <div class="barlist" style="--accent:#2fa0a0">
+        <div class="barlist" style="--accent:#1c9fe0">
           <div class="row"><div class="name">Web Dev</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">86 students</div></div>
           <div class="row"><div class="name">Data & AI</div><div class="track"><div class="fill" style="width:70%"></div></div><div class="num">60 students</div></div>
           <div class="row"><div class="name">Design</div><div class="track"><div class="fill" style="width:47%"></div></div><div class="num">40 students</div></div>
@@ -305,7 +305,7 @@
       <div class="stat"><div class="label">Projects delivered</div><div class="value">14</div><div class="foot">3 currently in build</div></div>
       <div class="stat"><div class="label">Avg project value</div><div class="value">₱94K</div><div class="foot">Across delivered + active work</div></div>
     </div>
-    <div class="card" style="--accent:#5468e0">
+    <div class="card" style="--accent:#1a4fc4">
       <h3><span class="dot"></span>Project pipeline</h3>
       <div class="sub">Active and recently delivered engagements</div>
       <table>
@@ -322,7 +322,7 @@
 
   <!-- USERS (admin only) -->
   <div class="view" id="users">
-    <div class="card" style="--accent:#c9a227">
+    <div class="card" style="--accent:#2f6fed">
       <h3><span class="dot"></span>Manage users</h3>
       <div class="sub">This static build has no backend, so accounts live in the page's code. Additions here only last for this browser tab — reset the page and they're gone. To make an account permanent, edit the <code>defaultUsers</code> list in the HTML file and re-upload it to your host.</div>
       <div class="user-form">
@@ -515,19 +515,19 @@
 
     new Chart(document.getElementById('chartOverviewBar'), {
       type:'bar',
-      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[4.20,1.60,1.10,0.85], backgroundColor:['#c9a227','#5468e0','#2fa0a0','#9c3347'], borderRadius:6 }]},
+      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[4.20,1.60,1.10,0.85], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0','#b8323a'], borderRadius:6 }]},
       options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}, title:{display:true,text:'₱ millions'}}, y:{grid:{display:false}} } }
     });
 
     new Chart(document.getElementById('chartOverviewDonut'), {
       type:'doughnut',
-      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[4.20,1.60,1.95], backgroundColor:['#c9a227','#5468e0','#2fa0a0'], borderWidth:0 }]},
+      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[4.20,1.60,1.95], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0'], borderWidth:0 }]},
       options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:10,padding:14,font:{size:11.5}}}} }
     });
 
-    baseLine(document.getElementById('chartMBTrend'), [0.42,0.46,0.51,0.49,0.55,0.58,0.6,0.59], '#c9a227');
-    baseLine(document.getElementById('chartBWTrend'), [28,32,35,38,40,44,48,55], '#9c3347');
-    baseLine(document.getElementById('chartNSTrend'), [16,20,22,24,26,30,34,38], '#2fa0a0');
+    baseLine(document.getElementById('chartMBTrend'), [0.42,0.46,0.51,0.49,0.55,0.58,0.6,0.59], '#e0453f');
+    baseLine(document.getElementById('chartBWTrend'), [28,32,35,38,40,44,48,55], '#b8323a');
+    baseLine(document.getElementById('chartNSTrend'), [16,20,22,24,26,30,34,38], '#1c9fe0');
   }
 
   ensureUsersSeeded();
