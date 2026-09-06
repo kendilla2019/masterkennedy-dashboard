@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#10131a; --panel:#171c26; --panel-2:#1d2330; --line:#2a3140;
@@ -718,6 +719,14 @@
   const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
   const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4' };
 
+  // Shared database: every account (admin, masterbaccarat, baccaratwin, nexstack, prokora)
+  // reads and writes this same Supabase table, so data stays in sync across devices.
+  const SUPABASE_URL = 'https://lljdjeztpwxreywyodda.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_YIdyGcgt7mVF9r1KPu8n-g_L1yh3znV';
+  let sb = null;
+  try{ sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+  catch(e){ console.error('Supabase client failed to initialize — falling back to local-only storage', e); }
+
   function periodKey(start, end){ return `${start}_${end}`; }
 
   // Converts every history snapshot's money fields from the old "millions/thousands" units
@@ -733,36 +742,71 @@
     return data;
   }
 
-  function loadDashboardData(){
-    try{
-      const saved = localStorage.getItem(DATA_KEY);
-      if(!saved) return JSON.parse(JSON.stringify(defaultData));
-      let parsed = JSON.parse(saved);
-      // Migrate old single-snapshot format (no .history) into the new per-period history format
-      if(parsed && parsed.mb && !parsed.history){
-        const migratedKey = periodKey(parsed.periodStart || '2026-01-01', parsed.periodEnd || '2026-08-31');
-        parsed = {
-          lastUpdated: parsed.lastUpdated || null,
-          currentPeriod: { start: parsed.periodStart || '2026-01-01', end: parsed.periodEnd || '2026-08-31' },
-          history: { [migratedKey]: { mb: parsed.mb, bw: parsed.bw, ns: parsed.ns, pk: parsed.pk, savedAt: parsed.lastUpdated || null } }
-        };
-      }
-      // Migrate old millions/thousands units to plain full-peso numbers
-      if(!parsed.dataVersion || parsed.dataVersion < 2){
-        parsed = migrateUnitsToFullPesos(parsed);
-      }
-      // Add the exec ledger (goals/cash/expenses/assets) for anyone who saved before it existed
-      if(!parsed.exec){
-        parsed.exec = JSON.parse(JSON.stringify(defaultExec));
-      }
-      parsed.dataVersion = 3;
-      return parsed;
-    }catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
+  // Applies every version migration to a loaded blob, regardless of whether it came from
+  // Supabase or the local browser cache.
+  function migrateLoadedData(parsed){
+    if(!parsed || typeof parsed !== 'object' || !Object.keys(parsed).length) return null;
+    // Migrate old single-snapshot format (no .history) into the new per-period history format
+    if(parsed.mb && !parsed.history){
+      const migratedKey = periodKey(parsed.periodStart || '2026-01-01', parsed.periodEnd || '2026-08-31');
+      parsed = {
+        lastUpdated: parsed.lastUpdated || null,
+        currentPeriod: { start: parsed.periodStart || '2026-01-01', end: parsed.periodEnd || '2026-08-31' },
+        history: { [migratedKey]: { mb: parsed.mb, bw: parsed.bw, ns: parsed.ns, pk: parsed.pk, savedAt: parsed.lastUpdated || null } }
+      };
+    }
+    if(!parsed.currentPeriod || !parsed.history) return null; // not a recognizable shape
+    // Migrate old millions/thousands units to plain full-peso numbers
+    if(!parsed.dataVersion || parsed.dataVersion < 2){
+      parsed = migrateUnitsToFullPesos(parsed);
+    }
+    // Add the exec ledger (goals/cash/expenses/assets) for anyone who saved before it existed
+    if(!parsed.exec){
+      parsed.exec = JSON.parse(JSON.stringify(defaultExec));
+    }
+    parsed.dataVersion = 3;
+    return parsed;
   }
-  function saveDashboardData(){
+
+  async function loadDashboardData(){
+    // 1. Try the shared Supabase database first — this is what makes every account see the same data.
+    if(sb){
+      try{
+        const { data, error } = await sb.from('dashboard_state').select('data').eq('id', 1).single();
+        if(error) throw error;
+        const migrated = migrateLoadedData(data && data.data);
+        if(migrated) return migrated;
+      }catch(e){
+        console.error('Could not load from Supabase, falling back to this browser\'s local copy:', e);
+      }
+    }
+    // 2. Fall back to whatever this browser has cached locally (keeps the app usable offline
+    //    or if Supabase is temporarily unreachable).
+    try{
+      const cached = localStorage.getItem(DATA_KEY);
+      const migrated = migrateLoadedData(cached ? JSON.parse(cached) : null);
+      if(migrated) return migrated;
+    }catch(e){}
+    // 3. Nothing anywhere — start from the sample data.
+    return JSON.parse(JSON.stringify(defaultData));
+  }
+
+  async function saveDashboardData(){
     dashboardData.dataVersion = 3;
-    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); return true; }
-    catch(e){ console.error('Could not save dashboard data', e); return false; }
+    let sharedSaveOk = false;
+    if(sb){
+      try{
+        const { error } = await sb.from('dashboard_state').upsert({ id: 1, data: dashboardData, updated_at: new Date().toISOString() });
+        if(error) throw error;
+        sharedSaveOk = true;
+      }catch(e){
+        console.error('Could not save to the shared Supabase database — this device will only save locally until it reconnects:', e);
+      }
+    }
+    // Always also keep a local cache, so the app still works if Supabase is briefly unreachable.
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }
+    catch(e){ console.error('Could not save local cache either', e); }
+    return sharedSaveOk;
   }
 
   // Returns the snapshot for the currently selected period, or a fresh blank one if that
@@ -1018,20 +1062,20 @@
     document.getElementById('assetTotal').textContent = `Total: ${fmtPeso(assetTotal)}`;
   }
 
-  function saveGoalsAndCash(){
+  async function saveGoalsAndCash(){
     ['mb','bw','ns','pk'].forEach(biz=>{
       dashboardData.exec.goals[biz] = clampNonNeg(parseCurrency(document.getElementById(`goal_${biz}`).value));
       dashboardData.exec.cash[biz] = clampNonNeg(parseCurrency(document.getElementById(`cash_${biz}`).value));
       dashboardData.exec.thresholds[biz] = clampNonNeg(parseCurrency(document.getElementById(`threshold_${biz}`).value));
     });
-    saveDashboardData();
+    await saveDashboardData();
     renderAll();
     const el = document.getElementById('execSaveConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
   }
 
-  function addExpense(){
+  async function addExpense(){
     const date = document.getElementById('expDate').value;
     const category = document.getElementById('expCategory').value.trim();
     const amount = parseCurrency(document.getElementById('expAmount').value);
@@ -1041,20 +1085,20 @@
       return;
     }
     dashboardData.exec.expenses.push({ id: 'e'+Date.now(), date, category, amount, business });
-    saveDashboardData();
+    await saveDashboardData();
     document.getElementById('expDate').value = '';
     document.getElementById('expCategory').value = '';
     document.getElementById('expAmount').value = '';
     renderAll();
   }
 
-  function removeExpense(id){
+  async function removeExpense(id){
     dashboardData.exec.expenses = dashboardData.exec.expenses.filter(e=>e.id !== id);
-    saveDashboardData();
+    await saveDashboardData();
     renderAll();
   }
 
-  function addAsset(){
+  async function addAsset(){
     const name = document.getElementById('assetName').value.trim();
     const value = parseCurrency(document.getElementById('assetValue').value);
     const business = document.getElementById('assetBusiness').value;
@@ -1063,15 +1107,15 @@
       return;
     }
     dashboardData.exec.assets.push({ id: 'a'+Date.now(), name, value, business });
-    saveDashboardData();
+    await saveDashboardData();
     document.getElementById('assetName').value = '';
     document.getElementById('assetValue').value = '';
     renderAll();
   }
 
-  function removeAsset(id){
+  async function removeAsset(id){
     dashboardData.exec.assets = dashboardData.exec.assets.filter(a=>a.id !== id);
-    saveDashboardData();
+    await saveDashboardData();
     renderAll();
   }
 
@@ -1228,16 +1272,16 @@
     }).join('');
   }
 
-  function viewHistoryPeriod(key){
+  async function viewHistoryPeriod(key){
     const [start, end] = key.split('_');
     dashboardData.currentPeriod = { start, end };
-    saveDashboardData();
+    await saveDashboardData();
     renderAll();
     populateEditForm();
     document.getElementById('periodFormNotice').textContent = `Now viewing and editing ${formatPeriod(start,end)}.`;
   }
 
-  function deleteHistoryPeriod(key){
+  async function deleteHistoryPeriod(key){
     if(!confirm('Delete all saved data for this period? This cannot be undone.')) return;
     delete dashboardData.history[key];
     const remainingKeys = Object.keys(dashboardData.history).sort().reverse();
@@ -1251,7 +1295,7 @@
         dashboardData = JSON.parse(JSON.stringify(defaultData));
       }
     }
-    saveDashboardData();
+    await saveDashboardData();
     renderAll();
     populateEditForm();
   }
@@ -1259,7 +1303,7 @@
   function clampPct(n){ return Math.min(100, Math.max(0, n)); }
   function clampNonNeg(n){ return Math.max(0, n); }
 
-  function saveEditedData(){
+  async function saveEditedData(){
     const startVal = document.getElementById('edit_period_start').value;
     const endVal = document.getElementById('edit_period_end').value;
     if(!startVal || !endVal){
@@ -1303,13 +1347,13 @@
     dashboardData.lastUpdated = Date.now();
 
     // small delay purely so "Saving…" is visible — makes the click feel acknowledged, not ignored
-    setTimeout(()=>{
-      const persisted = saveDashboardData();
+    setTimeout(async ()=>{
+      const persisted = await saveDashboardData();
       renderAll();
       populateEditForm();
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save changes';
-      showSaveConfirm(persisted ? `Saved ✓ (${formatPeriod(startVal,endVal)})` : 'Saved for this session (browser storage unavailable)');
+      showSaveConfirm(persisted ? `Saved ✓ (${formatPeriod(startVal,endVal)})` : 'Saved locally — will sync once reconnected');
     }, 220);
   }
 
@@ -1320,18 +1364,32 @@
     setTimeout(()=>{ confirmEl.style.opacity = '0'; }, 2600);
   }
 
-  function resetToSampleData(){
+  async function resetToSampleData(){
     if(!confirm('Reset EVERYTHING back to the original sample data? This deletes all saved periods and cannot be undone.')) return;
     dashboardData = JSON.parse(JSON.stringify(defaultData));
-    saveDashboardData();
+    await saveDashboardData();
     renderAll();
     populateEditForm();
     showSaveConfirm('Reset to sample data ✓');
   }
 
-  ensureUsersSeeded();
-  dashboardData = loadDashboardData();
-  tryAutoLogin();
+  document.addEventListener('visibilitychange', async () => {
+    if(document.visibilityState === 'visible' && currentUser){
+      dashboardData = await loadDashboardData();
+      renderAll();
+    }
+  });
+
+  (async function init(){
+    const signInBtn = document.getElementById('signInBtn');
+    signInBtn.disabled = true;
+    signInBtn.textContent = 'Loading…';
+    ensureUsersSeeded();
+    dashboardData = await loadDashboardData();
+    signInBtn.disabled = false;
+    signInBtn.textContent = 'Sign in';
+    await tryAutoLogin();
+  })();
 </script>
 </body>
 </html>
