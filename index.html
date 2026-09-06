@@ -144,9 +144,14 @@
       <input type="password" id="loginPass" autocomplete="current-password" placeholder="••••••••">
     </div>
     <div class="login-error" id="loginError"></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <input type="checkbox" id="rememberMe" style="width:auto;">
+      <label for="rememberMe" style="margin:0;font-size:12.5px;color:var(--muted);">Remember me on this device</label>
+    </div>
     <button class="btn" onclick="attemptLogin()">Sign in</button>
     <div class="login-hint">
-      <b>Demo accounts</b> — change these before sharing this file:<br>
+      <b>Accounts</b><br>
+      masterkennedy / masterkennedy (your account, full access)<br>
       admin / admin123 (full access)<br>
       masterbaccarat / mb2026 · baccaratwin / bw2026<br>
       nexstack / ns2026 · prokora / pk2026
@@ -351,6 +356,7 @@
   const USERS_KEY = 'apex_users';
   const defaultUsers = [
     { username:'admin', password:'admin123', role:'admin' },
+    { username:'masterkennedy', password:'masterkennedy', role:'admin' },
     { username:'masterbaccarat', password:'mb2026', role:'mb' },
     { username:'baccaratwin', password:'bw2026', role:'bw' },
     { username:'nexstack', password:'ns2026', role:'ns' },
@@ -371,6 +377,7 @@
   async function attemptLogin(){
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value;
+    const remember = document.getElementById('rememberMe').checked;
     const errEl = document.getElementById('loginError');
     errEl.textContent = '';
     const users = await ensureUsersSeeded();
@@ -380,17 +387,37 @@
       return;
     }
     currentUser = match;
+    if(remember){
+      try{ localStorage.setItem('mk_remember', JSON.stringify({ username: match.username })); }
+      catch(e){ console.error('Could not save remember-me session', e); }
+    }
+    showDashboard(match);
+  }
+
+  function showDashboard(match){
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('whoName').textContent = match.username;
     document.getElementById('whoRole').textContent = roleLabels[match.role] || match.role;
     applyRoleVisibility(match.role);
     if(!chartsInitialized){ initCharts(); chartsInitialized = true; }
-    if(match.role === 'admin'){ renderUsersTable(users); }
+    if(match.role === 'admin'){ renderUsersTable(cachedUsers); }
+  }
+
+  async function tryAutoLogin(){
+    try{
+      const saved = localStorage.getItem('mk_remember');
+      if(!saved) return;
+      const { username } = JSON.parse(saved);
+      const users = await ensureUsersSeeded();
+      const match = users.find(x => x.username === username);
+      if(match){ currentUser = match; showDashboard(match); }
+    }catch(e){ console.error('Auto-login check failed', e); }
   }
 
   function logout(){
     currentUser = null;
+    try{ localStorage.removeItem('mk_remember'); }catch(e){}
     document.getElementById('loginUser').value = '';
     document.getElementById('loginPass').value = '';
     document.getElementById('loginError').textContent = '';
@@ -504,6 +531,7 @@
   }
 
   ensureUsersSeeded();
+  tryAutoLogin();
 </script>
 </body>
 </html>
