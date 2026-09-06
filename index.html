@@ -176,7 +176,7 @@
       </div>
     </div>
     <div class="masthead-right">
-      <div class="period">YTD 2026 · Jan – Aug</div>
+      <div class="period" id="periodBadge">YTD 2026 · Jan – Aug</div>
       <div class="period" id="lastUpdatedBadge">Last updated: —</div>
       <div class="who">
         <span id="whoName">—</span>
@@ -189,7 +189,7 @@
   <div class="kpi-row">
     <div class="kpi"><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
     <div class="kpi"><div class="label">Active students (BW + NS)</div><div class="value" id="kpiStudents">530</div><div class="delta">Baccarat Win + Nexstack combined</div></div>
-    <div class="kpi"><div class="label">Gaming platforms live</div><div class="value">5</div><div class="delta">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
+    <div class="kpi"><div class="label">Gaming platforms live</div><div class="value" id="kpiPlatformCount">5</div><div class="delta" id="kpiPlatformList">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
     <div class="kpi"><div class="label">Prokora projects delivered</div><div class="value" id="kpiProjects">14</div><div class="delta" id="kpiProjectsFoot">3 currently in build</div></div>
   </div>
 
@@ -320,6 +320,11 @@
     <div class="card" style="--accent:#2f6fed">
       <h3><span class="dot"></span>Edit dashboard data</h3>
       <div class="sub">Type real numbers below and click Save — every KPI, chart, and stat updates immediately. Saved in this browser only: re-save here after re-uploading the file elsewhere, and have each admin who uses a different browser save their own copy too.</div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Reporting period</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr;max-width:320px;">
+        <div class="field"><label>Period label (shown top-right of the dashboard)</label><input type="text" id="edit_period" placeholder="e.g. YTD 2026 · Jan – Aug"></div>
+      </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱ millions)</h4>
       <div class="edit-grid">
@@ -546,6 +551,7 @@
   const DATA_KEY = 'mk_dashboard_data';
   const defaultData = {
     lastUpdated: null,
+    period: 'YTD 2026 · Jan – Aug',
     mb: { '22Win':1.35, 'Jolibet':1.05, '1xBet':0.89, 'Tab66':0.56, '747':0.38 },
     bw: { students:320, completion:82, revenue:0.85 },
     ns: { students:210, completion:76, placement:68 },
@@ -597,6 +603,9 @@
     document.getElementById('kpiStudents').textContent = activeStudents;
     document.getElementById('kpiProjects').textContent = pkDelivered;
     document.getElementById('kpiProjectsFoot').textContent = `${pkInProgress} currently in build`;
+    const livePlatforms = Object.keys(mb).filter(k => mb[k] > 0);
+    document.getElementById('kpiPlatformCount').textContent = livePlatforms.length;
+    document.getElementById('kpiPlatformList').textContent = livePlatforms.length ? livePlatforms.join(' · ') : 'No platforms active yet';
 
     // Overview
     document.getElementById('ovBarSub').textContent = `Share of ${fmtM(combined)} combined YTD revenue`;
@@ -645,6 +654,9 @@
       (pk.projects.length
         ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td>${fmtK(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
+
+    // Period label
+    document.getElementById('periodBadge').textContent = dashboardData.period || 'YTD 2026 · Jan – Aug';
 
     // Last updated badge
     const lu = document.getElementById('lastUpdatedBadge');
@@ -702,6 +714,7 @@
   /* ---------------- Edit Data form ---------------- */
   function populateEditForm(){
     const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
+    document.getElementById('edit_period').value = dashboardData.period || '';
     document.getElementById('edit_mb_22Win').value = mb['22Win'];
     document.getElementById('edit_mb_Jolibet').value = mb['Jolibet'];
     document.getElementById('edit_mb_1xBet').value = mb['1xBet'];
@@ -753,6 +766,7 @@
   function clampNonNeg(n){ return Math.max(0, n); }
 
   function saveEditedData(){
+    dashboardData.period = document.getElementById('edit_period').value.trim() || dashboardData.period;
     dashboardData.mb['22Win'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_22Win').value) || 0);
     dashboardData.mb['Jolibet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0);
     dashboardData.mb['1xBet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_1xBet').value) || 0);
