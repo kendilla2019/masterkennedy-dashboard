@@ -73,7 +73,7 @@
   .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;transition:border-color .2s ease;}
   .kpi .label{color:var(--muted);font-size:12.5px;margin-bottom:8px;}
-  .kpi .value{font-family:'IBM Plex Mono',monospace;font-size:25px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;transition:opacity .2s ease;}
+  .kpi .value{font-family:'IBM Plex Sans',sans-serif;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;transition:opacity .2s ease;}
   .kpi .delta{font-size:12.5px;margin-top:6px;color:#5fbf7a;}
 
   .tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line);overflow-x:auto;}
@@ -101,13 +101,13 @@
 
   .stat{background:var(--panel-2);border-radius:10px;padding:14px 16px;}
   .stat .label{color:var(--muted);font-size:12px;}
-  .stat .value{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:5px;}
+  .stat .value{font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:5px;}
   .stat .foot{font-size:11.5px;color:var(--muted);margin-top:4px;}
 
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th{text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);}
   td{padding:10px 10px;border-bottom:1px solid var(--line);}
-  td.num-cell{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--ink);}
+  td.num-cell{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);}
   tr:last-child td{border-bottom:none;}
   .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:500;}
   .pill.live{background:var(--teal-soft);color:var(--teal);}
@@ -120,7 +120,7 @@
   .barlist .row .name{width:78px;font-size:13px;flex-shrink:0;}
   .barlist .row .track{flex:1;height:8px;background:var(--panel-2);border-radius:6px;overflow:hidden;}
   .barlist .row .fill{height:100%;border-radius:6px;background:var(--accent,var(--gold));}
-  .barlist .row .num{width:96px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);flex-shrink:0;}
+  .barlist .row .num{min-width:190px;text-align:right;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink);flex-shrink:0;}
 
   canvas{max-height:260px;}
 
@@ -602,8 +602,8 @@
   }
 
   const statusLabel = { dev:'In development', done:'Delivered', live:'In progress', pause:'On hold' };
-  const fmtM = n => `₱${n.toFixed(2)}M`;
-  const fmtK = n => `₱${Math.round(n)}K`;
+  const fmtM = n => `₱${(n*1000000).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+  const fmtK = n => `₱${(n*1000).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
 
   function formatPeriod(startStr, endStr){
     if(!startStr || !endStr) return 'YTD 2026 · Jan – Aug';
