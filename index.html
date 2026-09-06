@@ -323,7 +323,24 @@
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Reporting period</h4>
       <div class="edit-grid" style="grid-template-columns:1fr;max-width:320px;">
-        <div class="field"><label>Period label (shown top-right of the dashboard)</label><input type="text" id="edit_period" placeholder="e.g. YTD 2026 · Jan – Aug"></div>
+        <div class="field">
+          <label>Choose a period (shown top-right of the dashboard)</label>
+          <select id="edit_period_select" onchange="onPeriodChoiceChange()">
+            <option value="YTD 2026 · Jan – Aug">YTD 2026 · Jan – Aug</option>
+            <option value="Q1 2026 · Jan – Mar">Q1 2026 · Jan – Mar</option>
+            <option value="Q2 2026 · Apr – Jun">Q2 2026 · Apr – Jun</option>
+            <option value="Q3 2026 · Jul – Sep">Q3 2026 · Jul – Sep</option>
+            <option value="Q4 2026 · Oct – Dec">Q4 2026 · Oct – Dec</option>
+            <option value="Full Year 2026">Full Year 2026</option>
+            <option value="This Month">This Month</option>
+            <option value="Last 30 Days">Last 30 Days</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div class="field" id="customPeriodField" style="display:none;">
+          <label>Custom period label</label>
+          <input type="text" id="edit_period_custom" placeholder="e.g. Jan 2026 – present">
+        </div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱ millions)</h4>
@@ -537,6 +554,11 @@
     link.textContent = isHidden ? 'Hide test accounts' : 'Show test accounts';
   }
 
+  function onPeriodChoiceChange(){
+    const select = document.getElementById('edit_period_select');
+    document.getElementById('customPeriodField').style.display = select.value === 'custom' ? 'block' : 'none';
+  }
+
   /* ---------------- Tabs ---------------- */
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
@@ -714,7 +736,17 @@
   /* ---------------- Edit Data form ---------------- */
   function populateEditForm(){
     const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
-    document.getElementById('edit_period').value = dashboardData.period || '';
+    const select = document.getElementById('edit_period_select');
+    const presetValues = Array.from(select.options).map(o => o.value);
+    const current = dashboardData.period || 'YTD 2026 · Jan – Aug';
+    if(presetValues.includes(current)){
+      select.value = current;
+      document.getElementById('customPeriodField').style.display = 'none';
+    } else {
+      select.value = 'custom';
+      document.getElementById('edit_period_custom').value = current;
+      document.getElementById('customPeriodField').style.display = 'block';
+    }
     document.getElementById('edit_mb_22Win').value = mb['22Win'];
     document.getElementById('edit_mb_Jolibet').value = mb['Jolibet'];
     document.getElementById('edit_mb_1xBet').value = mb['1xBet'];
@@ -766,7 +798,10 @@
   function clampNonNeg(n){ return Math.max(0, n); }
 
   function saveEditedData(){
-    dashboardData.period = document.getElementById('edit_period').value.trim() || dashboardData.period;
+    const periodSelect = document.getElementById('edit_period_select').value;
+    dashboardData.period = periodSelect === 'custom'
+      ? (document.getElementById('edit_period_custom').value.trim() || dashboardData.period)
+      : periodSelect;
     dashboardData.mb['22Win'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_22Win').value) || 0);
     dashboardData.mb['Jolibet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0);
     dashboardData.mb['1xBet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_1xBet').value) || 0);
