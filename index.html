@@ -322,25 +322,9 @@
       <div class="sub">Type real numbers below and click Save — every KPI, chart, and stat updates immediately. Saved in this browser only: re-save here after re-uploading the file elsewhere, and have each admin who uses a different browser save their own copy too.</div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Reporting period</h4>
-      <div class="edit-grid" style="grid-template-columns:1fr;max-width:320px;">
-        <div class="field">
-          <label>Choose a period (shown top-right of the dashboard)</label>
-          <select id="edit_period_select" onchange="onPeriodChoiceChange()">
-            <option value="YTD 2026 · Jan – Aug">YTD 2026 · Jan – Aug</option>
-            <option value="Q1 2026 · Jan – Mar">Q1 2026 · Jan – Mar</option>
-            <option value="Q2 2026 · Apr – Jun">Q2 2026 · Apr – Jun</option>
-            <option value="Q3 2026 · Jul – Sep">Q3 2026 · Jul – Sep</option>
-            <option value="Q4 2026 · Oct – Dec">Q4 2026 · Oct – Dec</option>
-            <option value="Full Year 2026">Full Year 2026</option>
-            <option value="This Month">This Month</option>
-            <option value="Last 30 Days">Last 30 Days</option>
-            <option value="custom">Custom…</option>
-          </select>
-        </div>
-        <div class="field" id="customPeriodField" style="display:none;">
-          <label>Custom period label</label>
-          <input type="text" id="edit_period_custom" placeholder="e.g. Jan 2026 – present">
-        </div>
+      <div class="edit-grid" style="max-width:400px;">
+        <div class="field"><label>Start date</label><input type="date" id="edit_period_start"></div>
+        <div class="field"><label>End date</label><input type="date" id="edit_period_end"></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Master Baccarat — revenue by platform (₱ millions)</h4>
@@ -554,11 +538,6 @@
     link.textContent = isHidden ? 'Hide test accounts' : 'Show test accounts';
   }
 
-  function onPeriodChoiceChange(){
-    const select = document.getElementById('edit_period_select');
-    document.getElementById('customPeriodField').style.display = select.value === 'custom' ? 'block' : 'none';
-  }
-
   /* ---------------- Tabs ---------------- */
   document.querySelectorAll('.tab').forEach(tab=>{
     tab.addEventListener('click', ()=>{
@@ -573,7 +552,8 @@
   const DATA_KEY = 'mk_dashboard_data';
   const defaultData = {
     lastUpdated: null,
-    period: 'YTD 2026 · Jan – Aug',
+    periodStart: '2026-01-01',
+    periodEnd: '2026-08-31',
     mb: { '22Win':1.35, 'Jolibet':1.05, '1xBet':0.89, 'Tab66':0.56, '747':0.38 },
     bw: { students:320, completion:82, revenue:0.85 },
     ns: { students:210, completion:76, placement:68 },
@@ -605,6 +585,19 @@
   const statusLabel = { dev:'In development', done:'Delivered', live:'In progress', pause:'On hold' };
   const fmtM = n => `₱${n.toFixed(2)}M`;
   const fmtK = n => `₱${Math.round(n)}K`;
+
+  function formatPeriod(startStr, endStr){
+    if(!startStr || !endStr) return 'YTD 2026 · Jan – Aug';
+    const start = new Date(startStr + 'T00:00:00');
+    const end = new Date(endStr + 'T00:00:00');
+    const optsShort = { month:'short', day:'numeric' };
+    const sameYear = start.getFullYear() === end.getFullYear();
+    const startLabel = start.toLocaleDateString('en-US', optsShort);
+    const endLabel = end.toLocaleDateString('en-US', sameYear ? optsShort : { month:'short', day:'numeric', year:'numeric' });
+    return sameYear
+      ? `${startLabel} – ${endLabel}, ${end.getFullYear()}`
+      : `${startLabel}, ${start.getFullYear()} – ${endLabel}`;
+  }
 
   function mbTotal(){ return Object.values(dashboardData.mb).reduce((a,b)=>a+b,0); }
   function pkRevenueM(){ return dashboardData.pk.projects.reduce((a,p)=>a+p.value,0) / 1000; }
@@ -678,7 +671,7 @@
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
 
     // Period label
-    document.getElementById('periodBadge').textContent = dashboardData.period || 'YTD 2026 · Jan – Aug';
+    document.getElementById('periodBadge').textContent = formatPeriod(dashboardData.periodStart, dashboardData.periodEnd);
 
     // Last updated badge
     const lu = document.getElementById('lastUpdatedBadge');
@@ -736,17 +729,8 @@
   /* ---------------- Edit Data form ---------------- */
   function populateEditForm(){
     const mb = dashboardData.mb, bw = dashboardData.bw, ns = dashboardData.ns;
-    const select = document.getElementById('edit_period_select');
-    const presetValues = Array.from(select.options).map(o => o.value);
-    const current = dashboardData.period || 'YTD 2026 · Jan – Aug';
-    if(presetValues.includes(current)){
-      select.value = current;
-      document.getElementById('customPeriodField').style.display = 'none';
-    } else {
-      select.value = 'custom';
-      document.getElementById('edit_period_custom').value = current;
-      document.getElementById('customPeriodField').style.display = 'block';
-    }
+    document.getElementById('edit_period_start').value = dashboardData.periodStart || '2026-01-01';
+    document.getElementById('edit_period_end').value = dashboardData.periodEnd || '2026-08-31';
     document.getElementById('edit_mb_22Win').value = mb['22Win'];
     document.getElementById('edit_mb_Jolibet').value = mb['Jolibet'];
     document.getElementById('edit_mb_1xBet').value = mb['1xBet'];
@@ -798,10 +782,14 @@
   function clampNonNeg(n){ return Math.max(0, n); }
 
   function saveEditedData(){
-    const periodSelect = document.getElementById('edit_period_select').value;
-    dashboardData.period = periodSelect === 'custom'
-      ? (document.getElementById('edit_period_custom').value.trim() || dashboardData.period)
-      : periodSelect;
+    const startVal = document.getElementById('edit_period_start').value;
+    const endVal = document.getElementById('edit_period_end').value;
+    if(startVal && endVal && startVal > endVal){
+      alert('End date must be on or after the start date.');
+      return;
+    }
+    dashboardData.periodStart = startVal || dashboardData.periodStart;
+    dashboardData.periodEnd = endVal || dashboardData.periodEnd;
     dashboardData.mb['22Win'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_22Win').value) || 0);
     dashboardData.mb['Jolibet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_Jolibet').value) || 0);
     dashboardData.mb['1xBet'] = clampNonNeg(parseFloat(document.getElementById('edit_mb_1xBet').value) || 0);
