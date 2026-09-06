@@ -177,6 +177,7 @@
     </div>
     <div class="masthead-right">
       <div class="period">YTD 2026 · Jan – Aug</div>
+      <div class="period" id="lastUpdatedBadge">Last updated: —</div>
       <div class="who">
         <span id="whoName">—</span>
         <span class="role-badge" id="whoRole">—</span>
@@ -544,6 +545,7 @@
   /* ---------------- Dashboard data (editable, saved per-browser) ---------------- */
   const DATA_KEY = 'mk_dashboard_data';
   const defaultData = {
+    lastUpdated: null,
     mb: { '22Win':1.35, 'Jolibet':1.05, '1xBet':0.89, 'Tab66':0.56, '747':0.38 },
     bw: { students:320, completion:82, revenue:0.85 },
     ns: { students:210, completion:76, placement:68 },
@@ -643,6 +645,15 @@
       (pk.projects.length
         ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td>${fmtK(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
+
+    // Last updated badge
+    const lu = document.getElementById('lastUpdatedBadge');
+    if(dashboardData.lastUpdated){
+      const d = new Date(dashboardData.lastUpdated);
+      lu.textContent = `Last updated: ${d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })} ${d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })}`;
+    } else {
+      lu.textContent = 'Last updated: sample data, not yet edited';
+    }
 
     renderCharts();
     if(document.getElementById('editdata')) populateEditForm();
@@ -762,6 +773,7 @@
       dashboardData.pk.projects[idx][field] = field === 'value' ? clampNonNeg(parseFloat(el.value)||0) : el.value;
     });
 
+    dashboardData.lastUpdated = Date.now();
     const persisted = saveDashboardData();
     renderAll();
     const confirmEl = document.getElementById('saveConfirm');
