@@ -707,7 +707,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Date</label><input type="date" id="calDate"></div>
         <div class="field"><label>Time (optional)</label><input type="time" id="calTime"></div>
         <div class="field"><label>Business</label>
-          <select id="calBusiness">
+          <select id="calBusiness" onchange="updateTitleSuggestions()">
             <option value="general">General / PCEC</option>
             <option value="mb">Master Baccarat</option>
             <option value="bw">Baccarat Win</option>
@@ -717,6 +717,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
         <button class="btn small" onclick="addCalendarEvent()">+ Add</button>
       </div>
+      <div id="calTitleSuggestions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
       <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;margin-top:12px;">
         <div class="field"><label>Repeat (for habits/recurring)</label>
           <select id="calRepeat" onchange="onCalRepeatChange()">
@@ -1847,6 +1848,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // Only admin can add/remove events — other accounts get a read-only calendar.
     const addCard = document.getElementById('calAddEventCard');
     if(addCard) addCard.style.display = (currentUser && currentUser.role === 'admin') ? '' : 'none';
+    if(addCard && document.getElementById('calTitleSuggestions').innerHTML === '') updateTitleSuggestions();
 
     const events = visibleCalendarEvents();
     const eventsByDate = {};
@@ -1933,6 +1935,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     renderCalendar();
     await dbUpdateCalendarEvent(id, ev);
     showSaveConfirm('Event moved ✓');
+  }
+
+  const calTitleSuggestionsByBiz = {
+    mb: ['Livestream', 'Content Recording'],
+    bw: ['Class', 'Coaching Session'],
+    ns: ['Class', 'Training Session'],
+    pk: ['Meeting', 'Client Call'],
+    general: ['PCEC Meeting', 'Event'],
+  };
+
+  function updateTitleSuggestions(){
+    const biz = document.getElementById('calBusiness').value;
+    const suggestions = calTitleSuggestionsByBiz[biz] || [];
+    document.getElementById('calTitleSuggestions').innerHTML = suggestions.map(s =>
+      `<button type="button" class="btn secondary small" onclick="document.getElementById('calTitle').value='${s}';document.getElementById('calTitle').focus();">${s}</button>`
+    ).join('');
   }
 
   function onCalRepeatChange(){
@@ -2053,6 +2071,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('calDate').value = ev.date;
     document.getElementById('calTime').value = ev.time || '';
     document.getElementById('calBusiness').value = ev.business;
+    updateTitleSuggestions();
     document.getElementById('calRepeat').value = 'none'; // editing always edits just this one occurrence
     onCalRepeatChange();
     closeEventDetail();
@@ -2079,6 +2098,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('calDate').value = ev.date;
     document.getElementById('calTime').value = ev.time || '';
     document.getElementById('calBusiness').value = ev.business;
+    updateTitleSuggestions();
     document.getElementById('calRepeat').value = 'none';
     onCalRepeatChange();
     closeEventDetail();
