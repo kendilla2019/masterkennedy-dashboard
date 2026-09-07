@@ -701,9 +701,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="view" id="calendar">
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;" id="calAddEventCard">
       <h3><span class="dot"></span>Add event</h3>
-      <div class="sub">Livestream schedule, client meetings, PCEC commitments — tag it by business so the right accounts see it</div>
+      <div class="sub">Livestream schedule, client meetings, habits, PCEC commitments — tag it by business so the right accounts see it. Click any day below to add an event there directly.</div>
       <div class="edit-grid" style="grid-template-columns:1.2fr 1fr 1fr 1fr auto;align-items:end;">
-        <div class="field"><label>Title</label><input type="text" id="calTitle" placeholder="e.g. Livestream, Client call"></div>
+        <div class="field"><label>Title</label><input type="text" id="calTitle" placeholder="e.g. Livestream, Client call, Gym"></div>
         <div class="field"><label>Date</label><input type="date" id="calDate"></div>
         <div class="field"><label>Time (optional)</label><input type="time" id="calTime"></div>
         <div class="field"><label>Business</label>
@@ -716,6 +716,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </select>
         </div>
         <button class="btn small" onclick="addCalendarEvent()">+ Add</button>
+      </div>
+      <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;margin-top:12px;">
+        <div class="field"><label>Repeat (for habits/recurring)</label>
+          <select id="calRepeat" onchange="onCalRepeatChange()">
+            <option value="none">Doesn't repeat</option>
+            <option value="daily">Every day</option>
+            <option value="weekly">Every week</option>
+          </select>
+        </div>
+        <div class="field" id="calRepeatUntilField" style="display:none;"><label>Repeat until</label><input type="date" id="calRepeatUntil"></div>
       </div>
     </div>
 
@@ -1831,7 +1841,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         `<div class="cal-event-pill" style="background:${bizColors[e.business]||bizColors.general}" title="${e.title}${e.time?' · '+e.time:''}">${e.time?e.time+' ':''}${e.title}</div>`
       ).join('');
       const more = dayEvents.length > maxShown ? `<div class="cal-more">+${dayEvents.length - maxShown} more</div>` : '';
-      cells += `<div class="cal-cell${isToday?' today':''}"><div class="cal-daynum">${d}</div>${shown}${more}</div>`;
+      cells += `<div class="cal-cell${isToday?' today':''}" onclick="calCellClicked('${dateStr}')" style="cursor:pointer;"><div class="cal-daynum">${d}</div>${shown}${more}</div>`;
     }
     document.getElementById('calGrid').innerHTML = dayLabels + cells;
 
@@ -1858,25 +1868,76 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function calNextMonth(){ calViewDate.setMonth(calViewDate.getMonth() + 1); renderCalendar(); }
   function calGoToday(){ calViewDate = new Date(); renderCalendar(); }
 
+  function calCellClicked(dateStr){
+    if(!currentUser || currentUser.role !== 'admin') return; // only admin can add events
+    document.getElementById('calDate').value = dateStr;
+    const card = document.getElementById('calAddEventCard');
+    if(card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'start' });
+    const titleInput = document.getElementById('calTitle');
+    if(titleInput) titleInput.focus();
+  }
+
+  function onCalRepeatChange(){
+    const val = document.getElementById('calRepeat').value;
+    document.getElementById('calRepeatUntilField').style.display = (val === 'none') ? 'none' : 'block';
+  }
+
+  // Builds the list of dates an event should land on, based on the repeat setting.
+  function calBuildRecurrenceDates(startDate, repeat, until){
+    const dates = [startDate];
+    if(repeat === 'none' || !until) return dates;
+    const stepDays = repeat === 'weekly' ? 7 : 1;
+    let cursor = new Date(startDate + 'T00:00:00');
+    const untilDate = new Date(until + 'T00:00:00');
+    const maxOccurrences = 366; // safety cap so a typo in "until" can't generate unlimited rows
+    let count = 0;
+    while(count < maxOccurrences){
+      cursor = new Date(cursor.getTime() + stepDays*24*60*60*1000);
+      if(cursor > untilDate) break;
+      dates.push(cursor.toISOString().slice(0,10));
+      count++;
+    }
+    return dates;
+  }
+
   async function addCalendarEvent(){
     const title = document.getElementById('calTitle').value.trim();
     const date = document.getElementById('calDate').value;
     const time = document.getElementById('calTime').value;
     const business = document.getElementById('calBusiness').value;
+    const repeat = document.getElementById('calRepeat').value;
+    const until = document.getElementById('calRepeatUntil').value;
     if(!title || !date){
       alert('Please fill in at least a title and a date.');
       return;
     }
-    const record = { id: 'cal'+Date.now(), title, date, time, business };
-    dashboardData.calendar.events.push(record);
+    if(repeat !== 'none' && !until){
+      alert('Please choose a "Repeat until" date, or set Repeat back to "Doesn\'t repeat".');
+      return;
+    }
+
+    const dates = calBuildRecurrenceDates(date, repeat, until);
+    const records = dates.map(d => ({ id: 'cal'+Date.now()+'-'+Math.random().toString(36).slice(2,7), title, date:d, time, business }));
+    records.forEach(r => dashboardData.calendar.events.push(r));
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+
     document.getElementById('calTitle').value = '';
     document.getElementById('calDate').value = '';
     document.getElementById('calTime').value = '';
+    document.getElementById('calRepeat').value = 'none';
+    document.getElementById('calRepeatUntil').value = '';
+    onCalRepeatChange();
+
     calViewDate = new Date(date + 'T00:00:00'); // jump the grid to show the month you just added to
     renderCalendar();
-    const realId = await dbInsertCalendarEvent(record);
-    if(realId){ record.id = realId; try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){} }
+
+    // Save each occurrence to the shared database in the background
+    for(const record of records){
+      const realId = await dbInsertCalendarEvent(record);
+      if(realId) record.id = realId;
+    }
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    if(records.length > 1) showSaveConfirm(`Added ${records.length} occurrences ✓`);
   }
 
   async function removeCalendarEvent(id){
