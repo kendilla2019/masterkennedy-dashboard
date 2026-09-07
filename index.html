@@ -776,6 +776,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     applyRoleVisibility(match.role);
     renderAll();
     if(match.role === 'admin'){ renderUsersTable(cachedUsers); }
+    playChime(700); // signals "you're in, dashboard is ready"
   }
 
   async function tryAutoLogin(){
@@ -901,6 +902,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(icon) icon.textContent = isLight ? '☀' : '☾';
     if(label) label.textContent = isLight ? 'Light mode' : 'Dark mode';
     try{ localStorage.setItem('mk_theme', isLight ? 'light' : 'dark'); }catch(e){}
+  }
+
+  // A short, pleasant chime generated on the fly — no audio file to load, so it never
+  // adds to page weight or has a network dependency to fail.
+  let audioCtx = null;
+  function playChime(pitch){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(pitch || 880, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    }catch(e){ /* silently do nothing if audio isn't available — never break the app over a sound */ }
   }
 
   function toggleTheme(){
@@ -1542,6 +1564,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const el = document.getElementById('execSaveConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+    playChime(920);
   }
 
   async function addExpense(){
@@ -1944,6 +1967,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     confirmEl.textContent = message;
     confirmEl.style.opacity = '1';
     setTimeout(()=>{ confirmEl.style.opacity = '0'; }, 2600);
+    playChime(920);
   }
 
   function downloadTextFile(filename, content, mimeType){
