@@ -610,23 +610,144 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
 
     <div class="mb-subview" id="mbSubview-marketing" style="display:none;">
-      <div class="card"><h3><span class="dot"></span>Marketing Dashboard</h3><div class="sub">Coming soon — reel/post performance, DM volume, content pillar breakdown, follower growth.</div></div>
+      <div class="grid-3">
+        <div class="stat"><div class="label">Followers</div><div class="value" id="mktFollowers">0</div><div class="foot" id="mktFollowerDelta">—</div></div>
+        <div class="stat"><div class="label">DM volume this week</div><div class="value" id="mktDmVolume">0</div><div class="foot">Logged weekly, below</div></div>
+        <div class="stat"><div class="label">Posts logged</div><div class="value" id="mktPostCount">0</div><div class="foot">Across all content pillars</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="card" style="--accent:#e0453f">
+          <h3><span class="dot"></span>Follower growth</h3>
+          <div class="sub">Logged month by month, below</div>
+          <canvas id="chartMktFollowers"></canvas>
+        </div>
+        <div class="card" style="--accent:#e0453f">
+          <h3><span class="dot"></span>Performance by content pillar</h3>
+          <div class="sub">Avg views, engagement, saves per post</div>
+          <div id="mktPillarBreakdown"></div>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#e0453f;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
+          <div><h3 style="margin:0;"><span class="dot"></span>Log a post</h3><div class="sub" style="margin:4px 0 0;">Reel/post performance — views, engagement, saves</div></div>
+        </div>
+        <div class="edit-grid" style="grid-template-columns:1.3fr 1fr 1fr 1fr 1fr auto;align-items:end;">
+          <div class="field"><label>Title/description</label><input type="text" id="mkt_postTitle" placeholder="e.g. Bankroll tips reel"></div>
+          <div class="field"><label>Pillar</label>
+            <select id="mkt_postPillar">
+              <option value="educational">Educational</option>
+              <option value="joke">Joke/entertainment</option>
+              <option value="proof">Proof/testimonial</option>
+            </select>
+          </div>
+          <div class="field"><label>Views</label><input type="text" inputmode="numeric" id="mkt_postViews"></div>
+          <div class="field"><label>Engagement</label><input type="text" inputmode="numeric" id="mkt_postEngagement"></div>
+          <div class="field"><label>Saves</label><input type="text" inputmode="numeric" id="mkt_postSaves"></div>
+          <button class="btn small" onclick="addMarketingPost()">+ Log</button>
+        </div>
+        <div id="mktPostList" style="margin-top:14px;"></div>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log weekly DM volume</h4>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;">
+          <div class="field"><label>Week</label><input type="week" id="mkt_dmWeek"></div>
+          <div class="field"><label>DM count</label><input type="text" inputmode="numeric" id="mkt_dmCount"></div>
+          <button class="btn small" onclick="addDmVolumeEntry()">+ Log</button>
+        </div>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log monthly follower count</h4>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;">
+          <div class="field"><label>Month</label><input type="month" id="mkt_followerMonth"></div>
+          <div class="field"><label>Followers</label><input type="text" inputmode="numeric" id="mkt_followerCount"></div>
+          <button class="btn small" onclick="addFollowerEntry()">+ Log</button>
+        </div>
+      </div>
     </div>
 
     <div class="mb-subview" id="mbSubview-team" style="display:none;">
-      <div class="card"><h3><span class="dot"></span>Team Dashboard</h3><div class="sub">Coming soon — Marc's weekly task checklist and ClickUp integration.</div></div>
+      <div class="card" style="--accent:#e0453f;">
+        <h3><span class="dot"></span>Marc's weekly checklist</h3>
+        <div class="sub">Manual checkboxes for now — flag: a live ClickUp integration (list 901615631297) would be a natural upgrade later</div>
+        <div id="teamTaskList" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="team_newTaskLabel" placeholder="e.g. Reply to all DMs"></div>
+          <button class="btn small" onclick="addTeamTask()">+ Add</button>
+        </div>
+      </div>
     </div>
 
     <div class="mb-subview" id="mbSubview-operating" style="display:none;">
-      <div class="card"><h3><span class="dot"></span>Operating Dashboard</h3><div class="sub">Coming soon — content pipeline status, compliance checklist, tool/platform notes.</div></div>
+      <div class="card" style="--accent:#e0453f;margin-bottom:16px;">
+        <h3><span class="dot"></span>Compliance check</h3>
+        <div class="sub">Quick weekly confirmation — no guaranteed-wins language went out this week</div>
+        <label style="display:flex;align-items:center;gap:10px;margin-top:12px;cursor:pointer;">
+          <input type="checkbox" id="op_complianceChecked" onchange="toggleComplianceCheck()" style="width:18px;height:18px;">
+          <span id="op_complianceLabel">Not yet confirmed for this week</span>
+        </label>
+      </div>
+
+      <div class="card" style="--accent:#e0453f;margin-bottom:16px;">
+        <h3><span class="dot"></span>Content pipeline</h3>
+        <div class="sub">Idea → Draft → Posted</div>
+        <div id="opPipelineList" style="margin-top:10px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1.3fr 1fr auto;align-items:end;margin-top:10px;">
+          <div class="field"><label>Content idea/title</label><input type="text" id="op_pipelineTitle" placeholder="e.g. Money management reel"></div>
+          <div class="field"><label>Stage</label>
+            <select id="op_pipelineStage">
+              <option value="idea">Idea</option>
+              <option value="draft">Draft</option>
+              <option value="posted">Posted</option>
+            </select>
+          </div>
+          <button class="btn small" onclick="addPipelineItem()">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#e0453f;">
+        <h3><span class="dot"></span>Tool/platform status notes</h3>
+        <div class="sub">Freeform — saves automatically when you click away</div>
+        <textarea id="op_toolNotes" rows="4" style="width:100%;margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-family:inherit;font-size:13.5px;" onblur="saveToolNotes()"></textarea>
+      </div>
     </div>
 
     <div class="mb-subview" id="mbSubview-expenses" style="display:none;">
-      <div class="card"><h3><span class="dot"></span>Expenses Dashboard</h3><div class="sub">Coming soon — monthly running costs by category, cost per subscriber.</div></div>
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="stat"><div class="label">Total expenses (all logged)</div><div class="value" id="mbExpTotal">₱0.00</div><div class="foot" id="mbExpCount">0 entries</div></div>
+        <div class="stat"><div class="label">Cost per subscriber</div><div class="value" id="mbExpPerSub">₱0.00</div><div class="foot">This month's expenses ÷ current subscribers</div></div>
+      </div>
+      <div class="card" style="--accent:#e0453f;margin-bottom:16px;">
+        <h3><span class="dot"></span>Expenses by category (most recent month)</h3>
+        <canvas id="chartMbExpenses"></canvas>
+      </div>
+      <div class="card" style="--accent:#e0453f;">
+        <h3><span class="dot"></span>Running costs</h3>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.3fr 1fr auto;align-items:end;">
+          <div class="field"><label>Month</label><input type="month" id="mbExp_month"></div>
+          <div class="field"><label>Category</label>
+            <select id="mbExp_category">
+              <option value="Tools">Tools</option>
+              <option value="Ad spend">Ad spend</option>
+              <option value="Misc">Misc</option>
+            </select>
+          </div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="mbExp_amount" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addMbExpense()">+ Add</button>
+        </div>
+        <table id="mbExpenseTable" style="margin-top:14px;"><tr><th>Month</th><th>Category</th><th>Amount</th><th></th></tr></table>
+      </div>
     </div>
 
     <div class="mb-subview" id="mbSubview-cashflow" style="display:none;">
-      <div class="card"><h3><span class="dot"></span>Cash Flow Summary</h3><div class="sub">Coming soon — revenue minus expenses, net income trend.</div></div>
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="stat"><div class="label">Net income (most recent month)</div><div class="value" id="mbCfNet">₱0.00</div><div class="foot" id="mbCfNetFoot">MRR − expenses</div></div>
+        <div class="stat"><div class="label">Net income (last 3 months)</div><div class="value" id="mbCfQuarterNet">₱0.00</div><div class="foot">Approx. quarterly rollup</div></div>
+      </div>
+      <div class="card" style="--accent:#e0453f;">
+        <h3><span class="dot"></span>Net income trend</h3>
+        <div class="sub">Revenue (from MRR log) minus expenses, by month</div>
+        <canvas id="chartMbCashflow"></canvas>
+      </div>
     </div>
   </div>
 
@@ -1068,6 +1189,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.querySelectorAll('.mb-subtab').forEach(t => t.classList.toggle('active', t.dataset.mbview === view));
     document.querySelectorAll('.mb-subview').forEach(v => v.style.display = (v.id === `mbSubview-${view}`) ? '' : 'none');
     if(view === 'sales') renderSalesDashboard();
+    if(view === 'marketing') renderMarketingDashboard();
+    if(view === 'team') renderTeamDashboard();
+    if(view === 'operating') renderOperatingDashboard();
+    if(view === 'expenses') renderExpensesDashboard();
+    if(view === 'cashflow') renderCashflowDashboard();
   }
 
   function toggleSidebar(){
@@ -1164,6 +1290,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mrrHistory: [] // [{ month:'2026-09', mrr:50000 }, ...]
   };
 
+  const defaultMbMarketing = {
+    posts: [], // [{ id, title, pillar:'educational'|'joke'|'proof', views, engagement, saves }]
+    dmVolume: [], // [{ week:'2026-W36', count }]
+    followers: [] // [{ month:'2026-09', count }]
+  };
+
+  const defaultMbTeam = {
+    tasks: [] // [{ id, label, done, lastUpdated }]
+  };
+
+  const defaultMbOperating = {
+    complianceConfirmedWeek: null, // ISO week string of the last confirmed week, e.g. '2026-W36'
+    pipeline: [], // [{ id, title, stage:'idea'|'draft'|'posted' }]
+    toolNotes: ''
+  };
+
+  const defaultMbExpenses = {
+    items: [] // [{ id, month:'2026-09', category, amount }]
+  };
+
   const defaultData = {
     dataVersion: 7,
     lastUpdated: null,
@@ -1174,7 +1320,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     exec: JSON.parse(JSON.stringify(defaultExec)),
     calendar: { events: [] },
     monthlyIncome: { goal:1000000 },
-    mbSales: JSON.parse(JSON.stringify(defaultMbSales))
+    mbSales: JSON.parse(JSON.stringify(defaultMbSales)),
+    mbMarketing: JSON.parse(JSON.stringify(defaultMbMarketing)),
+    mbTeam: JSON.parse(JSON.stringify(defaultMbTeam)),
+    mbOperating: JSON.parse(JSON.stringify(defaultMbOperating)),
+    mbExpenses: JSON.parse(JSON.stringify(defaultMbExpenses))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -1238,6 +1388,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // Add Master Baccarat Sales Dashboard data for anyone who saved before it existed
     if(!parsed.mbSales){
       parsed.mbSales = JSON.parse(JSON.stringify(defaultMbSales));
+    }
+    if(!parsed.mbMarketing){
+      parsed.mbMarketing = JSON.parse(JSON.stringify(defaultMbMarketing));
+    }
+    if(!parsed.mbTeam){
+      parsed.mbTeam = JSON.parse(JSON.stringify(defaultMbTeam));
+    }
+    if(!parsed.mbOperating){
+      parsed.mbOperating = JSON.parse(JSON.stringify(defaultMbOperating));
+    }
+    if(!parsed.mbExpenses){
+      parsed.mbExpenses = JSON.parse(JSON.stringify(defaultMbExpenses));
     }
     parsed.dataVersion = 7;
     return parsed;
@@ -1328,7 +1490,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         exec: { goals, cash, thresholds, expenses, assets },
         calendar: { events },
         monthlyIncome: settings.monthlyIncome || JSON.parse(JSON.stringify(defaultData.monthlyIncome)),
-        mbSales: settings.mbSales || JSON.parse(JSON.stringify(defaultMbSales))
+        mbSales: settings.mbSales || JSON.parse(JSON.stringify(defaultMbSales)),
+        mbMarketing: settings.mbMarketing || JSON.parse(JSON.stringify(defaultMbMarketing)),
+        mbTeam: settings.mbTeam || JSON.parse(JSON.stringify(defaultMbTeam)),
+        mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
+        mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -1911,6 +2077,338 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderSalesDashboard();
     await saveSetting('mbSales', s);
+  }
+
+  /* ---------------- Master Baccarat: Marketing Dashboard ---------------- */
+  const pillarLabels = { educational:'Educational', joke:'Joke/entertainment', proof:'Proof/testimonial' };
+
+  function renderMarketingDashboard(){
+    if(!document.getElementById('mbSubview-marketing')) return;
+    const m = dashboardData.mbMarketing;
+
+    const sortedFollowers = [...m.followers].sort((a,b)=> a.month.localeCompare(b.month));
+    const latestFollowers = sortedFollowers.length ? sortedFollowers[sortedFollowers.length-1].count : 0;
+    const prevFollowers = sortedFollowers.length > 1 ? sortedFollowers[sortedFollowers.length-2].count : null;
+    document.getElementById('mktFollowers').textContent = latestFollowers;
+    document.getElementById('mktFollowerDelta').textContent = prevFollowers !== null
+      ? `${latestFollowers - prevFollowers >= 0 ? '+' : ''}${latestFollowers - prevFollowers} vs last logged month`
+      : 'Log at least 2 months to see change';
+
+    const sortedDm = [...m.dmVolume].sort((a,b)=> a.week.localeCompare(b.week));
+    document.getElementById('mktDmVolume').textContent = sortedDm.length ? sortedDm[sortedDm.length-1].count : 0;
+
+    document.getElementById('mktPostCount').textContent = m.posts.length;
+
+    // Follower growth chart
+    const canvas = document.getElementById('chartMktFollowers');
+    if(canvas && typeof Chart !== 'undefined'){
+      if(charts.mktFollowers) charts.mktFollowers.destroy();
+      const isLight = document.documentElement.classList.contains('light-theme');
+      const gridColor = isLight ? '#e6e9f2' : '#2a3140';
+      charts.mktFollowers = new Chart(canvas, {
+        type: 'line',
+        data: { labels: sortedFollowers.map(e=>e.month), datasets:[{ label:'Followers', data: sortedFollowers.map(e=>e.count), borderColor:'#e0453f', backgroundColor:'rgba(224,69,63,.15)', fill:true, tension:.3 }] },
+        options: { responsive:true, plugins:{ legend:{ display:false } }, scales: { x:{ grid:{ color:gridColor } }, y:{ grid:{ color:gridColor } } } }
+      });
+    }
+
+    // Pillar breakdown
+    const pillars = ['educational','joke','proof'];
+    document.getElementById('mktPillarBreakdown').innerHTML = pillars.map(p=>{
+      const posts = m.posts.filter(post => post.pillar === p);
+      const avg = (field) => posts.length ? Math.round(posts.reduce((a,x)=>a+x[field],0)/posts.length) : 0;
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:8px;">
+          <div><div style="font-weight:600;font-size:13px;">${pillarLabels[p]}</div><div style="font-size:11px;color:var(--muted);">${posts.length} post${posts.length===1?'':'s'} logged</div></div>
+          <div style="text-align:right;font-size:12px;color:var(--muted);">Views ${avg('views')} · Eng. ${avg('engagement')} · Saves ${avg('saves')}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Post list
+    document.getElementById('mktPostList').innerHTML = m.posts.length
+      ? [...m.posts].reverse().map(p=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <div style="min-width:0;"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title}</div><div style="font-size:11px;color:var(--muted);">${pillarLabels[p.pillar]}</div></div>
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+              <span style="font-size:12px;color:var(--muted);">Views ${p.views} · Eng. ${p.engagement} · Saves ${p.saves}</span>
+              <button class="del-btn" onclick="removeMarketingPost('${p.id}')">Remove</button>
+            </div>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No posts logged yet.</div>';
+  }
+
+  async function addMarketingPost(){
+    const title = document.getElementById('mkt_postTitle').value.trim();
+    const pillar = document.getElementById('mkt_postPillar').value;
+    const views = clampNonNeg(parseInt(document.getElementById('mkt_postViews').value) || 0);
+    const engagement = clampNonNeg(parseInt(document.getElementById('mkt_postEngagement').value) || 0);
+    const saves = clampNonNeg(parseInt(document.getElementById('mkt_postSaves').value) || 0);
+    if(!title){ alert('Please give the post a title or short description.'); return; }
+    const m = dashboardData.mbMarketing;
+    m.posts.push({ id:'post'+Date.now(), title, pillar, views, engagement, saves });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('mkt_postTitle').value = '';
+    document.getElementById('mkt_postViews').value = '';
+    document.getElementById('mkt_postEngagement').value = '';
+    document.getElementById('mkt_postSaves').value = '';
+    renderMarketingDashboard();
+    await saveSetting('mbMarketing', m);
+  }
+
+  async function removeMarketingPost(id){
+    const m = dashboardData.mbMarketing;
+    m.posts = m.posts.filter(p => p.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderMarketingDashboard();
+    await saveSetting('mbMarketing', m);
+  }
+
+  async function addDmVolumeEntry(){
+    const week = document.getElementById('mkt_dmWeek').value;
+    const count = clampNonNeg(parseInt(document.getElementById('mkt_dmCount').value) || 0);
+    if(!week){ alert('Please choose a week.'); return; }
+    const m = dashboardData.mbMarketing;
+    const existing = m.dmVolume.find(e => e.week === week);
+    if(existing) existing.count = count; else m.dmVolume.push({ week, count });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('mkt_dmWeek').value = '';
+    document.getElementById('mkt_dmCount').value = '';
+    renderMarketingDashboard();
+    await saveSetting('mbMarketing', m);
+  }
+
+  async function addFollowerEntry(){
+    const month = document.getElementById('mkt_followerMonth').value;
+    const count = clampNonNeg(parseInt(document.getElementById('mkt_followerCount').value) || 0);
+    if(!month){ alert('Please choose a month.'); return; }
+    const m = dashboardData.mbMarketing;
+    const existing = m.followers.find(e => e.month === month);
+    if(existing) existing.count = count; else m.followers.push({ month, count });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('mkt_followerMonth').value = '';
+    document.getElementById('mkt_followerCount').value = '';
+    renderMarketingDashboard();
+    await saveSetting('mbMarketing', m);
+  }
+
+  /* ---------------- Master Baccarat: Team Dashboard ---------------- */
+  function renderTeamDashboard(){
+    if(!document.getElementById('mbSubview-team')) return;
+    const t = dashboardData.mbTeam;
+    document.getElementById('teamTaskList').innerHTML = t.tasks.length
+      ? t.tasks.map(task => `
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;cursor:pointer;">
+            <input type="checkbox" ${task.done?'checked':''} onchange="toggleTeamTask('${task.id}')" style="width:16px;height:16px;flex-shrink:0;">
+            <span style="flex:1;font-size:13.5px;${task.done?'text-decoration:line-through;color:var(--muted);':''}">${task.label}</span>
+            <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${task.lastUpdated ? new Date(task.lastUpdated).toLocaleDateString() : 'Not started'}</span>
+            <button class="del-btn" onclick="event.preventDefault();removeTeamTask('${task.id}')">Remove</button>
+          </label>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No tasks yet — add the weekly routine below.</div>';
+  }
+
+  async function addTeamTask(){
+    const label = document.getElementById('team_newTaskLabel').value.trim();
+    if(!label){ alert('Please enter a task.'); return; }
+    const t = dashboardData.mbTeam;
+    t.tasks.push({ id:'task'+Date.now(), label, done:false, lastUpdated:null });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('team_newTaskLabel').value = '';
+    renderTeamDashboard();
+    await saveSetting('mbTeam', t);
+  }
+
+  async function toggleTeamTask(id){
+    const t = dashboardData.mbTeam;
+    const task = t.tasks.find(x => x.id === id);
+    if(!task) return;
+    task.done = !task.done;
+    task.lastUpdated = Date.now();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderTeamDashboard();
+    await saveSetting('mbTeam', t);
+  }
+
+  async function removeTeamTask(id){
+    const t = dashboardData.mbTeam;
+    t.tasks = t.tasks.filter(x => x.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderTeamDashboard();
+    await saveSetting('mbTeam', t);
+  }
+
+  /* ---------------- Master Baccarat: Operating Dashboard ---------------- */
+  function getIsoWeek(d){
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const weekNum = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    return `${date.getUTCFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+  }
+
+  function renderOperatingDashboard(){
+    if(!document.getElementById('mbSubview-operating')) return;
+    const o = dashboardData.mbOperating;
+    const currentWeek = getIsoWeek(new Date());
+    const isConfirmedThisWeek = o.complianceConfirmedWeek === currentWeek;
+    document.getElementById('op_complianceChecked').checked = isConfirmedThisWeek;
+    document.getElementById('op_complianceLabel').textContent = isConfirmedThisWeek
+      ? `Confirmed for this week (${currentWeek})`
+      : `Not yet confirmed for this week (${currentWeek})`;
+
+    const stageLabels = { idea:'Idea', draft:'Draft', posted:'Posted' };
+    document.getElementById('opPipelineList').innerHTML = o.pipeline.length
+      ? [...o.pipeline].reverse().map(item => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <span style="font-size:13px;">${item.title}</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <select onchange="updatePipelineStage('${item.id}', this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:12px;font-family:inherit;">
+                <option value="idea" ${item.stage==='idea'?'selected':''}>Idea</option>
+                <option value="draft" ${item.stage==='draft'?'selected':''}>Draft</option>
+                <option value="posted" ${item.stage==='posted'?'selected':''}>Posted</option>
+              </select>
+              <button class="del-btn" onclick="removePipelineItem('${item.id}')">Remove</button>
+            </div>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">Nothing in the pipeline yet.</div>';
+
+    document.getElementById('op_toolNotes').value = o.toolNotes || '';
+  }
+
+  async function toggleComplianceCheck(){
+    const o = dashboardData.mbOperating;
+    const currentWeek = getIsoWeek(new Date());
+    const checked = document.getElementById('op_complianceChecked').checked;
+    o.complianceConfirmedWeek = checked ? currentWeek : null;
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderOperatingDashboard();
+    await saveSetting('mbOperating', o);
+    if(checked) playChime(920);
+  }
+
+  async function addPipelineItem(){
+    const title = document.getElementById('op_pipelineTitle').value.trim();
+    const stage = document.getElementById('op_pipelineStage').value;
+    if(!title){ alert('Please enter a content idea or title.'); return; }
+    const o = dashboardData.mbOperating;
+    o.pipeline.push({ id:'pipe'+Date.now(), title, stage });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('op_pipelineTitle').value = '';
+    renderOperatingDashboard();
+    await saveSetting('mbOperating', o);
+  }
+
+  async function updatePipelineStage(id, stage){
+    const o = dashboardData.mbOperating;
+    const item = o.pipeline.find(x => x.id === id);
+    if(!item) return;
+    item.stage = stage;
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    await saveSetting('mbOperating', o);
+  }
+
+  async function removePipelineItem(id){
+    const o = dashboardData.mbOperating;
+    o.pipeline = o.pipeline.filter(x => x.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderOperatingDashboard();
+    await saveSetting('mbOperating', o);
+  }
+
+  async function saveToolNotes(){
+    const o = dashboardData.mbOperating;
+    o.toolNotes = document.getElementById('op_toolNotes').value;
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    await saveSetting('mbOperating', o);
+  }
+
+  /* ---------------- Master Baccarat: Expenses Dashboard ---------------- */
+  function renderExpensesDashboard(){
+    if(!document.getElementById('mbSubview-expenses')) return;
+    const ex = dashboardData.mbExpenses;
+    const total = ex.items.reduce((a,i)=>a+i.amount,0);
+    document.getElementById('mbExpTotal').textContent = fmtPeso(total);
+    document.getElementById('mbExpCount').textContent = `${ex.items.length} entr${ex.items.length===1?'y':'ies'}`;
+
+    const months = [...new Set(ex.items.map(i=>i.month))].sort();
+    const latestMonth = months.length ? months[months.length-1] : null;
+    const latestMonthItems = latestMonth ? ex.items.filter(i=>i.month===latestMonth) : [];
+    const latestMonthTotal = latestMonthItems.reduce((a,i)=>a+i.amount,0);
+    const currentSubs = dashboardData.mbSales.subscribers.current;
+    document.getElementById('mbExpPerSub').textContent = currentSubs > 0 ? fmtPeso(latestMonthTotal / currentSubs) : '₱0.00';
+
+    const canvas = document.getElementById('chartMbExpenses');
+    if(canvas && typeof Chart !== 'undefined'){
+      if(charts.mbExpenses) charts.mbExpenses.destroy();
+      const categories = ['Tools','Ad spend','Misc'];
+      const byCat = categories.map(c => latestMonthItems.filter(i=>i.category===c).reduce((a,i)=>a+i.amount,0));
+      const isLight = document.documentElement.classList.contains('light-theme');
+      const gridColor = isLight ? '#e6e9f2' : '#2a3140';
+      charts.mbExpenses = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: categories, datasets:[{ data: byCat, backgroundColor:'#e0453f', borderRadius:6 }] },
+        options: { responsive:true, plugins:{ legend:{ display:false } }, scales: { x:{ grid:{ display:false } }, y:{ grid:{ color:gridColor } } } }
+      });
+    }
+
+    document.getElementById('mbExpenseTable').innerHTML = '<tr><th>Month</th><th>Category</th><th>Amount</th><th></th></tr>' +
+      [...ex.items].reverse().map(i => `<tr><td>${i.month}</td><td>${i.category}</td><td>${fmtPeso(i.amount)}</td><td><button class="del-btn" onclick="removeMbExpense('${i.id}')">Remove</button></td></tr>`).join('');
+  }
+
+  async function addMbExpense(){
+    const month = document.getElementById('mbExp_month').value;
+    const category = document.getElementById('mbExp_category').value;
+    const amount = clampNonNeg(parseCurrency(document.getElementById('mbExp_amount').value));
+    if(!month || amount <= 0){ alert('Please choose a month and enter a valid amount.'); return; }
+    const ex = dashboardData.mbExpenses;
+    ex.items.push({ id:'exp'+Date.now(), month, category, amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('mbExp_amount').value = '';
+    renderExpensesDashboard();
+    await saveSetting('mbExpenses', ex);
+  }
+
+  async function removeMbExpense(id){
+    const ex = dashboardData.mbExpenses;
+    ex.items = ex.items.filter(i => i.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderExpensesDashboard();
+    await saveSetting('mbExpenses', ex);
+  }
+
+  /* ---------------- Master Baccarat: Cash Flow Summary (auto-rolled up, no separate data entry) ---------------- */
+  function renderCashflowDashboard(){
+    if(!document.getElementById('mbSubview-cashflow')) return;
+    const revByMonth = {};
+    dashboardData.mbSales.mrrHistory.forEach(e => { revByMonth[e.month] = e.mrr; });
+    const expByMonth = {};
+    dashboardData.mbExpenses.items.forEach(i => { expByMonth[i.month] = (expByMonth[i.month]||0) + i.amount; });
+    const allMonths = [...new Set([...Object.keys(revByMonth), ...Object.keys(expByMonth)])].sort();
+    const netByMonth = allMonths.map(month => ({ month, net: (revByMonth[month]||0) - (expByMonth[month]||0) }));
+
+    const latest = netByMonth.length ? netByMonth[netByMonth.length-1] : null;
+    document.getElementById('mbCfNet').textContent = fmtPeso(latest ? latest.net : 0);
+    document.getElementById('mbCfNetFoot').textContent = latest ? `${latest.month}: MRR ${fmtPeso(revByMonth[latest.month]||0)} − expenses ${fmtPeso(expByMonth[latest.month]||0)}` : 'Log MRR and expenses to see this';
+
+    const last3 = netByMonth.slice(-3);
+    const last3Total = last3.reduce((a,e)=>a+e.net,0);
+    document.getElementById('mbCfQuarterNet').textContent = fmtPeso(last3Total);
+
+    const canvas = document.getElementById('chartMbCashflow');
+    if(canvas && typeof Chart !== 'undefined'){
+      if(charts.mbCashflow) charts.mbCashflow.destroy();
+      const isLight = document.documentElement.classList.contains('light-theme');
+      const gridColor = isLight ? '#e6e9f2' : '#2a3140';
+      charts.mbCashflow = new Chart(canvas, {
+        type: 'bar',
+        data: { labels: netByMonth.map(e=>e.month), datasets:[{ data: netByMonth.map(e=>e.net), backgroundColor: netByMonth.map(e=> e.net >= 0 ? '#5fbf7a' : '#e0453f'), borderRadius:6 }] },
+        options: { responsive:true, plugins:{ legend:{ display:false } }, scales: { x:{ grid:{ display:false } }, y:{ grid:{ color:gridColor } } } }
+      });
+    }
   }
 
   function renderExecutive(snap){
