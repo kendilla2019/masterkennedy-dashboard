@@ -1004,52 +1004,82 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="view" id="investments">
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
       <h3><span class="dot"></span>Net worth</h3>
-      <div class="sub">Total assets minus total liabilities</div>
+      <div class="sub">Property equity + other assets − other liabilities</div>
       <div style="font-family:'IBM Plex Sans',sans-serif;font-size:36px;font-weight:700;margin-top:10px;" id="netWorthTotal">₱0.00</div>
-      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;" id="netWorthBreakdown">Assets ₱0.00 − Liabilities ₱0.00</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;" id="netWorthBreakdown">—</div>
     </div>
 
     <div class="grid-2" style="margin-bottom:16px;">
       <div class="stat"><div class="label">Emergency fund / liquidity</div><div class="value" id="invEmergencyFund">₱0.00</div><div class="foot" id="invRunway">0 months of runway</div></div>
-      <div class="stat"><div class="label">Vehicle (Honda HR-V)</div><div class="value" id="invVehicleNet">₱0.00</div><div class="foot" id="invVehicleFoot">Value minus maintenance to date</div></div>
+      <div class="stat"><div class="label">Vehicle (Honda HR-V)</div><div class="value" id="invVehicleNet">₱0.00</div><div class="foot" id="invVehicleFoot">—</div></div>
     </div>
 
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
-      <h3><span class="dot"></span>Assets</h3>
-      <div class="sub">Current estimated value per asset</div>
-      <div class="grid-3" style="margin-top:12px;">
-        <div class="stat"><div class="label">Condo</div><div class="value" id="invCondo">₱0.00</div></div>
-        <div class="stat"><div class="label">Astoria</div><div class="value" id="invAstoria">₱0.00</div></div>
-        <div class="stat"><div class="label">Land</div><div class="value" id="invLand">₱0.00</div></div>
-        <div class="stat"><div class="label">Nexstack (equity stake)</div><div class="value" id="invNexstackEquity">₱0.00</div></div>
-        <div class="stat"><div class="label">Gold</div><div class="value" id="invGold">₱0.00</div></div>
-        <div class="stat"><div class="label">Total assets</div><div class="value" id="invAssetsTotal">₱0.00</div></div>
+      <h3><span class="dot"></span>Properties</h3>
+      <div class="sub">Value, loan balance, and equity per property</div>
+      <table style="margin-top:12px;" id="propertyTable">
+        <tr><th>Property</th><th>Value</th><th>Loan balance</th><th>Equity</th></tr>
+      </table>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="card" style="--accent:#2f6fed">
+        <h3><span class="dot"></span>Gold holdings</h3>
+        <div class="sub">Tracked separately since each lot differs</div>
+        <table id="goldTable" style="margin-top:12px;"><tr><th>Description</th><th>Value</th><th></th></tr></table>
+        <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="goldTotal">Total: ₱0.00</div>
+      </div>
+      <div class="card" style="--accent:#2f6fed">
+        <h3><span class="dot"></span>Other assets</h3>
+        <div class="sub">Not tied to a property or gold</div>
+        <div class="stat" style="margin-top:12px;"><div class="label">Nexstack (equity stake)</div><div class="value" id="invNexstackEquity">₱0.00</div></div>
       </div>
     </div>
 
     <div class="card" style="--accent:#2f6fed;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
-        <div><h3 style="margin:0;"><span class="dot"></span>Update numbers</h3><div class="sub" style="margin:4px 0 0;">Assets, vehicle, emergency fund, and liabilities</div></div>
+        <div><h3 style="margin:0;"><span class="dot"></span>Update numbers</h3><div class="sub" style="margin:4px 0 0;">Properties, vehicle, gold, emergency fund, and other liabilities</div></div>
         <button class="btn secondary small" onclick="toggleInvestmentEdit()" id="invEditToggleBtn">Edit numbers</button>
       </div>
       <div id="invEditForm" style="display:none;">
+
+        <h4 style="margin:0 0 10px;font-size:13.5px;color:var(--ink);">Properties (value and loan balance)</h4>
+        <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));">
+          <div class="field"><label>Condo value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_condoValue" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Condo loan balance (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_condoLoan" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Astoria value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_astoriaValue" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Astoria loan balance (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_astoriaLoan" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Land value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_landValue" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Land loan balance (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_landLoan" onblur="formatCurrencyField(this)"></div>
+        </div>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Vehicle (with depreciation)</h4>
+        <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));">
+          <div class="field"><label>Original purchase price (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehiclePurchase" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Current value, after depreciation (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehicleCurrent" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Maintenance to date (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehicleMaintenance" onblur="formatCurrencyField(this)"></div>
+        </div>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Other numbers</h4>
         <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
-          <div class="field"><label>Condo (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_condo" onblur="formatCurrencyField(this)"></div>
-          <div class="field"><label>Astoria (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_astoria" onblur="formatCurrencyField(this)"></div>
-          <div class="field"><label>Land (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_land" onblur="formatCurrencyField(this)"></div>
           <div class="field"><label>Nexstack equity (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_nexstackEquity" onblur="formatCurrencyField(this)"></div>
-          <div class="field"><label>Gold (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_gold" onblur="formatCurrencyField(this)"></div>
-          <div class="field"><label>Vehicle value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehicleValue" onblur="formatCurrencyField(this)"></div>
-          <div class="field"><label>Vehicle maintenance to date (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehicleMaintenance" onblur="formatCurrencyField(this)"></div>
           <div class="field"><label>Emergency fund (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_emergencyFund" onblur="formatCurrencyField(this)"></div>
           <div class="field"><label>Monthly expenses, for runway calc (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_monthlyExpenses" onblur="formatCurrencyField(this)"></div>
         </div>
         <button class="btn small" style="margin-top:6px;" onclick="saveInvestmentData()">Save</button>
         <span id="invSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
 
-        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Liabilities</h4>
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Gold holdings (each lot separately)</h4>
         <div class="edit-grid" style="grid-template-columns:1.3fr 1fr auto;align-items:end;">
-          <div class="field"><label>Name (e.g. Condo financing, Car loan)</label><input type="text" id="inv_liabilityName"></div>
+          <div class="field"><label>Description (e.g. 1oz bar, wedding set)</label><input type="text" id="inv_goldName"></div>
+          <div class="field"><label>Value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_goldValue" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addGoldHolding()">+ Add</button>
+        </div>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Other liabilities</h4>
+        <div class="sub" style="margin-bottom:10px;">Not tied to a property — those loans go in Properties above</div>
+        <div class="edit-grid" style="grid-template-columns:1.3fr 1fr auto;align-items:end;">
+          <div class="field"><label>Name (e.g. Car loan, Personal loan)</label><input type="text" id="inv_liabilityName"></div>
           <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_liabilityAmount" onblur="formatCurrencyField(this)"></div>
           <button class="btn small" onclick="addLiability()">+ Add</button>
         </div>
@@ -1371,15 +1401,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   };
 
   const defaultInvestment = {
-    assets: { condo:0, astoria:0, land:0, nexstackEquity:0, gold:0 },
-    vehicle: { value:0, maintenance:0 },
-    liabilities: [], // [{ id, name, amount }]
+    properties: {
+      condo: { value:0, loanBalance:0 },
+      astoria: { value:0, loanBalance:0 },
+      land: { value:0, loanBalance:0 }
+    },
+    nexstackEquity: 0,
+    goldHoldings: [], // [{ id, name, value }] — tracked separately since each lot differs
+    vehicle: { purchasePrice:0, currentValue:0, maintenance:0 },
+    liabilities: [], // other liabilities not tied to a property — [{ id, name, amount }]
     emergencyFund: 0,
     monthlyExpenses: 0 // used to compute months of runway
   };
 
   const defaultData = {
-    dataVersion: 8,
+    dataVersion: 9,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -1472,9 +1508,32 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     if(!parsed.investment){
       parsed.investment = JSON.parse(JSON.stringify(defaultInvestment));
+    } else {
+      parsed.investment = migrateInvestmentShape(parsed.investment);
     }
-    parsed.dataVersion = 8;
+    parsed.dataVersion = 9;
     return parsed;
+  }
+
+  // Migrates the old flat investment shape (single condo/astoria/land/gold numbers) to the
+  // new detailed one (per-property loans, a gold holdings list, vehicle with depreciation).
+  // Safe to call on already-new-shape data — it just returns it unchanged.
+  function migrateInvestmentShape(inv){
+    if(!inv || !inv.assets) return inv;
+    const old = inv;
+    return {
+      properties: {
+        condo: { value: old.assets.condo || 0, loanBalance: 0 },
+        astoria: { value: old.assets.astoria || 0, loanBalance: 0 },
+        land: { value: old.assets.land || 0, loanBalance: 0 }
+      },
+      nexstackEquity: old.assets.nexstackEquity || 0,
+      goldHoldings: old.assets.gold ? [{ id:'gold-migrated', name:'Gold (from previous entry)', value: old.assets.gold }] : [],
+      vehicle: { purchasePrice: old.vehicle?.value || 0, currentValue: old.vehicle?.value || 0, maintenance: old.vehicle?.maintenance || 0 },
+      liabilities: old.liabilities || [],
+      emergencyFund: old.emergencyFund || 0,
+      monthlyExpenses: old.monthlyExpenses || 0
+    };
   }
 
   // Wraps any promise with a hard timeout — if Supabase is slow or unreachable, we don't
@@ -1555,7 +1614,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
 
       const assembled = {
-        dataVersion: 7,
+        dataVersion: 9,
         lastUpdated: settings.lastUpdated || null,
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
@@ -1567,7 +1626,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbTeam: settings.mbTeam || JSON.parse(JSON.stringify(defaultMbTeam)),
         mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
         mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses)),
-        investment: settings.investment || JSON.parse(JSON.stringify(defaultInvestment))
+        investment: migrateInvestmentShape(settings.investment) || JSON.parse(JSON.stringify(defaultInvestment))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -2489,31 +2548,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function renderInvestments(){
     if(!document.getElementById('investments')) return;
     const inv = dashboardData.investment;
-    const assetsTotal = Object.values(inv.assets).reduce((a,v)=>a+v,0);
-    const vehicleNet = inv.vehicle.value - inv.vehicle.maintenance;
-    const liabilitiesTotal = inv.liabilities.reduce((a,l)=>a+l.amount,0);
-    const netWorth = assetsTotal + vehicleNet + inv.emergencyFund - liabilitiesTotal;
+    const propKeys = ['condo','astoria','land'];
+    const propLabels = { condo:'Condo', astoria:'Astoria', land:'Land' };
+    const propValueTotal = propKeys.reduce((a,k)=>a+inv.properties[k].value,0);
+    const propLoanTotal = propKeys.reduce((a,k)=>a+inv.properties[k].loanBalance,0);
+    const propEquityTotal = propValueTotal - propLoanTotal;
+
+    const goldTotal = inv.goldHoldings.reduce((a,g)=>a+g.value,0);
+    const vehicleNet = inv.vehicle.currentValue - inv.vehicle.maintenance;
+    const depreciation = inv.vehicle.purchasePrice - inv.vehicle.currentValue;
+    const otherLiabilitiesTotal = inv.liabilities.reduce((a,l)=>a+l.amount,0);
+
+    const netWorth = propEquityTotal + inv.nexstackEquity + goldTotal + vehicleNet + inv.emergencyFund - otherLiabilitiesTotal;
 
     document.getElementById('netWorthTotal').textContent = fmtPeso(netWorth);
-    document.getElementById('netWorthBreakdown').textContent = `Assets ${fmtPeso(assetsTotal + vehicleNet + inv.emergencyFund)} − Liabilities ${fmtPeso(liabilitiesTotal)}`;
+    document.getElementById('netWorthBreakdown').textContent =
+      `Property equity ${fmtPeso(propEquityTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)} − Other liabilities ${fmtPeso(otherLiabilitiesTotal)}`;
 
     document.getElementById('invEmergencyFund').textContent = fmtPeso(inv.emergencyFund);
     const runwayMonths = inv.monthlyExpenses > 0 ? (inv.emergencyFund / inv.monthlyExpenses).toFixed(1) : '0';
     document.getElementById('invRunway').textContent = `${runwayMonths} months of runway`;
 
     document.getElementById('invVehicleNet').textContent = fmtPeso(vehicleNet);
-    document.getElementById('invVehicleFoot').textContent = `${fmtPeso(inv.vehicle.value)} value − ${fmtPeso(inv.vehicle.maintenance)} maintenance`;
+    document.getElementById('invVehicleFoot').textContent = `${fmtPeso(inv.vehicle.currentValue)} current value (${fmtPeso(depreciation)} depreciated) − ${fmtPeso(inv.vehicle.maintenance)} maintenance`;
 
-    document.getElementById('invCondo').textContent = fmtPeso(inv.assets.condo);
-    document.getElementById('invAstoria').textContent = fmtPeso(inv.assets.astoria);
-    document.getElementById('invLand').textContent = fmtPeso(inv.assets.land);
-    document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.assets.nexstackEquity);
-    document.getElementById('invGold').textContent = fmtPeso(inv.assets.gold);
-    document.getElementById('invAssetsTotal').textContent = fmtPeso(assetsTotal);
+    document.getElementById('propertyTable').innerHTML = '<tr><th>Property</th><th>Value</th><th>Loan balance</th><th>Equity</th></tr>' +
+      propKeys.map(k => {
+        const p = inv.properties[k];
+        return `<tr><td>${propLabels[k]}</td><td>${fmtPeso(p.value)}</td><td>${fmtPeso(p.loanBalance)}</td><td>${fmtPeso(p.value - p.loanBalance)}</td></tr>`;
+      }).join('') +
+      `<tr style="font-weight:700;"><td>Total</td><td>${fmtPeso(propValueTotal)}</td><td>${fmtPeso(propLoanTotal)}</td><td>${fmtPeso(propEquityTotal)}</td></tr>`;
+
+    document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.nexstackEquity);
+
+    document.getElementById('goldTable').innerHTML = '<tr><th>Description</th><th>Value</th><th></th></tr>' +
+      inv.goldHoldings.map(g => `<tr><td>${g.name}</td><td>${fmtPeso(g.value)}</td><td><button class="del-btn" onclick="removeGoldHolding('${g.id}')">Remove</button></td></tr>`).join('');
+    document.getElementById('goldTotal').textContent = `Total: ${fmtPeso(goldTotal)}`;
 
     document.getElementById('liabilityTable').innerHTML = '<tr><th>Name</th><th>Amount</th><th></th></tr>' +
       inv.liabilities.map(l => `<tr><td>${l.name}</td><td>${fmtPeso(l.amount)}</td><td><button class="del-btn" onclick="removeLiability('${l.id}')">Remove</button></td></tr>`).join('');
-    document.getElementById('liabilityTotal').textContent = `Total: ${fmtPeso(liabilitiesTotal)}`;
+    document.getElementById('liabilityTotal').textContent = `Total: ${fmtPeso(otherLiabilitiesTotal)}`;
   }
 
   function toggleInvestmentEdit(){
@@ -2524,13 +2598,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       document.getElementById('invEditToggleBtn').textContent = 'Edit numbers';
     } else {
       const inv = dashboardData.investment;
-      document.getElementById('inv_condo').value = fmtPeso(inv.assets.condo).slice(1);
-      document.getElementById('inv_astoria').value = fmtPeso(inv.assets.astoria).slice(1);
-      document.getElementById('inv_land').value = fmtPeso(inv.assets.land).slice(1);
-      document.getElementById('inv_nexstackEquity').value = fmtPeso(inv.assets.nexstackEquity).slice(1);
-      document.getElementById('inv_gold').value = fmtPeso(inv.assets.gold).slice(1);
-      document.getElementById('inv_vehicleValue').value = fmtPeso(inv.vehicle.value).slice(1);
+      document.getElementById('inv_condoValue').value = fmtPeso(inv.properties.condo.value).slice(1);
+      document.getElementById('inv_condoLoan').value = fmtPeso(inv.properties.condo.loanBalance).slice(1);
+      document.getElementById('inv_astoriaValue').value = fmtPeso(inv.properties.astoria.value).slice(1);
+      document.getElementById('inv_astoriaLoan').value = fmtPeso(inv.properties.astoria.loanBalance).slice(1);
+      document.getElementById('inv_landValue').value = fmtPeso(inv.properties.land.value).slice(1);
+      document.getElementById('inv_landLoan').value = fmtPeso(inv.properties.land.loanBalance).slice(1);
+      document.getElementById('inv_vehiclePurchase').value = fmtPeso(inv.vehicle.purchasePrice).slice(1);
+      document.getElementById('inv_vehicleCurrent').value = fmtPeso(inv.vehicle.currentValue).slice(1);
       document.getElementById('inv_vehicleMaintenance').value = fmtPeso(inv.vehicle.maintenance).slice(1);
+      document.getElementById('inv_nexstackEquity').value = fmtPeso(inv.nexstackEquity).slice(1);
       document.getElementById('inv_emergencyFund').value = fmtPeso(inv.emergencyFund).slice(1);
       document.getElementById('inv_monthlyExpenses').value = fmtPeso(inv.monthlyExpenses).slice(1);
       form.style.display = 'block';
@@ -2540,13 +2617,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   async function saveInvestmentData(){
     const inv = dashboardData.investment;
-    inv.assets.condo = clampNonNeg(parseCurrency(document.getElementById('inv_condo').value));
-    inv.assets.astoria = clampNonNeg(parseCurrency(document.getElementById('inv_astoria').value));
-    inv.assets.land = clampNonNeg(parseCurrency(document.getElementById('inv_land').value));
-    inv.assets.nexstackEquity = clampNonNeg(parseCurrency(document.getElementById('inv_nexstackEquity').value));
-    inv.assets.gold = clampNonNeg(parseCurrency(document.getElementById('inv_gold').value));
-    inv.vehicle.value = clampNonNeg(parseCurrency(document.getElementById('inv_vehicleValue').value));
+    inv.properties.condo.value = clampNonNeg(parseCurrency(document.getElementById('inv_condoValue').value));
+    inv.properties.condo.loanBalance = clampNonNeg(parseCurrency(document.getElementById('inv_condoLoan').value));
+    inv.properties.astoria.value = clampNonNeg(parseCurrency(document.getElementById('inv_astoriaValue').value));
+    inv.properties.astoria.loanBalance = clampNonNeg(parseCurrency(document.getElementById('inv_astoriaLoan').value));
+    inv.properties.land.value = clampNonNeg(parseCurrency(document.getElementById('inv_landValue').value));
+    inv.properties.land.loanBalance = clampNonNeg(parseCurrency(document.getElementById('inv_landLoan').value));
+    inv.vehicle.purchasePrice = clampNonNeg(parseCurrency(document.getElementById('inv_vehiclePurchase').value));
+    inv.vehicle.currentValue = clampNonNeg(parseCurrency(document.getElementById('inv_vehicleCurrent').value));
     inv.vehicle.maintenance = clampNonNeg(parseCurrency(document.getElementById('inv_vehicleMaintenance').value));
+    inv.nexstackEquity = clampNonNeg(parseCurrency(document.getElementById('inv_nexstackEquity').value));
     inv.emergencyFund = clampNonNeg(parseCurrency(document.getElementById('inv_emergencyFund').value));
     inv.monthlyExpenses = clampNonNeg(parseCurrency(document.getElementById('inv_monthlyExpenses').value));
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
@@ -2556,6 +2636,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const el = document.getElementById('invSaveConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  async function addGoldHolding(){
+    const name = document.getElementById('inv_goldName').value.trim();
+    const value = clampNonNeg(parseCurrency(document.getElementById('inv_goldValue').value));
+    if(!name || value <= 0){ alert('Please enter a description and a valid value.'); return; }
+    const inv = dashboardData.investment;
+    inv.goldHoldings.push({ id:'gold'+Date.now(), name, value });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('inv_goldName').value = '';
+    document.getElementById('inv_goldValue').value = '';
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function removeGoldHolding(id){
+    const inv = dashboardData.investment;
+    inv.goldHoldings = inv.goldHoldings.filter(g => g.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
   }
 
   async function addLiability(){
