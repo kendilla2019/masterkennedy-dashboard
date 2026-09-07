@@ -1022,6 +1022,48 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       </table>
     </div>
 
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:10px;">
+        <div><h3 style="margin:0;"><span class="dot"></span>Property income &amp; expenses</h3><div class="sub" style="margin:4px 0 0;">Rental/other income and specific costs (tax, insurance, dues) per property</div></div>
+      </div>
+      <table id="propertyCashflowTable"><tr><th>Property</th><th>Income</th><th>Expenses</th><th>Net</th></tr></table>
+      <div style="display:flex;gap:24px;margin-top:14px;flex-wrap:wrap;">
+        <div><div style="font-size:12px;color:var(--muted);">Total monthly income</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="propIncomeTotal">₱0.00</div></div>
+        <div><div style="font-size:12px;color:var(--muted);">Total monthly expenses</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="propExpenseTotal">₱0.00</div></div>
+        <div><div style="font-size:12px;color:var(--muted);">Net monthly cash flow</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="propNetCashflow">₱0.00</div></div>
+      </div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log income</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr auto;align-items:end;">
+        <div class="field"><label>Property</label>
+          <select id="propInc_property"><option value="condo">Condo</option><option value="astoria">Astoria</option><option value="land">Land</option></select>
+        </div>
+        <div class="field"><label>Description (e.g. Rental income)</label><input type="text" id="propInc_desc"></div>
+        <div class="field"><label>Amount (₱/month)</label><input type="text" inputmode="decimal" class="currency-field" id="propInc_amount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addPropertyIncome()">+ Add</button>
+      </div>
+      <div id="propertyIncomeList" style="margin-top:10px;"></div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log a specific expense</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr auto;align-items:end;">
+        <div class="field"><label>Property</label>
+          <select id="propExp_property"><option value="condo">Condo</option><option value="astoria">Astoria</option><option value="land">Land</option></select>
+        </div>
+        <div class="field"><label>Category</label>
+          <select id="propExp_category">
+            <option value="Property tax">Property tax</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Association dues">Association dues</option>
+            <option value="Repairs">Repairs</option>
+            <option value="Misc">Misc</option>
+          </select>
+        </div>
+        <div class="field"><label>Amount (₱/month)</label><input type="text" inputmode="decimal" class="currency-field" id="propExp_amount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addPropertyExpense()">+ Add</button>
+      </div>
+      <div id="propertyExpenseList" style="margin-top:10px;"></div>
+    </div>
+
     <div class="grid-2" style="margin-bottom:16px;">
       <div class="card" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Gold holdings</h3>
@@ -1406,6 +1448,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       astoria: { value:0, loanBalance:0 },
       land: { value:0, loanBalance:0 }
     },
+    propertyIncome: [], // [{ id, property:'condo'|'astoria'|'land', description, amount }] — monthly
+    propertyExpenses: [], // [{ id, property, category, amount }] — monthly
     nexstackEquity: 0,
     goldHoldings: [], // [{ id, name, value }] — tracked separately since each lot differs
     vehicle: { purchasePrice:0, currentValue:0, maintenance:0 },
@@ -1519,21 +1563,29 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // new detailed one (per-property loans, a gold holdings list, vehicle with depreciation).
   // Safe to call on already-new-shape data — it just returns it unchanged.
   function migrateInvestmentShape(inv){
-    if(!inv || !inv.assets) return inv;
-    const old = inv;
-    return {
-      properties: {
-        condo: { value: old.assets.condo || 0, loanBalance: 0 },
-        astoria: { value: old.assets.astoria || 0, loanBalance: 0 },
-        land: { value: old.assets.land || 0, loanBalance: 0 }
-      },
-      nexstackEquity: old.assets.nexstackEquity || 0,
-      goldHoldings: old.assets.gold ? [{ id:'gold-migrated', name:'Gold (from previous entry)', value: old.assets.gold }] : [],
-      vehicle: { purchasePrice: old.vehicle?.value || 0, currentValue: old.vehicle?.value || 0, maintenance: old.vehicle?.maintenance || 0 },
-      liabilities: old.liabilities || [],
-      emergencyFund: old.emergencyFund || 0,
-      monthlyExpenses: old.monthlyExpenses || 0
-    };
+    if(!inv) return inv;
+    if(inv.assets){
+      // Old flat shape (single condo/astoria/land/gold numbers) — convert fully
+      const old = inv;
+      inv = {
+        properties: {
+          condo: { value: old.assets.condo || 0, loanBalance: 0 },
+          astoria: { value: old.assets.astoria || 0, loanBalance: 0 },
+          land: { value: old.assets.land || 0, loanBalance: 0 }
+        },
+        nexstackEquity: old.assets.nexstackEquity || 0,
+        goldHoldings: old.assets.gold ? [{ id:'gold-migrated', name:'Gold (from previous entry)', value: old.assets.gold }] : [],
+        vehicle: { purchasePrice: old.vehicle?.value || 0, currentValue: old.vehicle?.value || 0, maintenance: old.vehicle?.maintenance || 0 },
+        liabilities: old.liabilities || [],
+        emergencyFund: old.emergencyFund || 0,
+        monthlyExpenses: old.monthlyExpenses || 0
+      };
+    }
+    // Backfill any fields added since (covers both the flat-shape conversion above and anyone
+    // who already saved the "detailed" shape before property income/expenses existed).
+    if(!inv.propertyIncome) inv.propertyIncome = [];
+    if(!inv.propertyExpenses) inv.propertyExpenses = [];
+    return inv;
   }
 
   // Wraps any promise with a hard timeout — if Supabase is slow or unreachable, we don't
@@ -2579,6 +2631,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       }).join('') +
       `<tr style="font-weight:700;"><td>Total</td><td>${fmtPeso(propValueTotal)}</td><td>${fmtPeso(propLoanTotal)}</td><td>${fmtPeso(propEquityTotal)}</td></tr>`;
 
+    // Property income & expenses
+    const incomeByProp = {}; propKeys.forEach(k => incomeByProp[k] = inv.propertyIncome.filter(i=>i.property===k).reduce((a,i)=>a+i.amount,0));
+    const expenseByProp = {}; propKeys.forEach(k => expenseByProp[k] = inv.propertyExpenses.filter(e=>e.property===k).reduce((a,e)=>a+e.amount,0));
+    const totalPropIncome = Object.values(incomeByProp).reduce((a,v)=>a+v,0);
+    const totalPropExpense = Object.values(expenseByProp).reduce((a,v)=>a+v,0);
+
+    document.getElementById('propertyCashflowTable').innerHTML = '<tr><th>Property</th><th>Income</th><th>Expenses</th><th>Net</th></tr>' +
+      propKeys.map(k => `<tr><td>${propLabels[k]}</td><td>${fmtPeso(incomeByProp[k])}</td><td>${fmtPeso(expenseByProp[k])}</td><td>${fmtPeso(incomeByProp[k]-expenseByProp[k])}</td></tr>`).join('') +
+      `<tr style="font-weight:700;"><td>Total</td><td>${fmtPeso(totalPropIncome)}</td><td>${fmtPeso(totalPropExpense)}</td><td>${fmtPeso(totalPropIncome-totalPropExpense)}</td></tr>`;
+    document.getElementById('propIncomeTotal').textContent = fmtPeso(totalPropIncome);
+    document.getElementById('propExpenseTotal').textContent = fmtPeso(totalPropExpense);
+    document.getElementById('propNetCashflow').textContent = fmtPeso(totalPropIncome - totalPropExpense);
+
+    document.getElementById('propertyIncomeList').innerHTML = inv.propertyIncome.length
+      ? inv.propertyIncome.map(i => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <span style="font-size:13px;">${propLabels[i.property]} — ${i.description}</span>
+            <span style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(i.amount)}</span><button class="del-btn" onclick="removePropertyIncome('${i.id}')">Remove</button></span>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No income logged yet.</div>';
+
+    document.getElementById('propertyExpenseList').innerHTML = inv.propertyExpenses.length
+      ? inv.propertyExpenses.map(e => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <span style="font-size:13px;">${propLabels[e.property]} — ${e.category}</span>
+            <span style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.amount)}</span><button class="del-btn" onclick="removePropertyExpense('${e.id}')">Remove</button></span>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No expenses logged yet.</div>';
+
     document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.nexstackEquity);
 
     document.getElementById('goldTable').innerHTML = '<tr><th>Description</th><th>Value</th><th></th></tr>' +
@@ -2636,6 +2719,49 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const el = document.getElementById('invSaveConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  async function addPropertyIncome(){
+    const property = document.getElementById('propInc_property').value;
+    const description = document.getElementById('propInc_desc').value.trim();
+    const amount = clampNonNeg(parseCurrency(document.getElementById('propInc_amount').value));
+    if(!description || amount <= 0){ alert('Please enter a description and a valid amount.'); return; }
+    const inv = dashboardData.investment;
+    inv.propertyIncome.push({ id:'pinc'+Date.now(), property, description, amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('propInc_desc').value = '';
+    document.getElementById('propInc_amount').value = '';
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function removePropertyIncome(id){
+    const inv = dashboardData.investment;
+    inv.propertyIncome = inv.propertyIncome.filter(i => i.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function addPropertyExpense(){
+    const property = document.getElementById('propExp_property').value;
+    const category = document.getElementById('propExp_category').value;
+    const amount = clampNonNeg(parseCurrency(document.getElementById('propExp_amount').value));
+    if(amount <= 0){ alert('Please enter a valid amount.'); return; }
+    const inv = dashboardData.investment;
+    inv.propertyExpenses.push({ id:'pexp'+Date.now(), property, category, amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('propExp_amount').value = '';
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function removePropertyExpense(id){
+    const inv = dashboardData.investment;
+    inv.propertyExpenses = inv.propertyExpenses.filter(e => e.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
   }
 
   async function addGoldHolding(){
