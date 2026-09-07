@@ -410,6 +410,45 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- EXECUTIVE OVERVIEW (admin only) -->
   <div class="view" id="executive">
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
+        <div>
+          <h3 style="margin:0;"><span class="dot"></span>Income Overview</h3>
+          <div class="sub" style="margin:4px 0 0;">This month's income across all 4 businesses vs. your monthly goal</div>
+        </div>
+        <button class="btn secondary small" onclick="toggleIncomeEdit()" id="incomeEditToggleBtn">Edit numbers</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;margin-bottom:20px;">
+        <div>
+          <div style="font-size:12.5px;color:var(--muted);">Total income this month</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:34px;font-weight:700;color:var(--ink);" id="incomeTotalValue">₱0.00</div>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:6px;">
+            <span>Progress toward <span id="incomeGoalLabel">₱1,000,000.00</span> monthly goal</span>
+            <span id="incomeGoalPct" style="font-weight:700;color:var(--ink);">0%</span>
+          </div>
+          <div class="goal-track" style="height:14px;"><div class="goal-fill" id="incomeGoalBar" style="width:0%;background:var(--gold);"></div></div>
+        </div>
+      </div>
+
+      <div id="incomeEditForm" style="display:none;margin-bottom:20px;padding:16px;background:var(--panel-2);border-radius:10px;">
+        <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));">
+          <div class="field"><label>Master Baccarat (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="income_mb" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Prokora (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="income_pk" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Nexstack (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="income_ns" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Baccarat Win (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="income_bw" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Monthly goal (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="income_goal" onblur="formatCurrencyField(this)"></div>
+        </div>
+        <button class="btn small" style="margin-top:6px;" onclick="saveMonthlyIncome()">Save</button>
+        <span id="incomeSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+      </div>
+
+      <div id="incomeRankedList"></div>
+    </div>
+
     <div class="exec-strip">
       <div class="stat"><div class="label">Total cash on hand</div><div class="value" id="execCashTotal">₱0.00</div><div class="foot">Across all 4 businesses</div></div>
       <div class="stat"><div class="label">Expenses this month</div><div class="value" id="execExpenseMonth">₱0.00</div><div class="foot" id="execExpenseCount">0 entries</div></div>
@@ -975,14 +1014,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   };
 
   const defaultData = {
-    dataVersion: 4,
+    dataVersion: 6,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
       '2026-01-01_2026-08-31': Object.assign(JSON.parse(JSON.stringify(sampleSnapshot)), { savedAt:null })
     },
     exec: JSON.parse(JSON.stringify(defaultExec)),
-    calendar: { events: [] }
+    calendar: { events: [] },
+    monthlyIncome: { mb:0, bw:0, ns:0, pk:0, goal:1000000 }
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -1039,7 +1079,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.calendar){
       parsed.calendar = { events: [] };
     }
-    parsed.dataVersion = 4;
+    // Add Income Overview data for anyone who saved before it existed
+    if(!parsed.monthlyIncome){
+      parsed.monthlyIncome = { mb:0, bw:0, ns:0, pk:0, goal:1000000 };
+    }
+    parsed.dataVersion = 6;
     return parsed;
   }
 
@@ -1126,7 +1170,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
         exec: { goals, cash, thresholds, expenses, assets },
-        calendar: { events }
+        calendar: { events },
+        monthlyIncome: settings.monthlyIncome || JSON.parse(JSON.stringify(defaultData.monthlyIncome))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -1482,7 +1527,78 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     });
   }
 
+  /* ---------------- Income Overview: single combined monthly goal, ranked business breakdown ---------------- */
+  function renderIncomeOverview(){
+    const mi = dashboardData.monthlyIncome;
+    const bizKeys = ['mb','pk','ns','bw']; // matches the ranking order requested: Master Baccarat, Prokora, Nexstack, Baccarat Win as the input order
+    const total = bizKeys.reduce((a,k)=>a+(mi[k]||0),0);
+    const goal = mi.goal || 0;
+    const goalPct = goal > 0 ? Math.min(100, Math.round(total/goal*100)) : 0;
+
+    document.getElementById('incomeTotalValue').textContent = fmtPeso(total);
+    document.getElementById('incomeGoalLabel').textContent = fmtPeso(goal);
+    document.getElementById('incomeGoalPct').textContent = `${goalPct}%`;
+    document.getElementById('incomeGoalBar').style.width = `${goalPct}%`;
+
+    const ranked = bizKeys.map(k=>({ biz:k, income:mi[k]||0 })).sort((a,b)=>b.income-a.income);
+    const topIncome = ranked.length ? ranked[0].income : 0;
+
+    document.getElementById('incomeRankedList').innerHTML = ranked.map((r,i)=>{
+      const pctOfTotal = total > 0 ? Math.round(r.income/total*100) : 0;
+      const pctOfGoal = goal > 0 ? Math.round(r.income/goal*100) : 0;
+      const barWidth = topIncome > 0 ? Math.round(r.income/topIncome*100) : 0;
+      return `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:var(--panel-2);margin-bottom:8px;">
+          <div style="width:26px;height:26px;border-radius:50%;background:${bizColors[r.biz]};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:13.5px;">${bizNames[r.biz]}</div>
+            <div class="goal-track" style="height:6px;margin-top:6px;"><div class="goal-fill" style="width:${barWidth}%;background:${bizColors[r.biz]};"></div></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;min-width:120px;">
+            <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;">${fmtPeso(r.income)}</div>
+            <div style="font-size:11px;color:var(--muted);">${pctOfTotal}% of total · ${pctOfGoal}% of goal</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleIncomeEdit(){
+    const form = document.getElementById('incomeEditForm');
+    const showing = form.style.display !== 'none';
+    if(showing){
+      form.style.display = 'none';
+      document.getElementById('incomeEditToggleBtn').textContent = 'Edit numbers';
+    } else {
+      const mi = dashboardData.monthlyIncome;
+      document.getElementById('income_mb').value = fmtPeso(mi.mb).slice(1);
+      document.getElementById('income_pk').value = fmtPeso(mi.pk).slice(1);
+      document.getElementById('income_ns').value = fmtPeso(mi.ns).slice(1);
+      document.getElementById('income_bw').value = fmtPeso(mi.bw).slice(1);
+      document.getElementById('income_goal').value = fmtPeso(mi.goal).slice(1);
+      form.style.display = 'block';
+      document.getElementById('incomeEditToggleBtn').textContent = 'Hide';
+    }
+  }
+
+  async function saveMonthlyIncome(){
+    dashboardData.monthlyIncome = {
+      mb: clampNonNeg(parseCurrency(document.getElementById('income_mb').value)),
+      pk: clampNonNeg(parseCurrency(document.getElementById('income_pk').value)),
+      ns: clampNonNeg(parseCurrency(document.getElementById('income_ns').value)),
+      bw: clampNonNeg(parseCurrency(document.getElementById('income_bw').value)),
+      goal: clampNonNeg(parseCurrency(document.getElementById('income_goal').value)),
+    };
+    await saveSetting('monthlyIncome', dashboardData.monthlyIncome);
+    renderIncomeOverview();
+    playChime(920);
+    const el = document.getElementById('incomeSaveConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
   function renderExecutive(snap){
+    renderIncomeOverview();
     const exec = dashboardData.exec;
     const bizKeys = ['mb','bw','ns','pk'];
 
