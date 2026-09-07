@@ -1859,6 +1859,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-daylabel">${d}</div>`).join('');
 
     let cells = '';
+    const isAdminUser = currentUser && currentUser.role === 'admin';
     for(let i=0; i<startWeekday; i++) cells += '<div class="cal-cell empty"></div>';
     for(let d=1; d<=daysInMonth; d++){
       const dateStr = isoDate(year, month, d);
@@ -1866,10 +1867,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const isToday = dateStr === todayStr;
       const maxShown = 3;
       const shown = dayEvents.slice(0, maxShown).map(e=>
-        `<div class="cal-event-pill" style="background:${bizColors[e.business]||bizColors.general}" title="${e.title}${e.time?' · '+e.time:''}" onclick="event.stopPropagation();showEventDetail('${e.id}')">${e.time?e.time+' ':''}${e.title}</div>`
+        `<div class="cal-event-pill" style="background:${bizColors[e.business]||bizColors.general}" title="${e.title}${e.time?' · '+e.time:''}${isAdminUser?' — drag to move':''}" onclick="event.stopPropagation();showEventDetail('${e.id}')" ${isAdminUser?`draggable="true" ondragstart="onEventDragStart(event,'${e.id}')"`:''}>${e.time?e.time+' ':''}${e.title}</div>`
       ).join('');
       const more = dayEvents.length > maxShown ? `<div class="cal-more">+${dayEvents.length - maxShown} more</div>` : '';
-      cells += `<div class="cal-cell${isToday?' today':''}" onclick="calCellClicked('${dateStr}')" style="cursor:pointer;"><div class="cal-daynum">${d}</div>${shown}${more}</div>`;
+      const dropAttrs = isAdminUser ? `ondragover="onDayDragOver(event)" ondrop="onDayDrop(event,'${dateStr}')"` : '';
+      cells += `<div class="cal-cell${isToday?' today':''}" onclick="calCellClicked('${dateStr}')" style="cursor:pointer;" ${dropAttrs}><div class="cal-daynum">${d}</div>${shown}${more}</div>`;
     }
     document.getElementById('calGrid').innerHTML = dayLabels + cells;
 
@@ -1903,6 +1905,33 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(card && card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'start' });
     const titleInput = document.getElementById('calTitle');
     if(titleInput) titleInput.focus();
+  }
+
+  let draggedEventId = null;
+
+  function onEventDragStart(e, id){
+    draggedEventId = id;
+    e.dataTransfer.effectAllowed = 'move';
+    try{ e.dataTransfer.setData('text/plain', id); }catch(err){} // some browsers need this even if we also use the closure variable
+  }
+
+  function onDayDragOver(e){
+    e.preventDefault(); // required to allow a drop to happen at all
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  async function onDayDrop(e, newDateStr){
+    e.preventDefault();
+    const id = draggedEventId || e.dataTransfer.getData('text/plain');
+    draggedEventId = null;
+    if(!id) return;
+    const ev = dashboardData.calendar.events.find(x => x.id === id);
+    if(!ev || ev.date === newDateStr) return; // dropped on the same day it was already on — nothing to do
+    ev.date = newDateStr;
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(err){}
+    renderCalendar();
+    await dbUpdateCalendarEvent(id, ev);
+    showSaveConfirm('Event moved ✓');
   }
 
   function onCalRepeatChange(){
