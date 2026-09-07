@@ -99,6 +99,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .sidebar-nav .nav-label{transition:opacity .15s ease;}
   .sidebar.collapsed .nav-label{display:none;}
   .sidebar-divider{height:1px;background:var(--sidebar-line);margin:10px 14px;}
+  .mb-subnav{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .mb-subtab{padding:7px 14px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s ease,color .15s ease,border-color .15s ease;}
+  .mb-subtab:hover{border-color:var(--gold);color:var(--ink);}
+  .mb-subtab.active{background:var(--gold);border-color:var(--gold);color:#f4f7ff;}
   .theme-toggle-btn{
     display:flex;align-items:center;gap:12px;width:calc(100% - 20px);text-align:left;margin:8px 10px 0;
     padding:10px 10px;border-radius:8px;font-size:13.5px;font-weight:500;
@@ -513,6 +517,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- MASTER BACCARAT -->
   <div class="view" id="mb">
+    <div class="mb-subnav">
+      <button class="mb-subtab active" data-mbview="overview" onclick="switchMbSubview('overview')">Overview</button>
+      <button class="mb-subtab" data-mbview="sales" onclick="switchMbSubview('sales')">Sales</button>
+      <button class="mb-subtab" data-mbview="marketing" onclick="switchMbSubview('marketing')">Marketing</button>
+      <button class="mb-subtab" data-mbview="team" onclick="switchMbSubview('team')">Team</button>
+      <button class="mb-subtab" data-mbview="operating" onclick="switchMbSubview('operating')">Operating</button>
+      <button class="mb-subtab" data-mbview="expenses" onclick="switchMbSubview('expenses')">Expenses</button>
+      <button class="mb-subtab" data-mbview="cashflow" onclick="switchMbSubview('cashflow')">Cash Flow</button>
+    </div>
+
+    <div class="mb-subview active" id="mbSubview-overview">
     <div class="grid-3">
       <div class="stat"><div class="label">Total gaming revenue</div><div class="value" id="mbRevenueStat">₱4.20M</div><div class="foot">Sum across all platforms</div></div>
       <div class="stat"><div class="label">Top platform</div><div class="value" id="mbTopPlatform">22Win</div><div class="foot" id="mbTopPlatformFoot">₱1.35M · 32% of revenue</div></div>
@@ -529,6 +544,89 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="sub" id="mbBarlistSub">YTD, ₱4.20M total</div>
         <div class="barlist" style="--accent:#e0453f" id="mbBarlist"></div>
       </div>
+    </div>
+    </div>
+
+    <div class="mb-subview" id="mbSubview-sales" style="display:none;">
+      <div class="grid-3">
+        <div class="stat"><div class="label">Current subscribers</div><div class="value" id="salesSubCurrent">0</div><div class="foot" id="salesSubDelta">—</div></div>
+        <div class="stat"><div class="label">MRR</div><div class="value" id="salesMrr">₱0.00</div><div class="foot">Monthly recurring revenue</div></div>
+        <div class="stat"><div class="label">Conversion rate</div><div class="value" id="salesConvRate">0%</div><div class="foot" id="salesConvFoot">0 of 0 DM inquiries</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px;">
+        <div class="card" style="--accent:#e0453f">
+          <h3><span class="dot"></span>Monthly goal</h3>
+          <div class="sub">MRR vs. this month's target</div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:10px 0 6px;">
+            <span id="salesMonthlyGoalLabel">₱0.00 target</span><span id="salesMonthlyGoalPct" style="font-weight:700;color:var(--ink);">0%</span>
+          </div>
+          <div class="goal-track"><div class="goal-fill" id="salesMonthlyGoalBar" style="background:#e0453f;width:0%;"></div></div>
+        </div>
+        <div class="card" style="--accent:#e0453f">
+          <h3><span class="dot"></span>Quarterly goal</h3>
+          <div class="sub">MRR vs. this quarter's target</div>
+          <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:10px 0 6px;">
+            <span id="salesQuarterlyGoalLabel">₱0.00 target</span><span id="salesQuarterlyGoalPct" style="font-weight:700;color:var(--ink);">0%</span>
+          </div>
+          <div class="goal-track"><div class="goal-fill" id="salesQuarterlyGoalBar" style="background:#e0453f;width:0%;"></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#e0453f;margin-bottom:16px;">
+        <h3><span class="dot"></span>MRR trend</h3>
+        <div class="sub">Logged month by month, below</div>
+        <canvas id="chartMbMrrTrend"></canvas>
+      </div>
+
+      <div class="card" style="--accent:#e0453f;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
+          <div><h3 style="margin:0;"><span class="dot"></span>Update sales numbers</h3><div class="sub" style="margin:4px 0 0;">Subscribers, MRR, conversion, and goals</div></div>
+          <button class="btn secondary small" onclick="toggleSalesEdit()" id="salesEditToggleBtn">Edit numbers</button>
+        </div>
+        <div id="salesEditForm" style="display:none;">
+          <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
+            <div class="field"><label>Current subscribers</label><input type="text" inputmode="numeric" id="sales_subCurrent"></div>
+            <div class="field"><label>New this month</label><input type="text" inputmode="numeric" id="sales_subNew"></div>
+            <div class="field"><label>Churned this month</label><input type="text" inputmode="numeric" id="sales_subChurned"></div>
+            <div class="field"><label>MRR (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_mrr" onblur="formatCurrencyField(this)"></div>
+            <div class="field"><label>DM inquiries this month</label><input type="text" inputmode="numeric" id="sales_dmInquiries"></div>
+            <div class="field"><label>Paid conversions this month</label><input type="text" inputmode="numeric" id="sales_paidConversions"></div>
+            <div class="field"><label>Monthly MRR goal (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_monthlyGoal" onblur="formatCurrencyField(this)"></div>
+            <div class="field"><label>Quarterly MRR goal (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_quarterlyGoal" onblur="formatCurrencyField(this)"></div>
+          </div>
+          <button class="btn small" style="margin-top:6px;" onclick="saveSalesData()">Save</button>
+          <span id="salesSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+
+          <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log a month's MRR (builds the trend chart)</h4>
+          <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;">
+            <div class="field"><label>Month</label><input type="month" id="sales_mrrLogMonth"></div>
+            <div class="field"><label>MRR (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_mrrLogValue" onblur="formatCurrencyField(this)"></div>
+            <button class="btn small" onclick="addMrrLogEntry()">+ Log</button>
+          </div>
+          <div id="salesMrrLogList" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-subview" id="mbSubview-marketing" style="display:none;">
+      <div class="card"><h3><span class="dot"></span>Marketing Dashboard</h3><div class="sub">Coming soon — reel/post performance, DM volume, content pillar breakdown, follower growth.</div></div>
+    </div>
+
+    <div class="mb-subview" id="mbSubview-team" style="display:none;">
+      <div class="card"><h3><span class="dot"></span>Team Dashboard</h3><div class="sub">Coming soon — Marc's weekly task checklist and ClickUp integration.</div></div>
+    </div>
+
+    <div class="mb-subview" id="mbSubview-operating" style="display:none;">
+      <div class="card"><h3><span class="dot"></span>Operating Dashboard</h3><div class="sub">Coming soon — content pipeline status, compliance checklist, tool/platform notes.</div></div>
+    </div>
+
+    <div class="mb-subview" id="mbSubview-expenses" style="display:none;">
+      <div class="card"><h3><span class="dot"></span>Expenses Dashboard</h3><div class="sub">Coming soon — monthly running costs by category, cost per subscriber.</div></div>
+    </div>
+
+    <div class="mb-subview" id="mbSubview-cashflow" style="display:none;">
+      <div class="card"><h3><span class="dot"></span>Cash Flow Summary</h3><div class="sub">Coming soon — revenue minus expenses, net income trend.</div></div>
     </div>
   </div>
 
@@ -966,6 +1064,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     });
   });
 
+  function switchMbSubview(view){
+    document.querySelectorAll('.mb-subtab').forEach(t => t.classList.toggle('active', t.dataset.mbview === view));
+    document.querySelectorAll('.mb-subview').forEach(v => v.style.display = (v.id === `mbSubview-${view}`) ? '' : 'none');
+    if(view === 'sales') renderSalesDashboard();
+  }
+
   function toggleSidebar(){
     document.getElementById('sidebar').classList.toggle('collapsed');
     document.getElementById('dashboard').classList.toggle('sidebar-collapsed');
@@ -1050,8 +1154,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     assets: []
   };
 
+  const defaultMbSales = {
+    subscribers: { current: 0, newThisMonth: 0, churnedThisMonth: 0 },
+    mrr: 0,
+    dmInquiries: 0,
+    paidConversions: 0,
+    monthlyGoal: 0,
+    quarterlyGoal: 0,
+    mrrHistory: [] // [{ month:'2026-09', mrr:50000 }, ...]
+  };
+
   const defaultData = {
-    dataVersion: 6,
+    dataVersion: 7,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -1059,7 +1173,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     },
     exec: JSON.parse(JSON.stringify(defaultExec)),
     calendar: { events: [] },
-    monthlyIncome: { goal:1000000 }
+    monthlyIncome: { goal:1000000 },
+    mbSales: JSON.parse(JSON.stringify(defaultMbSales))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -1120,7 +1235,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.monthlyIncome){
       parsed.monthlyIncome = { goal:1000000 };
     }
-    parsed.dataVersion = 6;
+    // Add Master Baccarat Sales Dashboard data for anyone who saved before it existed
+    if(!parsed.mbSales){
+      parsed.mbSales = JSON.parse(JSON.stringify(defaultMbSales));
+    }
+    parsed.dataVersion = 7;
     return parsed;
   }
 
@@ -1202,13 +1321,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
 
       const assembled = {
-        dataVersion: 5,
+        dataVersion: 7,
         lastUpdated: settings.lastUpdated || null,
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
         exec: { goals, cash, thresholds, expenses, assets },
         calendar: { events },
-        monthlyIncome: settings.monthlyIncome || JSON.parse(JSON.stringify(defaultData.monthlyIncome))
+        monthlyIncome: settings.monthlyIncome || JSON.parse(JSON.stringify(defaultData.monthlyIncome)),
+        mbSales: settings.mbSales || JSON.parse(JSON.stringify(defaultMbSales))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -1665,6 +1785,132 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const el = document.getElementById('incomeSaveConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  /* ---------------- Master Baccarat: Sales Dashboard ---------------- */
+  function renderSalesDashboard(){
+    if(!document.getElementById('mbSubview-sales')) return; // not in DOM for this role
+    const s = dashboardData.mbSales;
+
+    document.getElementById('salesSubCurrent').textContent = s.subscribers.current;
+    const netChange = s.subscribers.newThisMonth - s.subscribers.churnedThisMonth;
+    document.getElementById('salesSubDelta').textContent = `+${s.subscribers.newThisMonth} new, -${s.subscribers.churnedThisMonth} churned (${netChange >= 0 ? '+' : ''}${netChange} net)`;
+
+    document.getElementById('salesMrr').textContent = fmtPeso(s.mrr);
+
+    const convRate = s.dmInquiries > 0 ? Math.round(s.paidConversions / s.dmInquiries * 100) : 0;
+    document.getElementById('salesConvRate').textContent = `${convRate}%`;
+    document.getElementById('salesConvFoot').textContent = `${s.paidConversions} of ${s.dmInquiries} DM inquiries`;
+
+    const monthlyPct = s.monthlyGoal > 0 ? Math.min(100, Math.round(s.mrr / s.monthlyGoal * 100)) : 0;
+    document.getElementById('salesMonthlyGoalLabel').textContent = `${fmtPeso(s.monthlyGoal)} target`;
+    document.getElementById('salesMonthlyGoalPct').textContent = `${monthlyPct}%`;
+    document.getElementById('salesMonthlyGoalBar').style.width = `${monthlyPct}%`;
+
+    const quarterlyPct = s.quarterlyGoal > 0 ? Math.min(100, Math.round(s.mrr / s.quarterlyGoal * 100)) : 0;
+    document.getElementById('salesQuarterlyGoalLabel').textContent = `${fmtPeso(s.quarterlyGoal)} target`;
+    document.getElementById('salesQuarterlyGoalPct').textContent = `${quarterlyPct}%`;
+    document.getElementById('salesQuarterlyGoalBar').style.width = `${quarterlyPct}%`;
+
+    // MRR trend chart
+    const sorted = [...s.mrrHistory].sort((a,b)=> a.month.localeCompare(b.month));
+    const canvas = document.getElementById('chartMbMrrTrend');
+    if(canvas && typeof Chart !== 'undefined'){
+      if(charts.mbMrrTrend) charts.mbMrrTrend.destroy();
+      const isLight = document.documentElement.classList.contains('light-theme');
+      const gridColor = isLight ? '#e6e9f2' : '#2a3140';
+      charts.mbMrrTrend = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: sorted.map(e => e.month),
+          datasets: [{ label:'MRR', data: sorted.map(e => e.mrr), borderColor:'#e0453f', backgroundColor:'rgba(224,69,63,.15)', fill:true, tension:.3 }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display:false } },
+          scales: {
+            x: { grid: { color: gridColor } },
+            y: { grid: { color: gridColor }, ticks: { callback: v => fmtPeso(v) } }
+          }
+        }
+      });
+    }
+
+    // MRR log list (with remove)
+    document.getElementById('salesMrrLogList').innerHTML = sorted.length
+      ? sorted.slice().reverse().map(e => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <span style="font-size:13px;">${e.month}</span>
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.mrr)}</span>
+              <button class="del-btn" onclick="removeMrrLogEntry('${e.month}')">Remove</button>
+            </span>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No months logged yet.</div>';
+  }
+
+  function toggleSalesEdit(){
+    const form = document.getElementById('salesEditForm');
+    const showing = form.style.display !== 'none';
+    if(showing){
+      form.style.display = 'none';
+      document.getElementById('salesEditToggleBtn').textContent = 'Edit numbers';
+    } else {
+      const s = dashboardData.mbSales;
+      document.getElementById('sales_subCurrent').value = s.subscribers.current;
+      document.getElementById('sales_subNew').value = s.subscribers.newThisMonth;
+      document.getElementById('sales_subChurned').value = s.subscribers.churnedThisMonth;
+      document.getElementById('sales_mrr').value = fmtPeso(s.mrr).slice(1);
+      document.getElementById('sales_dmInquiries').value = s.dmInquiries;
+      document.getElementById('sales_paidConversions').value = s.paidConversions;
+      document.getElementById('sales_monthlyGoal').value = fmtPeso(s.monthlyGoal).slice(1);
+      document.getElementById('sales_quarterlyGoal').value = fmtPeso(s.quarterlyGoal).slice(1);
+      form.style.display = 'block';
+      document.getElementById('salesEditToggleBtn').textContent = 'Hide';
+    }
+  }
+
+  async function saveSalesData(){
+    const s = dashboardData.mbSales;
+    s.subscribers.current = clampNonNeg(parseInt(document.getElementById('sales_subCurrent').value) || 0);
+    s.subscribers.newThisMonth = clampNonNeg(parseInt(document.getElementById('sales_subNew').value) || 0);
+    s.subscribers.churnedThisMonth = clampNonNeg(parseInt(document.getElementById('sales_subChurned').value) || 0);
+    s.mrr = clampNonNeg(parseCurrency(document.getElementById('sales_mrr').value));
+    s.dmInquiries = clampNonNeg(parseInt(document.getElementById('sales_dmInquiries').value) || 0);
+    s.paidConversions = clampNonNeg(parseInt(document.getElementById('sales_paidConversions').value) || 0);
+    s.monthlyGoal = clampNonNeg(parseCurrency(document.getElementById('sales_monthlyGoal').value));
+    s.quarterlyGoal = clampNonNeg(parseCurrency(document.getElementById('sales_quarterlyGoal').value));
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    await saveSetting('mbSales', s);
+    renderSalesDashboard();
+    playChime(920);
+    const el = document.getElementById('salesSaveConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  async function addMrrLogEntry(){
+    const month = document.getElementById('sales_mrrLogMonth').value;
+    const mrr = clampNonNeg(parseCurrency(document.getElementById('sales_mrrLogValue').value));
+    if(!month){ alert('Please choose a month.'); return; }
+    const s = dashboardData.mbSales;
+    const existing = s.mrrHistory.find(e => e.month === month);
+    if(existing) existing.mrr = mrr;
+    else s.mrrHistory.push({ month, mrr });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('sales_mrrLogMonth').value = '';
+    document.getElementById('sales_mrrLogValue').value = '';
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
+  }
+
+  async function removeMrrLogEntry(month){
+    const s = dashboardData.mbSales;
+    s.mrrHistory = s.mrrHistory.filter(e => e.month !== month);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
   }
 
   function renderExecutive(snap){
