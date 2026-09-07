@@ -317,6 +317,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <h2 id="pageTitle" style="margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:600;">Overview</h2>
     </div>
     <div class="masthead-right">
+      <div class="period" id="syncStatus" title="Whether your last save reached the shared database">
+        <span id="syncDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b93a6;margin-right:6px;"></span><span id="syncText">Checking sync…</span>
+      </div>
       <div class="period" id="periodBadge">YTD 2026 · Jan – Aug</div>
       <div class="period" id="lastUpdatedBadge">Last updated: —</div>
       <div class="who">
@@ -405,6 +408,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <button class="btn small" onclick="addExpense()">+ Add</button>
       </div>
       <table id="expenseTable"><tr><th>Date</th><th>Category</th><th>Business</th><th>Amount</th><th></th></tr></table>
+      <button class="btn secondary small" style="margin-top:10px;" onclick="exportExpensesCSV()">Export as CSV</button>
     </div>
 
     <div class="card" style="--accent:#2f6fed;">
@@ -530,6 +534,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>End date</label><input type="date" id="edit_period_end" onchange="onPeriodDateChange()"></div>
       </div>
       <div id="periodFormNotice" style="font-size:12.5px;color:var(--muted);margin-top:6px;"></div>
+      <div style="margin-top:14px;">
+        <button class="btn secondary small" onclick="downloadFullBackup()">Download full backup (JSON)</button>
+        <span style="font-size:11.5px;color:var(--muted);margin-left:10px;">Everything on this page, saved as a file you can keep safe.</span>
+      </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Saved periods</h4>
       <div id="historyList"></div>
@@ -966,8 +974,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return JSON.parse(JSON.stringify(defaultData));
   }
 
+  function setSyncStatus(connected){
+    const dot = document.getElementById('syncDot');
+    const text = document.getElementById('syncText');
+    if(!dot || !text) return;
+    if(connected){
+      dot.style.background = '#1f9d5c';
+      text.textContent = 'Synced to shared database';
+    } else {
+      dot.style.background = '#c23a3a';
+      text.textContent = 'Local only — not synced';
+    }
+  }
+
   async function loadDashboardData(){
-    if(!sb) return localCacheFallback();
+    if(!sb){ setSyncStatus(false); return localCacheFallback(); }
     try{
       const [settingsRes, revenueRes, projectsRes, goalsRes, expensesRes, assetsRes, eventsRes] = await withTimeout(Promise.all([
         sb.from('app_settings').select('key,value'),
@@ -979,6 +1000,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         sb.from('calendar_events').select('id,title,date,time,business'),
       ]), 6000);
 
+      setSyncStatus(true); // the round trip itself succeeded, regardless of whether there's data yet
       const anyRealData = (revenueRes.data||[]).length || (expensesRes.data||[]).length || (eventsRes.data||[]).length || (assetsRes.data||[]).length;
       if(!anyRealData) return localCacheFallback(); // brand new empty database — show sample data instead of a blank shell
 
@@ -1023,6 +1045,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       return assembled;
     }catch(e){
       console.error('Could not load from Supabase (multi-table), falling back to local copy:', e);
+      setSyncStatus(false);
       return localCacheFallback();
     }
   }
@@ -1036,9 +1059,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{
       const { error } = await withTimeout(sb.from('app_settings').upsert({ key, value }), 5000);
       if(error) throw error;
+      setSyncStatus(true);
       return true;
     }catch(e){
       console.error(`Could not save setting "${key}" to Supabase:`, e);
+      setSyncStatus(false);
       return false;
     }
   }
@@ -1057,8 +1082,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{
       const { data, error } = await withTimeout(sb.from('expenses').insert({ date:exp.date, category:exp.category, amount:exp.amount, business:exp.business }).select().single(), 5000);
       if(error) throw error;
+      setSyncStatus(true);
       return String(data.id);
-    }catch(e){ console.error('Could not save expense to Supabase:', e); return null; }
+    }catch(e){ console.error('Could not save expense to Supabase:', e); setSyncStatus(false); return null; }
   }
   async function dbDeleteExpense(id){
     if(!sb) return;
@@ -1070,8 +1096,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{
       const { data, error } = await withTimeout(sb.from('assets').insert({ name:a.name, value:a.value, business:a.business }).select().single(), 5000);
       if(error) throw error;
+      setSyncStatus(true);
       return String(data.id);
-    }catch(e){ console.error('Could not save asset to Supabase:', e); return null; }
+    }catch(e){ console.error('Could not save asset to Supabase:', e); setSyncStatus(false); return null; }
   }
   async function dbDeleteAsset(id){
     if(!sb) return;
@@ -1083,8 +1110,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{
       const { data, error } = await withTimeout(sb.from('calendar_events').insert({ title:ev.title, date:ev.date, time:ev.time||null, business:ev.business }).select().single(), 5000);
       if(error) throw error;
+      setSyncStatus(true);
       return String(data.id);
-    }catch(e){ console.error('Could not save event to Supabase:', e); return null; }
+    }catch(e){ console.error('Could not save event to Supabase:', e); setSyncStatus(false); return null; }
   }
   async function dbDeleteCalendarEvent(id){
     if(!sb) return;
@@ -1097,8 +1125,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const rows = ['mb','bw','ns','pk'].map(biz=>({ business:biz, goal:exec.goals[biz]||0, cash:exec.cash[biz]||0, threshold:exec.thresholds[biz]||0 }));
       const { error } = await withTimeout(sb.from('goals_cash').upsert(rows), 5000);
       if(error) throw error;
+      setSyncStatus(true);
       return true;
-    }catch(e){ console.error('Could not save goals/cash to Supabase:', e); return false; }
+    }catch(e){ console.error('Could not save goals/cash to Supabase:', e); setSyncStatus(false); return false; }
   }
   async function dbSaveRevenuePeriod(start, end, snap){
     if(!sb) return false;
@@ -1117,8 +1146,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         const { error: perr } = await withTimeout(sb.from('pk_projects').insert(projectRows), 5000);
         if(perr) throw perr;
       }
+      setSyncStatus(true);
       return true;
-    }catch(e){ console.error('Could not save revenue period to Supabase:', e); return false; }
+    }catch(e){ console.error('Could not save revenue period to Supabase:', e); setSyncStatus(false); return false; }
   }
   async function dbDeletePeriod(start, end){
     if(!sb) return;
@@ -1846,6 +1876,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     confirmEl.textContent = message;
     confirmEl.style.opacity = '1';
     setTimeout(()=>{ confirmEl.style.opacity = '0'; }, 2600);
+  }
+
+  function downloadTextFile(filename, content, mimeType){
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function csvEscape(val){
+    const s = String(val == null ? '' : val);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  }
+
+  function exportExpensesCSV(){
+    const rows = [['Date','Category','Business','Amount (₱)']];
+    dashboardData.exec.expenses.forEach(e=>{
+      rows.push([e.date, e.category, bizNames[e.business]||e.business, e.amount]);
+    });
+    const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+    downloadTextFile(`masterkennedy-expenses-${new Date().toISOString().slice(0,10)}.csv`, csv, 'text/csv');
+  }
+
+  function downloadFullBackup(){
+    const json = JSON.stringify(dashboardData, null, 2);
+    downloadTextFile(`masterkennedy-backup-${new Date().toISOString().slice(0,10)}.json`, json, 'application/json');
   }
 
   async function resetToSampleData(){
