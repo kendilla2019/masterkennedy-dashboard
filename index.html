@@ -762,6 +762,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div style="font-size:13.5px;color:var(--muted);margin-bottom:18px;" id="eventDetailBiz">—</div>
       <div id="eventDetailAdminActions" style="display:flex;gap:10px;">
         <button class="btn secondary small" onclick="startEditEvent()">Edit</button>
+        <button class="btn secondary small" onclick="duplicateEvent()">Duplicate</button>
         <button class="btn secondary small" style="color:#e0453f;" onclick="deleteEventFromModal()">Remove</button>
       </div>
     </div>
@@ -2068,6 +2069,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const id = selectedEventId;
     closeEventDetail();
     await removeCalendarEvent(id);
+  }
+
+  function duplicateEvent(){
+    const ev = dashboardData.calendar.events.find(e => e.id === selectedEventId);
+    if(!ev) return;
+    editingEventId = null; // make sure we're in "create new" mode, not "edit existing"
+    document.getElementById('calTitle').value = ev.title + ' (copy)';
+    document.getElementById('calDate').value = ev.date;
+    document.getElementById('calTime').value = ev.time || '';
+    document.getElementById('calBusiness').value = ev.business;
+    document.getElementById('calRepeat').value = 'none';
+    onCalRepeatChange();
+    closeEventDetail();
+    const card = document.getElementById('calAddEventCard');
+    if(card){
+      card.querySelector('h3').innerHTML = '<span class="dot"></span>Add event';
+      if(card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    const dateInput = document.getElementById('calDate');
+    dateInput.focus();
+    if(dateInput.select) dateInput.select(); // date is the field they're most likely to want to change before saving
   }
 
   /* ---------------- Edit Data form (works on a draft copy until Save is clicked) ---------------- */
