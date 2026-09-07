@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232f6fed'/%3E%3Cstop offset='1' stop-color='%2316306b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='28' font-weight='700' fill='%23f4f7ff' text-anchor='middle'%3EMK%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -1103,6 +1103,13 @@
 
   /* ---------------- Charts (destroyed + recreated whenever data changes) ---------------- */
   function renderCharts(){
+    if(typeof Chart === 'undefined'){
+      ['chartOverviewBar','chartOverviewDonut','chartMBTrend','chartBWTrend','chartNSTrend'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el && el.parentElement) el.parentElement.innerHTML += '<div style="color:var(--muted);font-size:12.5px;padding:20px 0;text-align:center;">Charts couldn\'t load right now — the numbers above are still accurate. Try refreshing.</div>';
+      });
+      return;
+    }
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
     const grid = '#e6e9f2';
     Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
