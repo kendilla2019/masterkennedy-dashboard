@@ -340,6 +340,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="tab" data-view="finance" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▦</span><span class="nav-label">Finance</span></button>
       <button class="tab" data-view="calendar" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
       <button class="tab" data-view="team" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◈</span><span class="nav-label">Team</span></button>
+      <button class="tab" data-view="investments" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Investments</span></button>
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f"><span class="nav-icon">●</span><span class="nav-label">Master Baccarat</span></button>
       <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4"><span class="nav-icon">●</span><span class="nav-label">Prokora</span></button>
@@ -999,6 +1000,65 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
   </div>
 
+  <!-- INVESTMENTS / NET WORTH (admin only, personal, separate from business tracking) -->
+  <div class="view" id="investments">
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Net worth</h3>
+      <div class="sub">Total assets minus total liabilities</div>
+      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:36px;font-weight:700;margin-top:10px;" id="netWorthTotal">₱0.00</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:4px;" id="netWorthBreakdown">Assets ₱0.00 − Liabilities ₱0.00</div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px;">
+      <div class="stat"><div class="label">Emergency fund / liquidity</div><div class="value" id="invEmergencyFund">₱0.00</div><div class="foot" id="invRunway">0 months of runway</div></div>
+      <div class="stat"><div class="label">Vehicle (Honda HR-V)</div><div class="value" id="invVehicleNet">₱0.00</div><div class="foot" id="invVehicleFoot">Value minus maintenance to date</div></div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Assets</h3>
+      <div class="sub">Current estimated value per asset</div>
+      <div class="grid-3" style="margin-top:12px;">
+        <div class="stat"><div class="label">Condo</div><div class="value" id="invCondo">₱0.00</div></div>
+        <div class="stat"><div class="label">Astoria</div><div class="value" id="invAstoria">₱0.00</div></div>
+        <div class="stat"><div class="label">Land</div><div class="value" id="invLand">₱0.00</div></div>
+        <div class="stat"><div class="label">Nexstack (equity stake)</div><div class="value" id="invNexstackEquity">₱0.00</div></div>
+        <div class="stat"><div class="label">Gold</div><div class="value" id="invGold">₱0.00</div></div>
+        <div class="stat"><div class="label">Total assets</div><div class="value" id="invAssetsTotal">₱0.00</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
+        <div><h3 style="margin:0;"><span class="dot"></span>Update numbers</h3><div class="sub" style="margin:4px 0 0;">Assets, vehicle, emergency fund, and liabilities</div></div>
+        <button class="btn secondary small" onclick="toggleInvestmentEdit()" id="invEditToggleBtn">Edit numbers</button>
+      </div>
+      <div id="invEditForm" style="display:none;">
+        <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
+          <div class="field"><label>Condo (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_condo" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Astoria (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_astoria" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Land (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_land" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Nexstack equity (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_nexstackEquity" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Gold (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_gold" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Vehicle value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehicleValue" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Vehicle maintenance to date (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_vehicleMaintenance" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Emergency fund (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_emergencyFund" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Monthly expenses, for runway calc (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_monthlyExpenses" onblur="formatCurrencyField(this)"></div>
+        </div>
+        <button class="btn small" style="margin-top:6px;" onclick="saveInvestmentData()">Save</button>
+        <span id="invSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Liabilities</h4>
+        <div class="edit-grid" style="grid-template-columns:1.3fr 1fr auto;align-items:end;">
+          <div class="field"><label>Name (e.g. Condo financing, Car loan)</label><input type="text" id="inv_liabilityName"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_liabilityAmount" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addLiability()">+ Add</button>
+        </div>
+        <table id="liabilityTable" style="margin-top:14px;"><tr><th>Name</th><th>Amount</th><th></th></tr></table>
+        <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="liabilityTotal">Total: ₱0.00</div>
+      </div>
+    </div>
+  </div>
+
   <div class="note">
     <b>Note:</b> use the Edit Data tab to enter your real numbers — everything below updates instantly once you save.
   </div>
@@ -1310,8 +1370,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     items: [] // [{ id, month:'2026-09', category, amount }]
   };
 
+  const defaultInvestment = {
+    assets: { condo:0, astoria:0, land:0, nexstackEquity:0, gold:0 },
+    vehicle: { value:0, maintenance:0 },
+    liabilities: [], // [{ id, name, amount }]
+    emergencyFund: 0,
+    monthlyExpenses: 0 // used to compute months of runway
+  };
+
   const defaultData = {
-    dataVersion: 7,
+    dataVersion: 8,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -1324,7 +1392,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mbMarketing: JSON.parse(JSON.stringify(defaultMbMarketing)),
     mbTeam: JSON.parse(JSON.stringify(defaultMbTeam)),
     mbOperating: JSON.parse(JSON.stringify(defaultMbOperating)),
-    mbExpenses: JSON.parse(JSON.stringify(defaultMbExpenses))
+    mbExpenses: JSON.parse(JSON.stringify(defaultMbExpenses)),
+    investment: JSON.parse(JSON.stringify(defaultInvestment))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -1401,7 +1470,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.mbExpenses){
       parsed.mbExpenses = JSON.parse(JSON.stringify(defaultMbExpenses));
     }
-    parsed.dataVersion = 7;
+    if(!parsed.investment){
+      parsed.investment = JSON.parse(JSON.stringify(defaultInvestment));
+    }
+    parsed.dataVersion = 8;
     return parsed;
   }
 
@@ -1494,7 +1566,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbMarketing: settings.mbMarketing || JSON.parse(JSON.stringify(defaultMbMarketing)),
         mbTeam: settings.mbTeam || JSON.parse(JSON.stringify(defaultMbTeam)),
         mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
-        mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses))
+        mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses)),
+        investment: settings.investment || JSON.parse(JSON.stringify(defaultInvestment))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -1741,6 +1814,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
         renderAlerts(snap);
+        renderInvestments();
       }
     }catch(e){ renderErrors.push(['executive/alerts', e]); }
     renderErrors.forEach(([section, e]) => showRenderError(section, e));
@@ -2409,6 +2483,100 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         options: { responsive:true, plugins:{ legend:{ display:false } }, scales: { x:{ grid:{ display:false } }, y:{ grid:{ color:gridColor } } } }
       });
     }
+  }
+
+  /* ---------------- Investments / Net Worth (admin only, personal) ---------------- */
+  function renderInvestments(){
+    if(!document.getElementById('investments')) return;
+    const inv = dashboardData.investment;
+    const assetsTotal = Object.values(inv.assets).reduce((a,v)=>a+v,0);
+    const vehicleNet = inv.vehicle.value - inv.vehicle.maintenance;
+    const liabilitiesTotal = inv.liabilities.reduce((a,l)=>a+l.amount,0);
+    const netWorth = assetsTotal + vehicleNet + inv.emergencyFund - liabilitiesTotal;
+
+    document.getElementById('netWorthTotal').textContent = fmtPeso(netWorth);
+    document.getElementById('netWorthBreakdown').textContent = `Assets ${fmtPeso(assetsTotal + vehicleNet + inv.emergencyFund)} − Liabilities ${fmtPeso(liabilitiesTotal)}`;
+
+    document.getElementById('invEmergencyFund').textContent = fmtPeso(inv.emergencyFund);
+    const runwayMonths = inv.monthlyExpenses > 0 ? (inv.emergencyFund / inv.monthlyExpenses).toFixed(1) : '0';
+    document.getElementById('invRunway').textContent = `${runwayMonths} months of runway`;
+
+    document.getElementById('invVehicleNet').textContent = fmtPeso(vehicleNet);
+    document.getElementById('invVehicleFoot').textContent = `${fmtPeso(inv.vehicle.value)} value − ${fmtPeso(inv.vehicle.maintenance)} maintenance`;
+
+    document.getElementById('invCondo').textContent = fmtPeso(inv.assets.condo);
+    document.getElementById('invAstoria').textContent = fmtPeso(inv.assets.astoria);
+    document.getElementById('invLand').textContent = fmtPeso(inv.assets.land);
+    document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.assets.nexstackEquity);
+    document.getElementById('invGold').textContent = fmtPeso(inv.assets.gold);
+    document.getElementById('invAssetsTotal').textContent = fmtPeso(assetsTotal);
+
+    document.getElementById('liabilityTable').innerHTML = '<tr><th>Name</th><th>Amount</th><th></th></tr>' +
+      inv.liabilities.map(l => `<tr><td>${l.name}</td><td>${fmtPeso(l.amount)}</td><td><button class="del-btn" onclick="removeLiability('${l.id}')">Remove</button></td></tr>`).join('');
+    document.getElementById('liabilityTotal').textContent = `Total: ${fmtPeso(liabilitiesTotal)}`;
+  }
+
+  function toggleInvestmentEdit(){
+    const form = document.getElementById('invEditForm');
+    const showing = form.style.display !== 'none';
+    if(showing){
+      form.style.display = 'none';
+      document.getElementById('invEditToggleBtn').textContent = 'Edit numbers';
+    } else {
+      const inv = dashboardData.investment;
+      document.getElementById('inv_condo').value = fmtPeso(inv.assets.condo).slice(1);
+      document.getElementById('inv_astoria').value = fmtPeso(inv.assets.astoria).slice(1);
+      document.getElementById('inv_land').value = fmtPeso(inv.assets.land).slice(1);
+      document.getElementById('inv_nexstackEquity').value = fmtPeso(inv.assets.nexstackEquity).slice(1);
+      document.getElementById('inv_gold').value = fmtPeso(inv.assets.gold).slice(1);
+      document.getElementById('inv_vehicleValue').value = fmtPeso(inv.vehicle.value).slice(1);
+      document.getElementById('inv_vehicleMaintenance').value = fmtPeso(inv.vehicle.maintenance).slice(1);
+      document.getElementById('inv_emergencyFund').value = fmtPeso(inv.emergencyFund).slice(1);
+      document.getElementById('inv_monthlyExpenses').value = fmtPeso(inv.monthlyExpenses).slice(1);
+      form.style.display = 'block';
+      document.getElementById('invEditToggleBtn').textContent = 'Hide';
+    }
+  }
+
+  async function saveInvestmentData(){
+    const inv = dashboardData.investment;
+    inv.assets.condo = clampNonNeg(parseCurrency(document.getElementById('inv_condo').value));
+    inv.assets.astoria = clampNonNeg(parseCurrency(document.getElementById('inv_astoria').value));
+    inv.assets.land = clampNonNeg(parseCurrency(document.getElementById('inv_land').value));
+    inv.assets.nexstackEquity = clampNonNeg(parseCurrency(document.getElementById('inv_nexstackEquity').value));
+    inv.assets.gold = clampNonNeg(parseCurrency(document.getElementById('inv_gold').value));
+    inv.vehicle.value = clampNonNeg(parseCurrency(document.getElementById('inv_vehicleValue').value));
+    inv.vehicle.maintenance = clampNonNeg(parseCurrency(document.getElementById('inv_vehicleMaintenance').value));
+    inv.emergencyFund = clampNonNeg(parseCurrency(document.getElementById('inv_emergencyFund').value));
+    inv.monthlyExpenses = clampNonNeg(parseCurrency(document.getElementById('inv_monthlyExpenses').value));
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    await saveSetting('investment', inv);
+    renderInvestments();
+    playChime(920);
+    const el = document.getElementById('invSaveConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  async function addLiability(){
+    const name = document.getElementById('inv_liabilityName').value.trim();
+    const amount = clampNonNeg(parseCurrency(document.getElementById('inv_liabilityAmount').value));
+    if(!name || amount <= 0){ alert('Please enter a name and a valid amount.'); return; }
+    const inv = dashboardData.investment;
+    inv.liabilities.push({ id:'liab'+Date.now(), name, amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('inv_liabilityName').value = '';
+    document.getElementById('inv_liabilityAmount').value = '';
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function removeLiability(id){
+    const inv = dashboardData.investment;
+    inv.liabilities = inv.liabilities.filter(l => l.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
   }
 
   function renderExecutive(snap){
