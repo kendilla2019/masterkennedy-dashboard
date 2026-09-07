@@ -51,11 +51,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans', sans-serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:1240px;margin:0 auto;padding:28px 24px 64px;}
-  .app-shell{display:flex;min-height:100vh;overflow-x:hidden;}
-  .main-content{flex:1;max-width:1240px;margin:0 auto;padding:20px 24px 40px;min-width:0;}
+  .app-shell{min-height:100vh;}
+  .app-shell.sidebar-collapsed .main-content{margin-left:68px;}
+  .main-content{margin-left:220px;max-width:1240px;padding:20px 24px 40px;transition:margin-left .2s ease;}
 
   /* ---------- Sidebar ---------- */
-  .sidebar{width:220px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--sidebar-line);padding:20px 0;height:100vh;overflow-y:auto;transition:width .2s ease;display:flex;flex-direction:column;position:relative;z-index:1;}
+  .sidebar{float:left;width:220px;background:var(--sidebar-bg);border-right:1px solid var(--sidebar-line);padding:20px 0;height:100vh;overflow-y:auto;transition:width .2s ease;display:flex;flex-direction:column;}
   .sidebar.collapsed{width:68px;}
   .sidebar-brand{display:flex;align-items:center;gap:10px;padding:0 18px 20px;margin-bottom:10px;border-bottom:1px solid var(--sidebar-line);cursor:pointer;user-select:none;color:#f4f7ff;}
   .sidebar-brand-text{white-space:nowrap;overflow:hidden;transition:opacity .15s ease;}
@@ -849,6 +850,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function toggleSidebar(){
     document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('dashboard').classList.toggle('sidebar-collapsed');
   }
 
   /* ---------------- Dashboard data (editable, saved per-browser, one snapshot per date range) ---------------- */
