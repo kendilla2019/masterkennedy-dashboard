@@ -1005,18 +1005,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
       <h3><span class="dot"></span>Net worth</h3>
       <div class="sub">Total assets minus total liabilities</div>
-      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:36px;font-weight:700;margin-top:10px;" id="netWorthTotal">₱0.00</div>
-      <div style="display:flex;gap:28px;margin-top:14px;flex-wrap:wrap;">
-        <div>
-          <div style="font-size:12px;color:var(--muted);">Total assets</div>
-          <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:19px;color:#5fbf7a;" id="netWorthAssets">₱0.00</div>
+      <div style="font-family:'IBM Plex Sans',sans-serif;font-size:42px;font-weight:800;margin-top:14px;letter-spacing:-0.02em;" id="netWorthTotal">₱0.00</div>
+
+      <div style="margin-top:18px;">
+        <div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--panel-2);">
+          <div id="netWorthEquityBar" style="background:linear-gradient(90deg,#4a9d63,#5fbf7a);height:100%;width:100%;transition:width .4s ease;"></div>
+          <div id="netWorthLiabilityBar" style="background:linear-gradient(90deg,#e0453f,#ff6b63);height:100%;width:0%;transition:width .4s ease;"></div>
         </div>
-        <div>
-          <div style="font-size:12px;color:var(--muted);">Total liabilities</div>
-          <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:19px;color:#e0453f;" id="netWorthLiabilities">₱0.00</div>
+        <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:5px;">
+          <span>Owned outright</span><span>Financed by debt</span>
         </div>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:12px;" id="netWorthBreakdown">—</div>
+
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:150px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--panel-2);">
+          <div class="kpi-icon icon-green" style="margin-bottom:0;flex-shrink:0;">▲</div>
+          <div style="min-width:0;"><div style="font-size:11px;color:var(--muted);">Total assets</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:15px;" id="netWorthAssets">₱0.00</div></div>
+        </div>
+        <div style="flex:1;min-width:150px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--panel-2);">
+          <div class="kpi-icon" style="margin-bottom:0;flex-shrink:0;background:rgba(224,69,63,.16);color:#ff8a83;">▼</div>
+          <div style="min-width:0;"><div style="font-size:11px;color:var(--muted);">Total liabilities</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:15px;" id="netWorthLiabilities">₱0.00</div></div>
+        </div>
+      </div>
+
+      <div style="font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.6;" id="netWorthBreakdown">—</div>
     </div>
 
     <div class="grid-2" style="margin-bottom:16px;">
@@ -2654,6 +2666,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('netWorthLiabilities').textContent = fmtPeso(totalLiabilities);
     document.getElementById('netWorthBreakdown').textContent =
       `Assets: Properties ${fmtPeso(propValueTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
+
+    // Leverage bar — what share of total assets is owned outright vs. financed by debt
+    const liabilityPct = totalAssets > 0 ? Math.min(100, Math.max(0, Math.round(totalLiabilities / totalAssets * 100))) : 0;
+    const equityPct = 100 - liabilityPct;
+    document.getElementById('netWorthEquityBar').style.width = `${equityPct}%`;
+    document.getElementById('netWorthLiabilityBar').style.width = `${liabilityPct}%`;
 
     document.getElementById('invEmergencyFund').textContent = fmtPeso(inv.emergencyFund);
     const runwayMonths = inv.monthlyExpenses > 0 ? (inv.emergencyFund / inv.monthlyExpenses).toFixed(1) : '0';
