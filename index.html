@@ -333,9 +333,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <span class="sidebar-brand-text"><span class="name">MasterKennedy</span><span class="subtitle">Business Dashboard</span></span>
     </div>
     <nav class="sidebar-nav" id="tabBar">
-      <button class="tab active" data-view="overview" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Overview</span></button>
-      <button class="tab" data-view="executive" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▣</span><span class="nav-label">Executive</span></button>
-      <button class="tab" data-view="executive" data-scroll-to="goalTrackerSection" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◎</span><span class="nav-label">Goal Tracker</span></button>
+      <button class="tab active" data-view="mainDashboard" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Dashboard</span></button>
       <button class="tab" data-view="finance" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▦</span><span class="nav-label">Finance</span></button>
       <button class="tab" data-view="calendar" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
       <button class="tab" data-view="team" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◈</span><span class="nav-label">Team</span></button>
@@ -356,7 +354,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <div class="masthead">
     <div class="brand">
-      <h2 id="pageTitle" style="margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:600;">Overview</h2>
+      <h2 id="pageTitle" style="margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:600;">Dashboard</h2>
     </div>
     <div class="masthead-right">
       <div class="period" id="syncStatus" title="Whether your last save reached the shared database">
@@ -386,8 +384,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="kpi"><div class="kpi-icon icon-orange">▲</div><div class="label">Prokora projects delivered</div><div class="value" id="kpiProjects">14</div><div class="delta" id="kpiProjectsFoot">3 currently in build</div></div>
   </div>
 
-  <!-- OVERVIEW -->
-  <div class="view active" id="overview">
+  <!-- DASHBOARD (merged Overview + Executive + Goal Tracker) -->
+  <div class="view active" id="mainDashboard">
     <div class="grid-2" style="margin-bottom:16px;">
       <div class="card" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Revenue by business unit</h3>
@@ -406,10 +404,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="stat"><div class="label">Nexstack</div><div class="value" id="ovNsRevenue">₱1.10M</div><div class="foot" id="ovNsFoot">210 students enrolled</div></div>
       <div class="stat"><div class="label">Prokora</div><div class="value" id="ovPkRevenue">₱1.60M</div><div class="foot" id="ovPkFoot">14 projects delivered</div></div>
     </div>
-  </div>
 
-  <!-- EXECUTIVE OVERVIEW (admin only) -->
-  <div class="view" id="executive">
+    <!-- Admin-only section (Executive Overview + Goal Tracker), hidden entirely for other roles -->
+    <div id="execOnlySection" style="margin-top:16px;">
 
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
@@ -511,7 +508,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <table id="assetTable"><tr><th>Name</th><th>Business</th><th>Value</th><th></th></tr></table>
       <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="assetTotal">Total: ₱0.00</div>
     </div>
-  </div>
+
+    </div><!-- /execOnlySection -->
+  </div><!-- /mainDashboard -->
 
   <!-- MASTER BACCARAT -->
   <div class="view" id="mb">
@@ -840,8 +839,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // reset to overview tab for next login
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-    document.querySelector('.tab[data-view="overview"]').classList.add('active');
-    document.getElementById('overview').classList.add('active');
+    document.querySelector('.tab[data-view="mainDashboard"]').classList.add('active');
+    document.getElementById('mainDashboard').classList.add('active');
   }
 
   function applyRoleVisibility(role){
@@ -849,6 +848,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const allowed = tab.dataset.roles.split(',');
       tab.style.display = allowed.includes(role) ? '' : 'none';
     });
+    // The Dashboard page itself is visible to everyone, but its admin-only inner section
+    // (Income Overview, Goal Tracker, Cash/Expenses/Assets) is hidden for other roles.
+    const execSection = document.getElementById('execOnlySection');
+    if(execSection) execSection.style.display = (role === 'admin') ? '' : 'none';
     // if current active view isn't allowed for this role, fall back to a tab they can see
     const activeTab = document.querySelector('.tab.active');
     if(activeTab && activeTab.style.display === 'none'){
