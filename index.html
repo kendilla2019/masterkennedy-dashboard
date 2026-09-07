@@ -162,8 +162,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .logout-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:color .15s ease, border-color .15s ease;}
   .logout-btn:hover{color:var(--ink);border-color:var(--muted);}
 
-  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
-  .kpi-row.has-goal{grid-template-columns:repeat(5,1fr);}
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px;}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;box-shadow:var(--shadow);position:relative;overflow:hidden;}
   .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
   .kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25),0 0 0 1px var(--gold-soft);border-color:var(--gold);}
@@ -285,8 +284,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   @media (max-width:900px){
     .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
-    .kpi-row{grid-template-columns:repeat(2,1fr);}
-    .kpi-row.has-goal{grid-template-columns:repeat(2,1fr);}
     .user-form{grid-template-columns:1fr;}
   }
 </style>
@@ -380,15 +377,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   </div>
 
   <div class="kpi-row">
-    <div class="kpi"><div class="kpi-icon icon-blue">₱</div><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
-    <div class="kpi" id="kpiGoalCard" onclick="startEditGoalInline()" style="cursor:pointer;" title="Click to edit your monthly goal">
+    <div class="kpi admin-only-kpi" id="kpiGoalCard" onclick="startEditGoalInline()" style="cursor:pointer;" title="Click to edit your monthly goal">
       <div class="kpi-icon icon-orange">🎯</div><div class="label">Monthly income goal</div>
       <div class="value" id="kpiGoalValue">₱1,000,000.00</div>
       <div class="delta" id="kpiGoalDelta">Click to edit</div>
     </div>
-    <div class="kpi"><div class="kpi-icon icon-green">◕</div><div class="label">Active students (BW + NS)</div><div class="value" id="kpiStudents">530</div><div class="delta">Baccarat Win + Nexstack combined</div></div>
-    <div class="kpi"><div class="kpi-icon icon-pink">●</div><div class="label">Gaming platforms live</div><div class="value" id="kpiPlatformCount">5</div><div class="delta" id="kpiPlatformList">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
-    <div class="kpi"><div class="kpi-icon icon-orange">▲</div><div class="label">Prokora projects delivered</div><div class="value" id="kpiProjects">14</div><div class="delta" id="kpiProjectsFoot">3 currently in build</div></div>
+    <div class="kpi"><div class="kpi-icon icon-blue">₱</div><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
+    <div class="kpi admin-only-kpi"><div class="kpi-icon icon-green">●</div><div class="label">Master Baccarat income</div><div class="value" id="kpiMbIncome">₱0.00</div><div class="delta">This month</div></div>
+    <div class="kpi admin-only-kpi"><div class="kpi-icon icon-pink">▲</div><div class="label">Prokora income</div><div class="value" id="kpiPkIncome">₱0.00</div><div class="delta">This month</div></div>
   </div>
 
   <!-- DASHBOARD (merged Overview + Executive + Goal Tracker) -->
@@ -890,11 +886,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // (Income Overview, Goal Tracker, Cash/Expenses/Assets) is hidden for other roles.
     const execSection = document.getElementById('execOnlySection');
     if(execSection) execSection.style.display = (role === 'admin') ? '' : 'none';
-    // The Monthly Income Goal KPI card (editable) is also admin-only.
-    const goalCard = document.getElementById('kpiGoalCard');
-    const kpiRow = goalCard ? goalCard.closest('.kpi-row') : null;
-    if(goalCard) goalCard.style.display = (role === 'admin') ? '' : 'none';
-    if(kpiRow) kpiRow.classList.toggle('has-goal', role === 'admin');
+    // Top KPI cards showing specific income figures (Goal, Master Baccarat income, Prokora income) are admin-only too.
+    document.querySelectorAll('.admin-only-kpi').forEach(el=>{
+      el.style.display = (role === 'admin') ? '' : 'none';
+    });
     // if current active view isn't allowed for this role, fall back to a tab they can see
     const activeTab = document.querySelector('.tab.active');
     if(activeTab && activeTab.style.display === 'none'){
@@ -1394,12 +1389,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     // KPI row
     document.getElementById('kpiRevenue').textContent = fmtPeso(combined);
-    document.getElementById('kpiStudents').textContent = activeStudents;
-    document.getElementById('kpiProjects').textContent = pkDelivered;
-    document.getElementById('kpiProjectsFoot').textContent = `${pkInProgress} currently in build`;
-    const livePlatforms = Object.keys(mb).filter(k => mb[k] > 0);
-    document.getElementById('kpiPlatformCount').textContent = livePlatforms.length;
-    document.getElementById('kpiPlatformList').textContent = livePlatforms.length ? livePlatforms.join(' · ') : 'No platforms active yet';
 
     // Overview
     document.getElementById('ovBarSub').textContent = `Share of ${fmtPeso(combined)} combined YTD revenue`;
@@ -1602,6 +1591,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     const kpiGoalDelta = document.getElementById('kpiGoalDelta');
     if(kpiGoalDelta) kpiGoalDelta.textContent = `${goalPct}% reached this month · Click to edit`;
+
+    const kpiMbIncome = document.getElementById('kpiMbIncome');
+    if(kpiMbIncome) kpiMbIncome.textContent = fmtPeso(mi.mb || 0);
+    const kpiPkIncome = document.getElementById('kpiPkIncome');
+    if(kpiPkIncome) kpiPkIncome.textContent = fmtPeso(mi.pk || 0);
 
     const ranked = bizKeys.map(k=>({ biz:k, income:mi[k]||0 })).sort((a,b)=>b.income-a.income);
     const topIncome = ranked.length ? ranked[0].income : 0;
