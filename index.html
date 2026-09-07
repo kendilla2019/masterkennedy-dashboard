@@ -163,6 +163,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .logout-btn:hover{color:var(--ink);border-color:var(--muted);}
 
   .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+  .kpi-row.has-goal{grid-template-columns:repeat(5,1fr);}
   .kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;box-shadow:var(--shadow);position:relative;overflow:hidden;}
   .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5;}
   .kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25),0 0 0 1px var(--gold-soft);border-color:var(--gold);}
@@ -285,6 +286,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   @media (max-width:900px){
     .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
     .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .kpi-row.has-goal{grid-template-columns:repeat(2,1fr);}
     .user-form{grid-template-columns:1fr;}
   }
 </style>
@@ -379,6 +381,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <div class="kpi-row">
     <div class="kpi"><div class="kpi-icon icon-blue">₱</div><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
+    <div class="kpi" id="kpiGoalCard" onclick="startEditGoalInline()" style="cursor:pointer;" title="Click to edit your monthly goal">
+      <div class="kpi-icon icon-orange">🎯</div><div class="label">Monthly income goal</div>
+      <div class="value" id="kpiGoalValue">₱1,000,000.00</div>
+      <div class="delta" id="kpiGoalDelta">Click to edit</div>
+    </div>
     <div class="kpi"><div class="kpi-icon icon-green">◕</div><div class="label">Active students (BW + NS)</div><div class="value" id="kpiStudents">530</div><div class="delta">Baccarat Win + Nexstack combined</div></div>
     <div class="kpi"><div class="kpi-icon icon-pink">●</div><div class="label">Gaming platforms live</div><div class="value" id="kpiPlatformCount">5</div><div class="delta" id="kpiPlatformList">22Win · Jolibet · 1xBet · Tab66 · 747</div></div>
     <div class="kpi"><div class="kpi-icon icon-orange">▲</div><div class="label">Prokora projects delivered</div><div class="value" id="kpiProjects">14</div><div class="delta" id="kpiProjectsFoot">3 currently in build</div></div>
@@ -883,6 +890,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // (Income Overview, Goal Tracker, Cash/Expenses/Assets) is hidden for other roles.
     const execSection = document.getElementById('execOnlySection');
     if(execSection) execSection.style.display = (role === 'admin') ? '' : 'none';
+    // The Monthly Income Goal KPI card (editable) is also admin-only.
+    const goalCard = document.getElementById('kpiGoalCard');
+    const kpiRow = goalCard ? goalCard.closest('.kpi-row') : null;
+    if(goalCard) goalCard.style.display = (role === 'admin') ? '' : 'none';
+    if(kpiRow) kpiRow.classList.toggle('has-goal', role === 'admin');
     // if current active view isn't allowed for this role, fall back to a tab they can see
     const activeTab = document.querySelector('.tab.active');
     if(activeTab && activeTab.style.display === 'none'){
@@ -1583,6 +1595,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('incomeGoalPct').textContent = `${goalPct}%`;
     document.getElementById('incomeGoalBar').style.width = `${goalPct}%`;
 
+    // Keep the top KPI card in sync too — but skip it while the person is actively typing in it
+    const kpiGoalValueEl = document.getElementById('kpiGoalValue');
+    if(kpiGoalValueEl && !kpiGoalValueEl.querySelector('input')){
+      kpiGoalValueEl.textContent = fmtPeso(goal);
+    }
+    const kpiGoalDelta = document.getElementById('kpiGoalDelta');
+    if(kpiGoalDelta) kpiGoalDelta.textContent = `${goalPct}% reached this month · Click to edit`;
+
     const ranked = bizKeys.map(k=>({ biz:k, income:mi[k]||0 })).sort((a,b)=>b.income-a.income);
     const topIncome = ranked.length ? ranked[0].income : 0;
 
@@ -1622,6 +1642,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       form.style.display = 'block';
       document.getElementById('incomeEditToggleBtn').textContent = 'Hide';
     }
+  }
+
+  function startEditGoalInline(){
+    if(!currentUser || currentUser.role !== 'admin') return;
+    const valueEl = document.getElementById('kpiGoalValue');
+    if(valueEl.querySelector('input')) return; // already editing
+    const currentGoal = dashboardData.monthlyIncome.goal || 0;
+    valueEl.innerHTML = `<input type="text" inputmode="decimal" id="kpiGoalInlineInput" style="width:100%;font-size:20px;font-weight:700;background:var(--panel-2);border:1px solid var(--gold);border-radius:6px;padding:2px 6px;color:var(--ink);font-family:inherit;" value="${currentGoal}">`;
+    const input = document.getElementById('kpiGoalInlineInput');
+    input.focus();
+    input.select();
+    input.onclick = (e) => e.stopPropagation(); // don't let clicking the input re-trigger edit mode or bubble oddly
+    input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); if(e.key === 'Escape'){ renderIncomeOverview(); } };
+    input.onblur = () => saveGoalInline(input.value);
+  }
+
+  async function saveGoalInline(rawValue){
+    const newGoal = clampNonNeg(parseCurrency(rawValue));
+    dashboardData.monthlyIncome.goal = newGoal;
+    document.getElementById('kpiGoalValue').textContent = fmtPeso(newGoal); // exit edit mode (removes the input) before re-rendering
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderIncomeOverview(); // refreshes the progress bar and ranked list below with the new goal
+    await saveSetting('monthlyIncome', dashboardData.monthlyIncome);
+    playChime(920);
   }
 
   async function saveMonthlyIncome(){
