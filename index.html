@@ -748,6 +748,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
   </div>
 
+  <!-- Event detail modal (shared by calendar grid clicks and upcoming-list clicks) -->
+  <div id="eventDetailOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this) closeEventDetail()">
+    <div style="background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:380px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.4);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="eventDetailDot" style="width:12px;height:12px;border-radius:50%;flex-shrink:0;"></span>
+          <h3 style="margin:0;font-size:16px;" id="eventDetailTitle">Event</h3>
+        </div>
+        <button onclick="closeEventDetail()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:0;">×</button>
+      </div>
+      <div style="font-size:13.5px;color:var(--muted);margin-bottom:4px;" id="eventDetailDate">—</div>
+      <div style="font-size:13.5px;color:var(--muted);margin-bottom:18px;" id="eventDetailBiz">—</div>
+      <div id="eventDetailAdminActions" style="display:flex;gap:10px;">
+        <button class="btn secondary small" onclick="startEditEvent()">Edit</button>
+        <button class="btn secondary small" style="color:#e0453f;" onclick="deleteEventFromModal()">Remove</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TEAM (placeholder — coming soon) -->
   <div class="view" id="team">
     <div class="card" style="--accent:#2f6fed">
@@ -1258,6 +1277,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       setSyncStatus(true);
       return String(data.id);
     }catch(e){ console.error('Could not save event to Supabase:', e); setSyncStatus(false); return null; }
+  }
+  async function dbUpdateCalendarEvent(id, ev){
+    if(!sb) return false;
+    try{
+      const { error } = await withTimeout(sb.from('calendar_events').update({ title:ev.title, date:ev.date, time:ev.time||null, business:ev.business }).eq('id', id), 5000);
+      if(error) throw error;
+      setSyncStatus(true);
+      return true;
+    }catch(e){ console.error('Could not update event in Supabase:', e); setSyncStatus(false); return false; }
   }
   async function dbDeleteCalendarEvent(id){
     if(!sb) return;
@@ -1838,7 +1866,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const isToday = dateStr === todayStr;
       const maxShown = 3;
       const shown = dayEvents.slice(0, maxShown).map(e=>
-        `<div class="cal-event-pill" style="background:${bizColors[e.business]||bizColors.general}" title="${e.title}${e.time?' · '+e.time:''}">${e.time?e.time+' ':''}${e.title}</div>`
+        `<div class="cal-event-pill" style="background:${bizColors[e.business]||bizColors.general}" title="${e.title}${e.time?' · '+e.time:''}" onclick="event.stopPropagation();showEventDetail('${e.id}')">${e.time?e.time+' ':''}${e.title}</div>`
       ).join('');
       const more = dayEvents.length > maxShown ? `<div class="cal-more">+${dayEvents.length - maxShown} more</div>` : '';
       cells += `<div class="cal-cell${isToday?' today':''}" onclick="calCellClicked('${dateStr}')" style="cursor:pointer;"><div class="cal-daynum">${d}</div>${shown}${more}</div>`;
@@ -1850,14 +1878,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const isAdmin = currentUser && currentUser.role === 'admin';
     document.getElementById('calUpcomingList').innerHTML = upcoming.length
       ? upcoming.map(e=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;cursor:pointer;" onclick="showEventDetail('${e.id}')">
             <div style="display:flex;align-items:center;gap:10px;min-width:0;">
               <span style="width:8px;height:8px;border-radius:50%;background:${bizColors[e.business]||bizColors.general};flex-shrink:0;"></span>
               <span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.title}</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
               <span style="font-size:11.5px;color:var(--muted);">${e.date}${e.time?' · '+e.time:''} · ${bizNames[e.business]||e.business}</span>
-              ${isAdmin ? `<button class="del-btn" onclick="removeCalendarEvent('${e.id}')">Remove</button>` : ''}
+              ${isAdmin ? `<button class="del-btn" onclick="event.stopPropagation();removeCalendarEvent('${e.id}')">Remove</button>` : ''}
             </div>
           </div>
         `).join('')
@@ -1916,6 +1944,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       return;
     }
 
+    // Editing an existing event (from the detail modal) updates that one record instead of creating new ones.
+    if(editingEventId){
+      const ev = dashboardData.calendar.events.find(e => e.id === editingEventId);
+      if(ev){
+        ev.title = title; ev.date = date; ev.time = time; ev.business = business;
+        try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+        calViewDate = new Date(date + 'T00:00:00');
+        renderCalendar();
+        await dbUpdateCalendarEvent(editingEventId, ev);
+      }
+      editingEventId = null;
+      document.getElementById('calAddEventCard').querySelector('h3').innerHTML = '<span class="dot"></span>Add event';
+      document.getElementById('calTitle').value = '';
+      document.getElementById('calDate').value = '';
+      document.getElementById('calTime').value = '';
+      showSaveConfirm('Event updated ✓');
+      return;
+    }
+
     const dates = calBuildRecurrenceDates(date, repeat, until);
     const records = dates.map(d => ({ id: 'cal'+Date.now()+'-'+Math.random().toString(36).slice(2,7), title, date:d, time, business }));
     records.forEach(r => dashboardData.calendar.events.push(r));
@@ -1945,6 +1992,53 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderCalendar();
     await dbDeleteCalendarEvent(id);
+  }
+
+  let selectedEventId = null;
+  let editingEventId = null; // set while the Add Event form is being used to edit an existing event instead of creating a new one
+
+  function showEventDetail(id){
+    const ev = dashboardData.calendar.events.find(e => e.id === id);
+    if(!ev) return;
+    selectedEventId = id;
+    document.getElementById('eventDetailDot').style.background = bizColors[ev.business] || bizColors.general;
+    document.getElementById('eventDetailTitle').textContent = ev.title;
+    document.getElementById('eventDetailDate').textContent = ev.date + (ev.time ? ' · ' + ev.time : '');
+    document.getElementById('eventDetailBiz').textContent = bizNames[ev.business] || ev.business;
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    document.getElementById('eventDetailAdminActions').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('eventDetailOverlay').style.display = 'flex';
+  }
+
+  function closeEventDetail(){
+    document.getElementById('eventDetailOverlay').style.display = 'none';
+    selectedEventId = null;
+  }
+
+  function startEditEvent(){
+    const ev = dashboardData.calendar.events.find(e => e.id === selectedEventId);
+    if(!ev) return;
+    editingEventId = ev.id;
+    document.getElementById('calTitle').value = ev.title;
+    document.getElementById('calDate').value = ev.date;
+    document.getElementById('calTime').value = ev.time || '';
+    document.getElementById('calBusiness').value = ev.business;
+    document.getElementById('calRepeat').value = 'none'; // editing always edits just this one occurrence
+    onCalRepeatChange();
+    closeEventDetail();
+    const card = document.getElementById('calAddEventCard');
+    if(card){
+      card.querySelector('h3').innerHTML = '<span class="dot"></span>Edit event';
+      if(card.scrollIntoView) card.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+    document.getElementById('calTitle').focus();
+  }
+
+  async function deleteEventFromModal(){
+    if(!selectedEventId) return;
+    const id = selectedEventId;
+    closeEventDetail();
+    await removeCalendarEvent(id);
   }
 
   /* ---------------- Edit Data form (works on a draft copy until Save is clicked) ---------------- */
