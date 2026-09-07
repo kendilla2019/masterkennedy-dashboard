@@ -24,7 +24,7 @@
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans', sans-serif;-webkit-font-smoothing:antialiased;}
   .app{max-width:1240px;margin:0 auto;padding:28px 24px 64px;}
   .app-shell{display:flex;min-height:100vh;overflow-x:hidden;}
-  .main-content{flex:1;max-width:1240px;margin:0 auto;padding:28px 24px 64px;min-width:0;}
+  .main-content{flex:1;max-width:1240px;margin:0 auto;padding:20px 24px 40px;min-width:0;}
 
   /* ---------- Sidebar ---------- */
   .sidebar{width:220px;flex-shrink:0;background:var(--sidebar-bg);border-right:1px solid var(--sidebar-line);padding:20px 0;height:100vh;overflow-y:auto;transition:width .2s ease;display:flex;flex-direction:column;position:relative;z-index:1;}
@@ -95,7 +95,7 @@
   .login-hint b{color:var(--ink);}
 
   /* ---------- Masthead ---------- */
-  .masthead{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+  .masthead{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:16px;}
   .brand{display:flex;align-items:center;gap:12px;}
   .brand-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(155deg,var(--gold),#16306b);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:#f4f7ff;flex-shrink:0;}
   .brand h1{font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0;letter-spacing:.2px;}
@@ -107,8 +107,8 @@
   .logout-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:color .15s ease, border-color .15s ease;}
   .logout-btn:hover{color:var(--ink);border-color:var(--muted);}
 
-  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
-  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;transition:box-shadow .2s ease;box-shadow:var(--shadow);}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;transition:box-shadow .2s ease;box-shadow:var(--shadow);}
   .kpi-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;margin-bottom:10px;}
   .kpi .label{color:var(--muted);font-size:12.5px;margin-bottom:8px;}
   .kpi .value{font-family:'IBM Plex Sans',sans-serif;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;transition:opacity .2s ease;}
@@ -128,11 +128,11 @@
     .btn, .tab, .logout-btn, .field input, .field select, .kpi{transition:none;}
   }
 
-  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;}
   .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
   .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
 
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;transition:box-shadow .2s ease;box-shadow:var(--shadow);}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;transition:box-shadow .2s ease;box-shadow:var(--shadow);}
   .card h3{margin:0 0 14px;font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
   .card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent,var(--gold));}
   .card .sub{color:var(--muted);font-size:12.5px;margin-top:-8px;margin-bottom:14px;}
@@ -160,7 +160,7 @@
   .barlist .row .fill{height:100%;border-radius:6px;background:var(--accent,var(--gold));}
   .barlist .row .num{min-width:190px;text-align:right;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink);flex-shrink:0;}
 
-  canvas{max-height:260px;}
+  canvas{max-height:210px;}
 
   .note{margin-top:28px;padding:14px 18px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:12.5px;line-height:1.6;}
   .note b{color:var(--ink);}
@@ -288,7 +288,7 @@
 
   <div class="masthead">
     <div class="brand">
-      <p style="margin:0;">Master Baccarat · Baccarat Win · Nexstack · Prokora</p>
+      <h2 id="pageTitle" style="margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:600;">Overview</h2>
     </div>
     <div class="masthead-right">
       <div class="period" id="periodBadge">YTD 2026 · Jan – Aug</div>
@@ -797,6 +797,8 @@
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
       document.querySelectorAll(`.tab[data-view="${tab.dataset.view}"]`).forEach(t=>t.classList.add('active'));
       document.getElementById(tab.dataset.view).classList.add('active');
+      const labelEl = tab.querySelector('.nav-label');
+      if(labelEl && document.getElementById('pageTitle')) document.getElementById('pageTitle').textContent = labelEl.textContent;
       if(tab.dataset.scrollTo){
         setTimeout(()=>{
           const el = document.getElementById(tab.dataset.scrollTo);
