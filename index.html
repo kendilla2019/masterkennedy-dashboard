@@ -991,7 +991,7 @@
   function pkRevenue(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
 
   /* ---------------- Render everything from the active snapshot ---------------- */
-  function renderAll(){
+  function renderAllInner(){
     const snap = getCurrentSnapshot();
     const mb = snap.mb, bw = snap.bw, ns = snap.ns, pk = snap.pk;
     const mbTot = mbTotal(snap);
@@ -1083,6 +1083,33 @@
       }
     }catch(e){ renderErrors.push(['executive/alerts', e]); }
     renderErrors.forEach(([section, e]) => showRenderError(section, e));
+  }
+
+  // Outer safety net: if ANYTHING in renderAllInner throws (even in the parts that aren't
+  // individually wrapped), this guarantees the page never stays blank. It resets to the
+  // built-in sample data and tries once more, so there's always something on screen.
+  let renderAllRetried = false;
+  function renderAll(){
+    try{
+      renderAllInner();
+      renderAllRetried = false;
+    }catch(e){
+      console.error('renderAll failed entirely:', e);
+      if(!renderAllRetried){
+        renderAllRetried = true;
+        try{
+          dashboardData = JSON.parse(JSON.stringify(defaultData));
+          renderAllInner();
+          showRenderError('data', new Error('Your saved data looked corrupted, so this reset to sample data. Nothing you enter is lost from Supabase — try refreshing.'));
+        }catch(e2){
+          document.getElementById('alertBanner').innerHTML =
+            `<div class="alert-item red"><span class="dot-icon">⚠</span><span><b>The dashboard couldn't load:</b> ${e2.message || e2}. Please screenshot this and refresh the page.</span></div>`;
+        }
+      } else {
+        document.getElementById('alertBanner').innerHTML =
+          `<div class="alert-item red"><span class="dot-icon">⚠</span><span><b>The dashboard couldn't load:</b> ${e.message || e}. Please screenshot this and refresh the page.</span></div>`;
+      }
+    }
   }
 
   // Surfaces a rendering error directly on the page instead of failing silently — so if
