@@ -1072,10 +1072,31 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="goldTotal">Total: ₱0.00</div>
       </div>
       <div class="card" style="--accent:#2f6fed">
-        <h3><span class="dot"></span>Other assets</h3>
-        <div class="sub">Not tied to a property or gold</div>
+        <h3><span class="dot"></span>Nexstack equity</h3>
+        <div class="sub">Fixed business stake</div>
         <div class="stat" style="margin-top:12px;"><div class="label">Nexstack (equity stake)</div><div class="value" id="invNexstackEquity">₱0.00</div></div>
       </div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Other investments</h3>
+      <div class="sub">Anything not covered above — stocks, crypto, another property, a business stake, etc.</div>
+      <div class="edit-grid" style="grid-template-columns:1.3fr 1fr 1fr auto;align-items:end;margin-top:12px;">
+        <div class="field"><label>Name</label><input type="text" id="otherInv_name" placeholder="e.g. Stocks, Crypto, Another business"></div>
+        <div class="field"><label>Category</label>
+          <select id="otherInv_category">
+            <option value="Stocks">Stocks</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Business stake">Business stake</option>
+            <option value="Property">Property</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Current value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="otherInv_value" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addOtherInvestment()">+ Add</button>
+      </div>
+      <table id="otherInvestmentTable" style="margin-top:14px;"><tr><th>Name</th><th>Category</th><th>Value</th><th></th></tr></table>
+      <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="otherInvestmentTotal">Total: ₱0.00</div>
     </div>
 
     <div class="card" style="--accent:#2f6fed;">
@@ -1452,6 +1473,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     propertyExpenses: [], // [{ id, property, category, amount }] — monthly
     nexstackEquity: 0,
     goldHoldings: [], // [{ id, name, value }] — tracked separately since each lot differs
+    otherInvestments: [], // [{ id, name, category, value }] — anything not covered by the fixed categories above
     vehicle: { purchasePrice:0, currentValue:0, maintenance:0 },
     liabilities: [], // other liabilities not tied to a property — [{ id, name, amount }]
     emergencyFund: 0,
@@ -1585,6 +1607,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // who already saved the "detailed" shape before property income/expenses existed).
     if(!inv.propertyIncome) inv.propertyIncome = [];
     if(!inv.propertyExpenses) inv.propertyExpenses = [];
+    if(!inv.otherInvestments) inv.otherInvestments = [];
     return inv;
   }
 
@@ -2607,15 +2630,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const propEquityTotal = propValueTotal - propLoanTotal;
 
     const goldTotal = inv.goldHoldings.reduce((a,g)=>a+g.value,0);
+    const otherInvTotal = inv.otherInvestments.reduce((a,o)=>a+o.value,0);
     const vehicleNet = inv.vehicle.currentValue - inv.vehicle.maintenance;
     const depreciation = inv.vehicle.purchasePrice - inv.vehicle.currentValue;
     const otherLiabilitiesTotal = inv.liabilities.reduce((a,l)=>a+l.amount,0);
 
-    const netWorth = propEquityTotal + inv.nexstackEquity + goldTotal + vehicleNet + inv.emergencyFund - otherLiabilitiesTotal;
+    const netWorth = propEquityTotal + inv.nexstackEquity + goldTotal + otherInvTotal + vehicleNet + inv.emergencyFund - otherLiabilitiesTotal;
 
     document.getElementById('netWorthTotal').textContent = fmtPeso(netWorth);
     document.getElementById('netWorthBreakdown').textContent =
-      `Property equity ${fmtPeso(propEquityTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)} − Other liabilities ${fmtPeso(otherLiabilitiesTotal)}`;
+      `Property equity ${fmtPeso(propEquityTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)} − Other liabilities ${fmtPeso(otherLiabilitiesTotal)}`;
 
     document.getElementById('invEmergencyFund').textContent = fmtPeso(inv.emergencyFund);
     const runwayMonths = inv.monthlyExpenses > 0 ? (inv.emergencyFund / inv.monthlyExpenses).toFixed(1) : '0';
@@ -2663,6 +2687,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       : '<div style="color:var(--muted);font-size:13px;">No expenses logged yet.</div>';
 
     document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.nexstackEquity);
+
+    document.getElementById('otherInvestmentTable').innerHTML = '<tr><th>Name</th><th>Category</th><th>Value</th><th></th></tr>' +
+      inv.otherInvestments.map(o => `<tr><td>${o.name}</td><td>${o.category}</td><td>${fmtPeso(o.value)}</td><td><button class="del-btn" onclick="removeOtherInvestment('${o.id}')">Remove</button></td></tr>`).join('');
+    document.getElementById('otherInvestmentTotal').textContent = `Total: ${fmtPeso(otherInvTotal)}`;
 
     document.getElementById('goldTable').innerHTML = '<tr><th>Description</th><th>Value</th><th></th></tr>' +
       inv.goldHoldings.map(g => `<tr><td>${g.name}</td><td>${fmtPeso(g.value)}</td><td><button class="del-btn" onclick="removeGoldHolding('${g.id}')">Remove</button></td></tr>`).join('');
@@ -2759,6 +2787,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function removePropertyExpense(id){
     const inv = dashboardData.investment;
     inv.propertyExpenses = inv.propertyExpenses.filter(e => e.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function addOtherInvestment(){
+    const name = document.getElementById('otherInv_name').value.trim();
+    const category = document.getElementById('otherInv_category').value;
+    const value = clampNonNeg(parseCurrency(document.getElementById('otherInv_value').value));
+    if(!name || value <= 0){ alert('Please enter a name and a valid value.'); return; }
+    const inv = dashboardData.investment;
+    inv.otherInvestments.push({ id:'otherinv'+Date.now(), name, category, value });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('otherInv_name').value = '';
+    document.getElementById('otherInv_value').value = '';
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  async function removeOtherInvestment(id){
+    const inv = dashboardData.investment;
+    inv.otherInvestments = inv.otherInvestments.filter(o => o.id !== id);
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderInvestments();
     await saveSetting('investment', inv);
