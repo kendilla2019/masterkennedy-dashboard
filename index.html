@@ -800,20 +800,11 @@
           if(el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
         }, 50);
       }
-      // On narrow screens, collapse the sidebar after choosing a page so it doesn't cover the content.
-      if(window.innerWidth <= 900){
-        document.getElementById('sidebar').classList.add('collapsed');
-      }
     });
   });
 
   function toggleSidebar(){
     document.getElementById('sidebar').classList.toggle('collapsed');
-  }
-
-  // Sidebar starts collapsed by default on narrow (phone-sized) screens.
-  if(window.innerWidth <= 900){
-    document.getElementById('sidebar').classList.add('collapsed');
   }
 
   /* ---------------- Dashboard data (editable, saved per-browser, one snapshot per date range) ---------------- */
@@ -1078,14 +1069,30 @@
       lu.textContent = 'Last updated: sample data, not yet edited';
     }
 
-    renderCharts();
-    if(document.getElementById('editdata')) populateEditForm();
-    renderCalendar();
-    if(currentUser && currentUser.role === 'admin'){
-      renderExecutive(snap);
-      renderAlerts(snap);
-    } else {
-      document.getElementById('alertBanner').innerHTML = '';
+    document.getElementById('alertBanner').innerHTML = ''; // clear before this render pass so old errors/alerts don't linger
+    const renderErrors = [];
+    try{ renderCharts(); }catch(e){ renderErrors.push(['charts', e]); }
+    try{ if(document.getElementById('editdata')) populateEditForm(); }catch(e){ renderErrors.push(['edit form', e]); }
+    try{ renderCalendar(); }catch(e){ renderErrors.push(['calendar', e]); }
+    try{
+      if(currentUser && currentUser.role === 'admin'){
+        renderExecutive(snap);
+        renderAlerts(snap);
+      }
+    }catch(e){ renderErrors.push(['executive/alerts', e]); }
+    renderErrors.forEach(([section, e]) => showRenderError(section, e));
+  }
+
+  // Surfaces a rendering error directly on the page instead of failing silently — so if
+  // something breaks on a device I can't test on, the person sees exactly what and where.
+  function showRenderError(section, err){
+    console.error(`Render error in ${section}:`, err);
+    const banner = document.getElementById('alertBanner');
+    if(banner){
+      const div = document.createElement('div');
+      div.className = 'alert-item red';
+      div.innerHTML = `<span class="dot-icon">⚠</span><span><b>Display issue in ${section}:</b> ${err.message || err}. The rest of the dashboard should still work — screenshot this message if you report it.</span>`;
+      banner.prepend(div);
     }
   }
 
