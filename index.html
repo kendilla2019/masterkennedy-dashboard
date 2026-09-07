@@ -957,46 +957,175 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ]);
   }
 
-  async function loadDashboardData(){
-    // 1. Try the shared Supabase database first — this is what makes every account see the same data.
-    // Capped at 5 seconds so a slow or blocked network never leaves the page stuck waiting.
-    if(sb){
-      try{
-        const { data, error } = await withTimeout(sb.from('dashboard_state').select('data').eq('id', 1).single(), 5000);
-        if(error) throw error;
-        const migrated = migrateLoadedData(data && data.data);
-        if(migrated) return migrated;
-      }catch(e){
-        console.error('Could not load from Supabase, falling back to this browser\'s local copy:', e);
-      }
-    }
-    // 2. Fall back to whatever this browser has cached locally (keeps the app usable offline
-    //    or if Supabase is temporarily unreachable).
+  function localCacheFallback(){
     try{
       const cached = localStorage.getItem(DATA_KEY);
       const migrated = migrateLoadedData(cached ? JSON.parse(cached) : null);
       if(migrated) return migrated;
     }catch(e){}
-    // 3. Nothing anywhere — start from the sample data.
     return JSON.parse(JSON.stringify(defaultData));
   }
 
-  async function saveDashboardData(){
-    dashboardData.dataVersion = 4;
-    let sharedSaveOk = false;
-    if(sb){
-      try{
-        const { error } = await withTimeout(sb.from('dashboard_state').upsert({ id: 1, data: dashboardData, updated_at: new Date().toISOString() }), 5000);
-        if(error) throw error;
-        sharedSaveOk = true;
-      }catch(e){
-        console.error('Could not save to the shared Supabase database — this device will only save locally until it reconnects:', e);
-      }
+  async function loadDashboardData(){
+    if(!sb) return localCacheFallback();
+    try{
+      const [settingsRes, revenueRes, projectsRes, goalsRes, expensesRes, assetsRes, eventsRes] = await withTimeout(Promise.all([
+        sb.from('app_settings').select('key,value'),
+        sb.from('revenue_periods').select('period_start,period_end,business,metric,saved_at'),
+        sb.from('pk_projects').select('id,period_start,period_end,client,scope,value,status'),
+        sb.from('goals_cash').select('business,goal,cash,threshold'),
+        sb.from('expenses').select('id,date,category,amount,business'),
+        sb.from('assets').select('id,name,value,business'),
+        sb.from('calendar_events').select('id,title,date,time,business'),
+      ]), 6000);
+
+      const anyRealData = (revenueRes.data||[]).length || (expensesRes.data||[]).length || (eventsRes.data||[]).length || (assetsRes.data||[]).length;
+      if(!anyRealData) return localCacheFallback(); // brand new empty database — show sample data instead of a blank shell
+
+      const settings = {};
+      (settingsRes.data||[]).forEach(row => { settings[row.key] = row.value; });
+
+      const history = {};
+      (revenueRes.data||[]).forEach(row=>{
+        const key = periodKey(row.period_start, row.period_end);
+        if(!history[key]) history[key] = { mb:{}, bw:{}, ns:{}, pk:{projects:[]}, savedAt:row.saved_at };
+        history[key][row.business] = row.metric;
+        if(!history[key].savedAt || row.saved_at > history[key].savedAt) history[key].savedAt = row.saved_at;
+      });
+      (projectsRes.data||[]).forEach(row=>{
+        const key = periodKey(row.period_start, row.period_end);
+        if(!history[key]) history[key] = { mb:{}, bw:{}, ns:{}, pk:{projects:[]}, savedAt:null };
+        history[key].pk.projects.push({ id:String(row.id), client:row.client, scope:row.scope, value:row.value, status:row.status });
+      });
+      const blankSnap = emptySnapshot();
+      Object.values(history).forEach(snap=>{
+        if(!snap.mb || !Object.keys(snap.mb).length) snap.mb = JSON.parse(JSON.stringify(blankSnap.mb));
+        if(!snap.bw || !Object.keys(snap.bw).length) snap.bw = JSON.parse(JSON.stringify(blankSnap.bw));
+        if(!snap.ns || !Object.keys(snap.ns).length) snap.ns = JSON.parse(JSON.stringify(blankSnap.ns));
+      });
+
+      const goals={mb:0,bw:0,ns:0,pk:0}, cash={mb:0,bw:0,ns:0,pk:0}, thresholds={mb:0,bw:0,ns:0,pk:0};
+      (goalsRes.data||[]).forEach(row=>{ goals[row.business]=row.goal||0; cash[row.business]=row.cash||0; thresholds[row.business]=row.threshold||0; });
+
+      const expenses = (expensesRes.data||[]).map(r=>({ id:String(r.id), date:r.date, category:r.category, amount:r.amount, business:r.business }));
+      const assets = (assetsRes.data||[]).map(r=>({ id:String(r.id), name:r.name, value:r.value, business:r.business }));
+      const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
+
+      const assembled = {
+        dataVersion: 5,
+        lastUpdated: settings.lastUpdated || null,
+        currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
+        history,
+        exec: { goals, cash, thresholds, expenses, assets },
+        calendar: { events }
+      };
+      try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
+      return assembled;
+    }catch(e){
+      console.error('Could not load from Supabase (multi-table), falling back to local copy:', e);
+      return localCacheFallback();
     }
-    // Always also keep a local cache, so the app still works if Supabase is briefly unreachable.
-    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }
-    catch(e){ console.error('Could not save local cache either', e); }
-    return sharedSaveOk;
+  }
+
+  // Persists only the lightweight settings (which period is selected, last-updated stamp).
+  // Every other entity (expenses, assets, events, goals, revenue) saves itself directly —
+  // see saveSetting calls sprinkled through the action functions below.
+  async function saveSetting(key, value){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){} // local mirror, always
+    if(!sb) return false;
+    try{
+      const { error } = await withTimeout(sb.from('app_settings').upsert({ key, value }), 5000);
+      if(error) throw error;
+      return true;
+    }catch(e){
+      console.error(`Could not save setting "${key}" to Supabase:`, e);
+      return false;
+    }
+  }
+
+  // Kept for compatibility with a couple of call sites — now just mirrors the local cache
+  // and re-saves current settings, since real persistence happens per-entity below.
+  async function saveDashboardData(){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    await saveSetting('currentPeriod', dashboardData.currentPeriod);
+    await saveSetting('lastUpdated', dashboardData.lastUpdated);
+    return !!sb;
+  }
+
+  async function dbInsertExpense(exp){
+    if(!sb) return null;
+    try{
+      const { data, error } = await withTimeout(sb.from('expenses').insert({ date:exp.date, category:exp.category, amount:exp.amount, business:exp.business }).select().single(), 5000);
+      if(error) throw error;
+      return String(data.id);
+    }catch(e){ console.error('Could not save expense to Supabase:', e); return null; }
+  }
+  async function dbDeleteExpense(id){
+    if(!sb) return;
+    try{ await withTimeout(sb.from('expenses').delete().eq('id', id), 5000); }
+    catch(e){ console.error('Could not delete expense from Supabase:', e); }
+  }
+  async function dbInsertAsset(a){
+    if(!sb) return null;
+    try{
+      const { data, error } = await withTimeout(sb.from('assets').insert({ name:a.name, value:a.value, business:a.business }).select().single(), 5000);
+      if(error) throw error;
+      return String(data.id);
+    }catch(e){ console.error('Could not save asset to Supabase:', e); return null; }
+  }
+  async function dbDeleteAsset(id){
+    if(!sb) return;
+    try{ await withTimeout(sb.from('assets').delete().eq('id', id), 5000); }
+    catch(e){ console.error('Could not delete asset from Supabase:', e); }
+  }
+  async function dbInsertCalendarEvent(ev){
+    if(!sb) return null;
+    try{
+      const { data, error } = await withTimeout(sb.from('calendar_events').insert({ title:ev.title, date:ev.date, time:ev.time||null, business:ev.business }).select().single(), 5000);
+      if(error) throw error;
+      return String(data.id);
+    }catch(e){ console.error('Could not save event to Supabase:', e); return null; }
+  }
+  async function dbDeleteCalendarEvent(id){
+    if(!sb) return;
+    try{ await withTimeout(sb.from('calendar_events').delete().eq('id', id), 5000); }
+    catch(e){ console.error('Could not delete event from Supabase:', e); }
+  }
+  async function dbSaveGoalsCash(exec){
+    if(!sb) return false;
+    try{
+      const rows = ['mb','bw','ns','pk'].map(biz=>({ business:biz, goal:exec.goals[biz]||0, cash:exec.cash[biz]||0, threshold:exec.thresholds[biz]||0 }));
+      const { error } = await withTimeout(sb.from('goals_cash').upsert(rows), 5000);
+      if(error) throw error;
+      return true;
+    }catch(e){ console.error('Could not save goals/cash to Supabase:', e); return false; }
+  }
+  async function dbSaveRevenuePeriod(start, end, snap){
+    if(!sb) return false;
+    try{
+      const rows = [
+        { period_start:start, period_end:end, business:'mb', metric:snap.mb, saved_at:new Date().toISOString() },
+        { period_start:start, period_end:end, business:'bw', metric:snap.bw, saved_at:new Date().toISOString() },
+        { period_start:start, period_end:end, business:'ns', metric:snap.ns, saved_at:new Date().toISOString() },
+      ];
+      const { error } = await withTimeout(sb.from('revenue_periods').upsert(rows, { onConflict:'period_start,period_end,business' }), 5000);
+      if(error) throw error;
+      // Projects: replace-on-save is simplest and matches how the edit form works (freely add/remove before saving)
+      await withTimeout(sb.from('pk_projects').delete().eq('period_start', start).eq('period_end', end), 5000);
+      if(snap.pk.projects.length){
+        const projectRows = snap.pk.projects.map(p=>({ period_start:start, period_end:end, client:p.client, scope:p.scope, value:p.value, status:p.status }));
+        const { error: perr } = await withTimeout(sb.from('pk_projects').insert(projectRows), 5000);
+        if(perr) throw perr;
+      }
+      return true;
+    }catch(e){ console.error('Could not save revenue period to Supabase:', e); return false; }
+  }
+  async function dbDeletePeriod(start, end){
+    if(!sb) return;
+    try{
+      await withTimeout(sb.from('revenue_periods').delete().eq('period_start', start).eq('period_end', end), 5000);
+      await withTimeout(sb.from('pk_projects').delete().eq('period_start', start).eq('period_end', end), 5000);
+    }catch(e){ console.error('Could not delete period from Supabase:', e); }
   }
 
   // Returns the snapshot for the currently selected period, or a fresh blank one if that
@@ -1309,7 +1438,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       dashboardData.exec.cash[biz] = clampNonNeg(parseCurrency(document.getElementById(`cash_${biz}`).value));
       dashboardData.exec.thresholds[biz] = clampNonNeg(parseCurrency(document.getElementById(`threshold_${biz}`).value));
     });
-    await saveDashboardData();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    await dbSaveGoalsCash(dashboardData.exec);
     renderAll();
     const el = document.getElementById('execSaveConfirm');
     el.style.opacity = '1';
@@ -1325,18 +1455,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       alert('Please fill in date, category, and a valid amount.');
       return;
     }
-    dashboardData.exec.expenses.push({ id: 'e'+Date.now(), date, category, amount, business });
-    await saveDashboardData();
+    const tempId = 'e'+Date.now();
+    const record = { id: tempId, date, category, amount, business };
+    dashboardData.exec.expenses.push(record);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('expDate').value = '';
     document.getElementById('expCategory').value = '';
     document.getElementById('expAmount').value = '';
     renderAll();
+    const realId = await dbInsertExpense(record);
+    if(realId){ record.id = realId; try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){} }
   }
 
   async function removeExpense(id){
     dashboardData.exec.expenses = dashboardData.exec.expenses.filter(e=>e.id !== id);
-    await saveDashboardData();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderAll();
+    await dbDeleteExpense(id);
   }
 
   async function addAsset(){
@@ -1347,17 +1482,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       alert('Please fill in a name and a valid value.');
       return;
     }
-    dashboardData.exec.assets.push({ id: 'a'+Date.now(), name, value, business });
-    await saveDashboardData();
+    const tempId = 'a'+Date.now();
+    const record = { id: tempId, name, value, business };
+    dashboardData.exec.assets.push(record);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('assetName').value = '';
     document.getElementById('assetValue').value = '';
     renderAll();
+    const realId = await dbInsertAsset(record);
+    if(realId){ record.id = realId; try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){} }
   }
 
   async function removeAsset(id){
     dashboardData.exec.assets = dashboardData.exec.assets.filter(a=>a.id !== id);
-    await saveDashboardData();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderAll();
+    await dbDeleteAsset(id);
   }
 
   /* ---------------- Alert Dashboard (admin only) ---------------- */
@@ -1487,19 +1627,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       alert('Please fill in at least a title and a date.');
       return;
     }
-    dashboardData.calendar.events.push({ id: 'cal'+Date.now(), title, date, time, business });
-    await saveDashboardData();
+    const record = { id: 'cal'+Date.now(), title, date, time, business };
+    dashboardData.calendar.events.push(record);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('calTitle').value = '';
     document.getElementById('calDate').value = '';
     document.getElementById('calTime').value = '';
     calViewDate = new Date(date + 'T00:00:00'); // jump the grid to show the month you just added to
     renderCalendar();
+    const realId = await dbInsertCalendarEvent(record);
+    if(realId){ record.id = realId; try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){} }
   }
 
   async function removeCalendarEvent(id){
     dashboardData.calendar.events = dashboardData.calendar.events.filter(e => e.id !== id);
-    await saveDashboardData();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderCalendar();
+    await dbDeleteCalendarEvent(id);
   }
 
   /* ---------------- Edit Data form (works on a draft copy until Save is clicked) ---------------- */
@@ -1620,6 +1764,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   async function deleteHistoryPeriod(key){
     if(!confirm('Delete all saved data for this period? This cannot be undone.')) return;
+    const [delStart, delEnd] = key.split('_');
     delete dashboardData.history[key];
     const remainingKeys = Object.keys(dashboardData.history).sort().reverse();
     const cp = dashboardData.currentPeriod;
@@ -1633,6 +1778,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       }
     }
     await saveDashboardData();
+    await dbDeletePeriod(delStart, delEnd);
     renderAll();
     populateEditForm();
   }
@@ -1685,7 +1831,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     // small delay purely so "Saving…" is visible — makes the click feel acknowledged, not ignored
     setTimeout(async ()=>{
-      const persisted = await saveDashboardData();
+      await saveDashboardData(); // settings + local cache
+      const persisted = await dbSaveRevenuePeriod(startVal, endVal, editingSnapshot); // the actual revenue data
       renderAll();
       populateEditForm();
       saveBtn.disabled = false;
@@ -1702,8 +1849,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   async function resetToSampleData(){
-    if(!confirm('Reset EVERYTHING back to the original sample data? This deletes all saved periods and cannot be undone.')) return;
+    if(!confirm('Reset EVERYTHING back to the original sample data? This deletes all saved periods, expenses, assets, goals, and calendar events from the shared database and cannot be undone.')) return;
     dashboardData = JSON.parse(JSON.stringify(defaultData));
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    if(sb){
+      try{
+        await Promise.all([
+          sb.from('revenue_periods').delete().neq('id', -1),
+          sb.from('pk_projects').delete().neq('id', -1),
+          sb.from('expenses').delete().neq('id', -1),
+          sb.from('assets').delete().neq('id', -1),
+          sb.from('calendar_events').delete().neq('id', -1),
+          sb.from('goals_cash').delete().neq('business', ''),
+        ]);
+      }catch(e){ console.error('Could not fully clear the shared database:', e); }
+    }
     await saveDashboardData();
     renderAll();
     populateEditForm();
