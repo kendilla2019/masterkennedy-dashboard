@@ -586,6 +586,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="btn small" style="margin-top:6px;" onclick="saveCommissionEdit()">Save commission</button>
           <span id="commissionSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
         </div>
+
+        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log weekly commission</h4>
+        <div class="sub" style="margin-bottom:10px;">Add each week's payout as it comes in — the totals above automatically roll it up into whatever period you're viewing</div>
+        <div class="edit-grid" style="grid-template-columns:1.2fr 1fr 1fr auto;align-items:end;">
+          <div class="field"><label>Week</label>
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="week" id="weeklyComm_week" style="flex:1;min-width:0;">
+              <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillWeekField('weeklyComm_week',0)">This</button>
+              <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillWeekField('weeklyComm_week',-1)">Last</button>
+            </div>
+          </div>
+          <div class="field"><label>Platform</label>
+            <select id="weeklyComm_platform">
+              <option value="22Win">22Win</option>
+              <option value="Jolibet">Jolibet</option>
+              <option value="1xBet">1xBet</option>
+              <option value="Tab66">Tab66</option>
+              <option value="747">747</option>
+            </select>
+          </div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="weeklyComm_amount" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addWeeklyCommission()">+ Log</button>
+        </div>
+        <div id="weeklyCommList" style="margin-top:10px;"></div>
       </div>
 
       <div class="card" style="--accent:#e0453f;">
@@ -1488,7 +1512,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     monthlyGoal: 0,
     quarterlyGoal: 0,
     mrrHistory: [], // [{ month:'2026-09', mrr:50000 }, ...]
-    additionalIncome: [] // [{ id, month, description, amount }] — talent fees, bonuses, etc.
+    additionalIncome: [], // [{ id, month, description, amount }] — talent fees, bonuses, etc.
+    weeklyCommission: [] // [{ id, week:'2026-W36', platform, amount }] — logged weekly, rolled up into period totals
   };
 
   const defaultMbMarketing = {
@@ -1609,6 +1634,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       parsed.mbSales = JSON.parse(JSON.stringify(defaultMbSales));
     }
     if(!parsed.mbSales.additionalIncome) parsed.mbSales.additionalIncome = [];
+    if(!parsed.mbSales.weeklyCommission) parsed.mbSales.weeklyCommission = [];
     if(!parsed.mbMarketing){
       parsed.mbMarketing = JSON.parse(JSON.stringify(defaultMbMarketing));
     }
@@ -1745,7 +1771,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         exec: { goals, cash, thresholds, expenses, assets },
         calendar: { events },
         monthlyIncome: settings.monthlyIncome || JSON.parse(JSON.stringify(defaultData.monthlyIncome)),
-        mbSales: settings.mbSales ? Object.assign(JSON.parse(JSON.stringify(defaultMbSales)), settings.mbSales, { additionalIncome: settings.mbSales.additionalIncome || [] }) : JSON.parse(JSON.stringify(defaultMbSales)),
+        mbSales: settings.mbSales ? Object.assign(JSON.parse(JSON.stringify(defaultMbSales)), settings.mbSales, { additionalIncome: settings.mbSales.additionalIncome || [], weeklyCommission: settings.mbSales.weeklyCommission || [] }) : JSON.parse(JSON.stringify(defaultMbSales)),
         mbMarketing: settings.mbMarketing || JSON.parse(JSON.stringify(defaultMbMarketing)),
         mbTeam: settings.mbTeam || JSON.parse(JSON.stringify(defaultMbTeam)),
         mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
@@ -1910,7 +1936,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       : `${startLabel}, ${start.getFullYear()} – ${endLabel}`;
   }
 
-  function mbTotal(snap){ return Object.values(snap.mb).reduce((a,b)=>a+b,0); }
+  // Weekly-logged commission, summed per platform, scoped to the currently selected period
+  // (each entry's week-Monday must fall within start–end). This is what lets commission be
+  // logged weekly but shown rolled up into whatever period (e.g. a full month) is selected.
+  function mbWeeklyCommissionByPlatform(){
+    const cp = dashboardData.currentPeriod;
+    const byPlat = { '22Win':0, 'Jolibet':0, '1xBet':0, 'Tab66':0, '747':0 };
+    (dashboardData.mbSales.weeklyCommission || []).forEach(w => {
+      const weekDate = isoWeekToMonday(w.week);
+      if(weekDate >= cp.start && weekDate <= cp.end){
+        byPlat[w.platform] = (byPlat[w.platform] || 0) + w.amount;
+      }
+    });
+    return byPlat;
+  }
+  function mbCombinedPlatformTotals(snap){
+    const weekly = mbWeeklyCommissionByPlatform();
+    const combined = {};
+    Object.keys(snap.mb).forEach(k => { combined[k] = (snap.mb[k] || 0) + (weekly[k] || 0); });
+    return combined;
+  }
+  function mbTotal(snap){ return Object.values(mbCombinedPlatformTotals(snap)).reduce((a,b)=>a+b,0); }
   function pkRevenue(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
   // Additional income (talent fees, bonuses, other) logged for the currently selected reporting
   // period (month falls within start–end), split by type. Entries saved before the Type field
@@ -1966,8 +2012,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('ovPkRevenue').textContent = fmtPeso(pkRev);
     document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
 
-    // Master Baccarat: platforms (pure commission) plus talent fees/bonuses broken down by brand
-    const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
+    // Master Baccarat: platforms (base + weekly-logged commission combined) plus talent fees/bonuses broken down by brand
+    const mbCombined = mbCombinedPlatformTotals(snap);
+    const mbEntries = Object.entries(mbCombined).sort((a,b)=>b[1]-a[1]);
     const addlByType = mbAdditionalIncomeByType();
     const tfTotal = addlByType.talentFee;
     const bonusTotal = addlByType.bonus;
@@ -2290,6 +2337,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!document.getElementById('mbSubview-sales')) return; // not in DOM for this role
     const s = dashboardData.mbSales;
 
+    // Weekly commission — this list shows everything ever logged, most recent first
+    document.getElementById('weeklyCommList').innerHTML = s.weeklyCommission.length
+      ? [...s.weeklyCommission].reverse().map(w => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <span style="font-size:13px;">${w.week} — ${w.platform}</span>
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(w.amount)}</span>
+              <button class="del-btn" onclick="removeWeeklyCommission('${w.id}')">Remove</button>
+            </span>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No weekly commission logged yet.</div>';
+
     // Additional income (talent fees, bonuses, other) — this list shows everything ever logged;
     // the split summary below only counts what falls in the currently selected period.
     const typeLabels = { talentFee:'Talent Fee', bonus:'Bonus', other:'Other' };
@@ -2309,6 +2369,29 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </div>
         `).join('')
       : '<div style="color:var(--muted);font-size:13px;">No additional income logged yet.</div>';
+  }
+
+  async function addWeeklyCommission(){
+    const week = document.getElementById('weeklyComm_week').value;
+    const platform = document.getElementById('weeklyComm_platform').value;
+    const amount = clampNonNeg(parseCurrency(document.getElementById('weeklyComm_amount').value));
+    if(!week || amount <= 0){ alert('Please choose a week and enter a valid amount.'); return; }
+    const s = dashboardData.mbSales;
+    s.weeklyCommission.push({ id:'wc'+Date.now(), week, platform, amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('weeklyComm_amount').value = '';
+    renderAll(); // weekly commission rolls into KPI cards, charts, and Overview too, not just Sales
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
+  }
+
+  async function removeWeeklyCommission(id){
+    const s = dashboardData.mbSales;
+    s.weeklyCommission = s.weeklyCommission.filter(w => w.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderAll();
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
   }
 
   function toggleCommissionEdit(){
@@ -2549,6 +2632,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
     const weekNum = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
     return `${date.getUTCFullYear()}-W${String(weekNum).padStart(2,'0')}`;
+  }
+
+  // Converts an ISO week string ('2026-W36') back to the Monday of that week, as 'YYYY-MM-DD'
+  function isoWeekToMonday(weekStr){
+    const [yearStr, weekPart] = weekStr.split('-W');
+    const year = parseInt(yearStr), week = parseInt(weekPart);
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7;
+    const week1Monday = new Date(jan4);
+    week1Monday.setUTCDate(jan4.getUTCDate() - jan4Day + 1);
+    const monday = new Date(week1Monday);
+    monday.setUTCDate(week1Monday.getUTCDate() + (week-1)*7);
+    return monday.toISOString().slice(0,10);
   }
 
   function renderOperatingDashboard(){
@@ -3469,6 +3565,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const now = new Date();
     const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
     document.getElementById(inputId).value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+
+  // Quick-fills any type="week" input with the current week (offset 0) or a prior week (offset -1, -2, ...)
+  function fillWeekField(inputId, offset){
+    const d = new Date();
+    d.setDate(d.getDate() + offset*7);
+    document.getElementById(inputId).value = getIsoWeek(d);
   }
 
 
