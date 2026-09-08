@@ -841,6 +841,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="sub">Each date range you pick keeps its own saved data — switch dates to view or edit a different period's numbers without losing older ones. Saved in this browser only: re-save here after re-uploading the file elsewhere, and have each admin who uses a different browser save their own copy too.</div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Reporting period</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="mb-subtab" onclick="setPeriodPreset('thisMonth')">This month</button>
+        <button class="mb-subtab" onclick="setPeriodPreset('lastMonth')">Last month</button>
+        <button class="mb-subtab" onclick="setPeriodPreset('thisQuarter')">This quarter</button>
+        <button class="mb-subtab" onclick="setPeriodPreset('last3Months')">Last 3 months</button>
+        <button class="mb-subtab" onclick="setPeriodPreset('ytd')">Year to date</button>
+      </div>
       <div class="edit-grid" style="max-width:400px;">
         <div class="field"><label>Start date</label><input type="date" id="edit_period_start" onchange="onPeriodDateChange()"></div>
         <div class="field"><label>End date</label><input type="date" id="edit_period_end" onchange="onPeriodDateChange()"></div>
@@ -3454,6 +3461,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Called when either date picker changes — loads that period's saved data into the form
   // (or a blank template if that exact date range has never been saved) without touching
   // what the rest of the dashboard is currently showing until Save is clicked.
+  function ymd(d){ return d.toISOString().slice(0,10); }
+
+  function setPeriodPreset(preset){
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth();
+    let start, end;
+    if(preset === 'thisMonth'){
+      start = new Date(y, m, 1);
+      end = new Date(y, m+1, 0);
+    } else if(preset === 'lastMonth'){
+      start = new Date(y, m-1, 1);
+      end = new Date(y, m, 0);
+    } else if(preset === 'thisQuarter'){
+      const qStartMonth = Math.floor(m/3)*3;
+      start = new Date(y, qStartMonth, 1);
+      end = new Date(y, qStartMonth+3, 0);
+    } else if(preset === 'last3Months'){
+      start = new Date(y, m-2, 1);
+      end = new Date(y, m+1, 0);
+    } else if(preset === 'ytd'){
+      start = new Date(y, 0, 1);
+      end = now;
+    } else {
+      return;
+    }
+    document.getElementById('edit_period_start').value = ymd(start);
+    document.getElementById('edit_period_end').value = ymd(end);
+    onPeriodDateChange();
+  }
+
   function onPeriodDateChange(){
     const start = document.getElementById('edit_period_start').value;
     const end = document.getElementById('edit_period_end').value;
