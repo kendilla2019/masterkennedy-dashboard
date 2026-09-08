@@ -562,6 +562,33 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="mb-subview" id="mbSubview-sales" style="display:none;">
       <div class="grid-3">
+        <div class="stat"><div class="label">Total gaming revenue</div><div class="value" id="salesMbRevenueStat">₱0.00</div><div class="foot">Commission + talent fee + bonus</div></div>
+        <div class="stat"><div class="label">Total commission</div><div class="value" id="salesMbCommissionStat">₱0.00</div><div class="foot">Sum across all platforms</div></div>
+        <div class="stat"><div class="label">Talent fee</div><div class="value" id="salesMbTfStat">₱0.00</div><div class="foot" id="salesMbTfFoot">This period</div></div>
+      </div>
+
+      <div class="card" style="--accent:#e0453f;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:10px;">
+          <div><h3 style="margin:0;"><span class="dot"></span>Revenue by platform</h3><div class="sub" id="salesMbBarlistSub" style="margin:4px 0 0;">YTD, ₱0.00 total</div></div>
+          <button class="btn secondary small" onclick="toggleCommissionEdit()" id="commissionEditToggleBtn">Edit commission</button>
+        </div>
+        <div class="barlist" style="--accent:#e0453f" id="salesMbBarlist"></div>
+
+        <div id="commissionEditForm" style="display:none;margin-top:16px;padding:16px;background:var(--panel-2);border-radius:10px;">
+          <div class="sub" style="margin-bottom:10px;">Editing commission for the currently selected period</div>
+          <div class="edit-grid">
+            <div class="field"><label>22Win</label><input type="text" inputmode="decimal" class="currency-field" id="commEdit_22Win" onblur="formatCurrencyField(this)"></div>
+            <div class="field"><label>Jolibet</label><input type="text" inputmode="decimal" class="currency-field" id="commEdit_Jolibet" onblur="formatCurrencyField(this)"></div>
+            <div class="field"><label>1xBet</label><input type="text" inputmode="decimal" class="currency-field" id="commEdit_1xBet" onblur="formatCurrencyField(this)"></div>
+            <div class="field"><label>Tab66</label><input type="text" inputmode="decimal" class="currency-field" id="commEdit_Tab66" onblur="formatCurrencyField(this)"></div>
+            <div class="field"><label>747</label><input type="text" inputmode="decimal" class="currency-field" id="commEdit_747" onblur="formatCurrencyField(this)"></div>
+          </div>
+          <button class="btn small" style="margin-top:6px;" onclick="saveCommissionEdit()">Save commission</button>
+          <span id="commissionSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
         <div class="stat"><div class="label">Current subscribers</div><div class="value" id="salesSubCurrent">0</div><div class="foot" id="salesSubDelta">—</div></div>
         <div class="stat"><div class="label">MRR</div><div class="value" id="salesMrr">₱0.00</div><div class="foot">Monthly recurring revenue</div></div>
         <div class="stat"><div class="label">Conversion rate</div><div class="value" id="salesConvRate">0%</div><div class="foot" id="salesConvFoot">0 of 0 DM inquiries</div></div>
@@ -2037,9 +2064,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(name.endsWith(' (Other)')) return '#8b93a6';
       return null;
     };
-    document.getElementById('mbBarlist').innerHTML = barEntries.map(([name,val])=>`
+    const barlistHtml = barEntries.map(([name,val])=>`
       <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%;${barColorFor(name)?`background:${barColorFor(name)};`:''}"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
     `).join('');
+    document.getElementById('mbBarlist').innerHTML = barlistHtml;
+
+    // Same numbers, mirrored onto the Sales sub-page so commission/TF/revenue are visible there too
+    const salesMbRevenueStat = document.getElementById('salesMbRevenueStat');
+    if(salesMbRevenueStat){
+      salesMbRevenueStat.textContent = fmtPeso(mbGrandTotal);
+      document.getElementById('salesMbCommissionStat').textContent = fmtPeso(mbCommission);
+      document.getElementById('salesMbTfStat').textContent = fmtPeso(tfTotal);
+      document.getElementById('salesMbTfFoot').textContent = bonusTotal > 0 || addlByType.other > 0
+        ? `This period · Bonus ${fmtPeso(bonusTotal)}${addlByType.other>0?` · Other ${fmtPeso(addlByType.other)}`:''}`
+        : 'This period';
+      document.getElementById('salesMbBarlistSub').textContent = `YTD, ${fmtPeso(mbGrandTotal)} total`;
+      document.getElementById('salesMbBarlist').innerHTML = barlistHtml;
+    }
 
     // Baccarat Win
     document.getElementById('bwStudentsStat').textContent = bw.students;
@@ -2430,6 +2471,45 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const el = document.getElementById('salesSaveConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  function toggleCommissionEdit(){
+    const form = document.getElementById('commissionEditForm');
+    const showing = form.style.display !== 'none';
+    if(showing){
+      form.style.display = 'none';
+      document.getElementById('commissionEditToggleBtn').textContent = 'Edit commission';
+    } else {
+      const snap = getCurrentSnapshot();
+      document.getElementById('commEdit_22Win').value = fmtPeso(snap.mb['22Win']).slice(1);
+      document.getElementById('commEdit_Jolibet').value = fmtPeso(snap.mb['Jolibet']).slice(1);
+      document.getElementById('commEdit_1xBet').value = fmtPeso(snap.mb['1xBet']).slice(1);
+      document.getElementById('commEdit_Tab66').value = fmtPeso(snap.mb['Tab66']).slice(1);
+      document.getElementById('commEdit_747').value = fmtPeso(snap.mb['747']).slice(1);
+      form.style.display = 'block';
+      document.getElementById('commissionEditToggleBtn').textContent = 'Hide';
+    }
+  }
+
+  async function saveCommissionEdit(){
+    const snap = getCurrentSnapshot();
+    snap.mb['22Win'] = clampNonNeg(parseCurrency(document.getElementById('commEdit_22Win').value));
+    snap.mb['Jolibet'] = clampNonNeg(parseCurrency(document.getElementById('commEdit_Jolibet').value));
+    snap.mb['1xBet'] = clampNonNeg(parseCurrency(document.getElementById('commEdit_1xBet').value));
+    snap.mb['Tab66'] = clampNonNeg(parseCurrency(document.getElementById('commEdit_Tab66').value));
+    snap.mb['747'] = clampNonNeg(parseCurrency(document.getElementById('commEdit_747').value));
+    snap.savedAt = Date.now();
+    const key = periodKey(dashboardData.currentPeriod.start, dashboardData.currentPeriod.end);
+    dashboardData.history[key] = snap;
+    dashboardData.lastUpdated = Date.now();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderAll();
+    const persisted = await dbSaveRevenuePeriod(dashboardData.currentPeriod.start, dashboardData.currentPeriod.end, snap);
+    playChime(920);
+    const el = document.getElementById('commissionSaveConfirm');
+    el.textContent = persisted ? 'Saved ✓' : 'Saved locally — will sync once reconnected';
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2600);
   }
 
   async function addMrrLogEntry(){
