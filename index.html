@@ -1931,18 +1931,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('ovPkRevenue').textContent = fmtPeso(pkRev);
     document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
 
-    // Master Baccarat (platform breakdown uses pure commission — talent fees aren't tied to a platform)
+    // Master Baccarat: platforms (pure commission) plus talent fees shown as their own line,
+    // so the headline total and percentages include everything but "top platform" stays about actual platforms.
     const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
     const [topName, topVal] = mbEntries[0] || ['—',0];
-    document.getElementById('mbRevenueStat').textContent = fmtPeso(mbCommission);
+    const tfTotal = mbTalentFeeTotal();
+    const mbGrandTotal = mbCommission + tfTotal; // same as mbTot, spelled out here for clarity
+    document.getElementById('mbRevenueStat').textContent = fmtPeso(mbGrandTotal);
     document.getElementById('mbTopPlatform').textContent = topName;
-    document.getElementById('mbTopPlatformFoot').textContent = `${fmtPeso(topVal)} · ${mbCommission? Math.round(topVal/mbCommission*100):0}% of revenue`;
+    document.getElementById('mbTopPlatformFoot').textContent = `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue`;
     document.getElementById('mbPlatformCount').textContent = mbEntries.length;
     document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
-    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbCommission)} total`;
-    const mbMax = mbEntries.length ? mbEntries[0][1] : 1;
-    document.getElementById('mbBarlist').innerHTML = mbEntries.map(([name,val])=>`
-      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtPeso(val)} · ${mbCommission? Math.round(val/mbCommission*100):0}%</div></div>
+    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbGrandTotal)} total`;
+    const barEntries = tfTotal > 0 ? [...mbEntries, ['Talent fees', tfTotal]].sort((a,b)=>b[1]-a[1]) : mbEntries;
+    const mbMax = barEntries.length ? barEntries[0][1] : 1;
+    document.getElementById('mbBarlist').innerHTML = barEntries.map(([name,val])=>`
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
     `).join('');
 
     // Baccarat Win
@@ -2354,6 +2358,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('sales_addlIncomeDesc').value = '';
     document.getElementById('sales_addlIncomeAmount').value = '';
+    renderAll(); // talent fees touch KPI cards, charts, and Income Overview too, not just this Sales subview
     renderSalesDashboard();
     await saveSetting('mbSales', s);
   }
@@ -2362,6 +2367,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const s = dashboardData.mbSales;
     s.additionalIncome = s.additionalIncome.filter(i => i.id !== id);
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderAll();
     renderSalesDashboard();
     await saveSetting('mbSales', s);
   }
