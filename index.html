@@ -1953,6 +1953,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function mbTalentFeeTotal(){ return mbAdditionalIncomeByType().talentFee; }
   function mbBonusTotal(){ return mbAdditionalIncomeByType().bonus; }
   function mbAdditionalIncomeTotal(){ const b = mbAdditionalIncomeByType(); return b.talentFee + b.bonus + b.other; }
+  // Groups a given type of additional income by brand/source (e.g. { '22Win': 50000, 'Jolibet': 50000 }),
+  // scoped to the currently selected period.
+  function mbAdditionalIncomeByBrand(type){
+    const cp = dashboardData.currentPeriod;
+    const inPeriod = dashboardData.mbSales.additionalIncome
+      .filter(i => (i.month + '-01') >= cp.start && (i.month + '-01') <= cp.end && (i.type || 'talentFee') === type);
+    const byBrand = {};
+    inPeriod.forEach(i => { byBrand[i.description] = (byBrand[i.description] || 0) + i.amount; });
+    return byBrand;
+  }
   // Master Baccarat's full income for dashboard-level totals: platform commission + all additional income.
   // (The Master Baccarat business page's own per-platform breakdown uses mbTotal() alone, since
   // additional income isn't tied to any one platform and would throw off the percentage-of-platform math.)
@@ -1984,18 +1994,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('ovPkRevenue').textContent = fmtPeso(pkRev);
     document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
 
-    // Master Baccarat: platforms (pure commission) plus talent fees and bonuses, all competing for "top" and shown in the breakdown
+    // Master Baccarat: platforms (pure commission) plus talent fees/bonuses broken down by brand
     const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
     const addlByType = mbAdditionalIncomeByType();
     const tfTotal = addlByType.talentFee;
     const bonusTotal = addlByType.bonus;
     const mbGrandTotal = mbCommission + tfTotal + bonusTotal + addlByType.other;
     let barEntries = [...mbEntries];
-    if(tfTotal > 0) barEntries.push(['TF', tfTotal]);
-    if(bonusTotal > 0) barEntries.push(['Bonus', bonusTotal]);
-    if(addlByType.other > 0) barEntries.push(['Other', addlByType.other]);
+    Object.entries(mbAdditionalIncomeByBrand('talentFee')).forEach(([brand,amt]) => barEntries.push([`${brand} TF`, amt]));
+    Object.entries(mbAdditionalIncomeByBrand('bonus')).forEach(([brand,amt]) => barEntries.push([`${brand} Bonus`, amt]));
+    Object.entries(mbAdditionalIncomeByBrand('other')).forEach(([brand,amt]) => barEntries.push([`${brand} (Other)`, amt]));
     barEntries.sort((a,b)=>b[1]-a[1]);
     const [topName, topVal] = barEntries[0] || ['—',0];
+    const topIsAdditional = / TF$| Bonus$| \(Other\)$/.test(topName);
     document.getElementById('mbRevenueStat').textContent = fmtPeso(mbGrandTotal);
     document.getElementById('mbCommissionStat').textContent = fmtPeso(mbCommission);
     document.getElementById('mbTfStat').textContent = fmtPeso(tfTotal);
@@ -2003,16 +2014,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       ? `This period · Bonus ${fmtPeso(bonusTotal)}${addlByType.other>0?` · Other ${fmtPeso(addlByType.other)}`:''}`
       : 'This period';
     document.getElementById('mbTopPlatform').textContent = topName;
-    document.getElementById('mbTopPlatformFoot').textContent = (topName === 'TF' || topName === 'Bonus' || topName === 'Other')
+    document.getElementById('mbTopPlatformFoot').textContent = topIsAdditional
       ? `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue · not a platform`
       : `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue`;
     document.getElementById('mbPlatformCount').textContent = mbEntries.length;
     document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
     document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbGrandTotal)} total`;
     const mbMax = barEntries.length ? barEntries[0][1] : 1;
-    const barColor = { TF:'var(--gold)', Bonus:'#5fbf7a', Other:'#8b93a6' };
+    const barColorFor = (name) => {
+      if(name.endsWith(' TF')) return 'var(--gold)';
+      if(name.endsWith(' Bonus')) return '#5fbf7a';
+      if(name.endsWith(' (Other)')) return '#8b93a6';
+      return null;
+    };
     document.getElementById('mbBarlist').innerHTML = barEntries.map(([name,val])=>`
-      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%;${barColor[name]?`background:${barColor[name]};`:''}"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%;${barColorFor(name)?`background:${barColorFor(name)};`:''}"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
     `).join('');
 
     // Baccarat Win
