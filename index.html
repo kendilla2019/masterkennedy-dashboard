@@ -396,7 +396,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="delta" id="kpiGoalDelta">Click to edit</div>
     </div>
     <div class="kpi"><div class="kpi-icon icon-blue">₱</div><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
-    <div class="kpi admin-only-kpi"><div class="kpi-icon icon-green">●</div><div class="label">Master Baccarat income</div><div class="value" id="kpiMbIncome">₱0.00</div><div class="delta">This month</div></div>
+    <div class="kpi admin-only-kpi"><div class="kpi-icon icon-green">●</div><div class="label">Master Baccarat income</div><div class="value" id="kpiMbIncome">₱0.00</div><div class="delta" id="kpiMbIncomeFoot">This month</div></div>
     <div class="kpi admin-only-kpi"><div class="kpi-icon icon-pink">▲</div><div class="label">Prokora income</div><div class="value" id="kpiPkIncome">₱0.00</div><div class="delta">This month</div></div>
   </div>
 
@@ -2150,6 +2150,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     const kpiMbIncome = document.getElementById('kpiMbIncome');
     if(kpiMbIncome) kpiMbIncome.textContent = fmtPeso(mbIncome);
+    const kpiMbIncomeFoot = document.getElementById('kpiMbIncomeFoot');
+    if(kpiMbIncomeFoot){
+      const mbCommissionOnly = mbTotal(snap);
+      const mbTfOnly = mbTalentFeeTotal();
+      kpiMbIncomeFoot.textContent = mbTfOnly > 0
+        ? `Commission ${fmtPeso(mbCommissionOnly)} + TF ${fmtPeso(mbTfOnly)}`
+        : `Commission ${fmtPeso(mbCommissionOnly)} (no TF logged this period)`;
+    }
     const kpiPkIncome = document.getElementById('kpiPkIncome');
     if(kpiPkIncome) kpiPkIncome.textContent = fmtPeso(pkIncome);
 
