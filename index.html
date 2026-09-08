@@ -621,9 +621,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <h3><span class="dot"></span>Additional income</h3>
         <div class="sub">Talent fees, bonuses, or anything outside the regular platform commission</div>
         <div style="text-align:right;margin-top:6px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="salesAddlIncomeTotal">Total: ₱0.00</div>
-        <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr auto;align-items:end;margin-top:10px;">
+        <div style="text-align:right;font-size:12px;color:var(--muted);margin-top:2px;" id="salesAddlIncomeSplit">—</div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.1fr 1fr auto;align-items:end;margin-top:10px;">
           <div class="field"><label>Month</label><input type="month" id="sales_addlIncomeMonth"></div>
-          <div class="field"><label>Source (e.g. 22Win talent fee)</label><input type="text" id="sales_addlIncomeDesc"></div>
+          <div class="field"><label>Type</label>
+            <select id="sales_addlIncomeType">
+              <option value="talentFee">Talent Fee</option>
+              <option value="bonus">Bonus</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Source (e.g. 22Win)</label><input type="text" id="sales_addlIncomeDesc"></div>
           <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_addlIncomeAmount" onblur="formatCurrencyField(this)"></div>
           <button class="btn small" onclick="addSalesAdditionalIncome()">+ Add</button>
         </div>
@@ -1908,17 +1916,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function mbTotal(snap){ return Object.values(snap.mb).reduce((a,b)=>a+b,0); }
   function pkRevenue(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
-  // Talent fees logged for the currently selected reporting period (month falls within start–end)
-  function mbTalentFeeTotal(){
+  // Additional income (talent fees, bonuses, other) logged for the currently selected reporting
+  // period (month falls within start–end), split by type. Entries saved before the Type field
+  // existed default to 'talentFee', since that's what the feature originally tracked.
+  function mbAdditionalIncomeByType(){
     const cp = dashboardData.currentPeriod;
-    return dashboardData.mbSales.additionalIncome
-      .filter(i => (i.month + '-01') >= cp.start && (i.month + '-01') <= cp.end)
-      .reduce((a,i)=>a+i.amount, 0);
+    const inPeriod = dashboardData.mbSales.additionalIncome
+      .filter(i => (i.month + '-01') >= cp.start && (i.month + '-01') <= cp.end);
+    const sum = (type) => inPeriod.filter(i => (i.type || 'talentFee') === type).reduce((a,i)=>a+i.amount, 0);
+    return { talentFee: sum('talentFee'), bonus: sum('bonus'), other: sum('other') };
   }
-  // Master Baccarat's full income for dashboard-level totals: platform commission + talent fees.
+  function mbTalentFeeTotal(){ return mbAdditionalIncomeByType().talentFee; }
+  function mbBonusTotal(){ return mbAdditionalIncomeByType().bonus; }
+  function mbAdditionalIncomeTotal(){ const b = mbAdditionalIncomeByType(); return b.talentFee + b.bonus + b.other; }
+  // Master Baccarat's full income for dashboard-level totals: platform commission + all additional income.
   // (The Master Baccarat business page's own per-platform breakdown uses mbTotal() alone, since
-  // talent fees aren't tied to any one platform and would throw off the percentage-of-platform math.)
-  function mbEffectiveRevenue(snap){ return mbTotal(snap) + mbTalentFeeTotal(); }
+  // additional income isn't tied to any one platform and would throw off the percentage-of-platform math.)
+  function mbEffectiveRevenue(snap){ return mbTotal(snap) + mbAdditionalIncomeTotal(); }
 
   /* ---------------- Render everything from the active snapshot ---------------- */
   function renderAllInner(){
@@ -1946,23 +1960,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('ovPkRevenue').textContent = fmtPeso(pkRev);
     document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
 
-    // Master Baccarat: platforms (pure commission) plus talent fees, all competing for "top" and shown in the breakdown
+    // Master Baccarat: platforms (pure commission) plus talent fees and bonuses, all competing for "top" and shown in the breakdown
     const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
-    const tfTotal = mbTalentFeeTotal();
-    const mbGrandTotal = mbCommission + tfTotal; // same as mbTot, spelled out here for clarity
-    const barEntries = tfTotal > 0 ? [...mbEntries, ['TF', tfTotal]].sort((a,b)=>b[1]-a[1]) : mbEntries;
+    const addlByType = mbAdditionalIncomeByType();
+    const tfTotal = addlByType.talentFee;
+    const bonusTotal = addlByType.bonus;
+    const mbGrandTotal = mbCommission + tfTotal + bonusTotal + addlByType.other;
+    let barEntries = [...mbEntries];
+    if(tfTotal > 0) barEntries.push(['TF', tfTotal]);
+    if(bonusTotal > 0) barEntries.push(['Bonus', bonusTotal]);
+    if(addlByType.other > 0) barEntries.push(['Other', addlByType.other]);
+    barEntries.sort((a,b)=>b[1]-a[1]);
     const [topName, topVal] = barEntries[0] || ['—',0];
     document.getElementById('mbRevenueStat').textContent = fmtPeso(mbGrandTotal);
     document.getElementById('mbTopPlatform').textContent = topName;
-    document.getElementById('mbTopPlatformFoot').textContent = topName === 'TF'
-      ? `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue · talent fees, not a platform`
+    document.getElementById('mbTopPlatformFoot').textContent = (topName === 'TF' || topName === 'Bonus' || topName === 'Other')
+      ? `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue · not a platform`
       : `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue`;
     document.getElementById('mbPlatformCount').textContent = mbEntries.length;
     document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
     document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbGrandTotal)} total`;
     const mbMax = barEntries.length ? barEntries[0][1] : 1;
+    const barColor = { TF:'var(--gold)', Bonus:'#5fbf7a', Other:'#8b93a6' };
     document.getElementById('mbBarlist').innerHTML = barEntries.map(([name,val])=>`
-      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%;${name==='TF'?'background:var(--gold);':''}"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%;${barColor[name]?`background:${barColor[name]};`:''}"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
     `).join('');
 
     // Baccarat Win
@@ -2153,10 +2174,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const kpiMbIncomeFoot = document.getElementById('kpiMbIncomeFoot');
     if(kpiMbIncomeFoot){
       const mbCommissionOnly = mbTotal(snap);
-      const mbTfOnly = mbTalentFeeTotal();
-      kpiMbIncomeFoot.textContent = mbTfOnly > 0
-        ? `Commission ${fmtPeso(mbCommissionOnly)} + TF ${fmtPeso(mbTfOnly)}`
-        : `Commission ${fmtPeso(mbCommissionOnly)} (no TF logged this period)`;
+      const addl = mbAdditionalIncomeByType();
+      const parts = [`Commission ${fmtPeso(mbCommissionOnly)}`];
+      if(addl.talentFee > 0) parts.push(`TF ${fmtPeso(addl.talentFee)}`);
+      if(addl.bonus > 0) parts.push(`Bonus ${fmtPeso(addl.bonus)}`);
+      if(addl.other > 0) parts.push(`Other ${fmtPeso(addl.other)}`);
+      kpiMbIncomeFoot.textContent = parts.length > 1 ? parts.join(' + ') : `${parts[0]} (no additional income logged this period)`;
     }
     const kpiPkIncome = document.getElementById('kpiPkIncome');
     if(kpiPkIncome) kpiPkIncome.textContent = fmtPeso(pkIncome);
@@ -2293,13 +2316,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         `).join('')
       : '<div style="color:var(--muted);font-size:13px;">No months logged yet.</div>';
 
-    // Additional income (talent fees, bonuses, etc.)
+    // Additional income (talent fees, bonuses, other) — this list shows everything ever logged;
+    // the split summary below only counts what falls in the currently selected period.
+    const typeLabels = { talentFee:'Talent Fee', bonus:'Bonus', other:'Other' };
     const addlTotal = s.additionalIncome.reduce((a,i)=>a+i.amount,0);
-    document.getElementById('salesAddlIncomeTotal').textContent = `Total: ${fmtPeso(addlTotal)}`;
+    document.getElementById('salesAddlIncomeTotal').textContent = `Total logged: ${fmtPeso(addlTotal)}`;
+    const periodSplit = mbAdditionalIncomeByType();
+    document.getElementById('salesAddlIncomeSplit').textContent =
+      `This period: TF ${fmtPeso(periodSplit.talentFee)} · Bonus ${fmtPeso(periodSplit.bonus)} · Other ${fmtPeso(periodSplit.other)}`;
     document.getElementById('salesAddlIncomeList').innerHTML = s.additionalIncome.length
       ? [...s.additionalIncome].reverse().map(i => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
-            <span style="font-size:13px;">${i.month} — ${i.description}</span>
+            <span style="font-size:13px;">${i.month} — ${typeLabels[i.type || 'talentFee']}: ${i.description}</span>
             <span style="display:flex;align-items:center;gap:10px;">
               <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(i.amount)}</span>
               <button class="del-btn" onclick="removeSalesAdditionalIncome('${i.id}')">Remove</button>
@@ -2374,15 +2402,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   async function addSalesAdditionalIncome(){
     const month = document.getElementById('sales_addlIncomeMonth').value;
+    const type = document.getElementById('sales_addlIncomeType').value;
     const description = document.getElementById('sales_addlIncomeDesc').value.trim();
     const amount = clampNonNeg(parseCurrency(document.getElementById('sales_addlIncomeAmount').value));
     if(!month || !description || amount <= 0){ alert('Please fill in month, source, and a valid amount.'); return; }
     const s = dashboardData.mbSales;
-    s.additionalIncome.push({ id:'addl'+Date.now(), month, description, amount });
+    s.additionalIncome.push({ id:'addl'+Date.now(), month, type, description, amount });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('sales_addlIncomeDesc').value = '';
     document.getElementById('sales_addlIncomeAmount').value = '';
-    renderAll(); // talent fees touch KPI cards, charts, and Income Overview too, not just this Sales subview
+    renderAll(); // talent fees/bonuses touch KPI cards, charts, and Income Overview too, not just this Sales subview
     renderSalesDashboard();
     await saveSetting('mbSales', s);
   }
