@@ -538,7 +538,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="mb-subview active" id="mbSubview-overview">
     <div class="grid-3">
-      <div class="stat"><div class="label">Total gaming revenue</div><div class="value" id="mbRevenueStat">₱4.20M</div><div class="foot">Sum across all platforms</div></div>
+      <div class="stat"><div class="label">Total gaming revenue</div><div class="value" id="mbRevenueStat">₱4.20M</div><div class="foot">Commission + talent fee + bonus</div></div>
+      <div class="stat"><div class="label">Total commission</div><div class="value" id="mbCommissionStat">₱0.00</div><div class="foot">Sum across all platforms</div></div>
+      <div class="stat"><div class="label">Talent fee</div><div class="value" id="mbTfStat">₱0.00</div><div class="foot" id="mbTfFoot">This period</div></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:16px;">
       <div class="stat"><div class="label">Top platform</div><div class="value" id="mbTopPlatform">22Win</div><div class="foot" id="mbTopPlatformFoot">₱1.35M · 32% of revenue</div></div>
       <div class="stat"><div class="label">Active platforms</div><div class="value" id="mbPlatformCount">5</div><div class="foot" id="mbPlatformList">22Win, Jolibet, 1xBet, Tab66, 747</div></div>
     </div>
@@ -1973,6 +1977,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     barEntries.sort((a,b)=>b[1]-a[1]);
     const [topName, topVal] = barEntries[0] || ['—',0];
     document.getElementById('mbRevenueStat').textContent = fmtPeso(mbGrandTotal);
+    document.getElementById('mbCommissionStat').textContent = fmtPeso(mbCommission);
+    document.getElementById('mbTfStat').textContent = fmtPeso(tfTotal);
+    document.getElementById('mbTfFoot').textContent = bonusTotal > 0 || addlByType.other > 0
+      ? `This period · Bonus ${fmtPeso(bonusTotal)}${addlByType.other>0?` · Other ${fmtPeso(addlByType.other)}`:''}`
+      : 'This period';
     document.getElementById('mbTopPlatform').textContent = topName;
     document.getElementById('mbTopPlatformFoot').textContent = (topName === 'TF' || topName === 'Bonus' || topName === 'Other')
       ? `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue · not a platform`
