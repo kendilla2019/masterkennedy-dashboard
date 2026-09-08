@@ -389,19 +389,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <span>Loading your dashboard…</span>
   </div>
 
-  <div class="kpi-row">
-    <div class="kpi admin-only-kpi" id="kpiGoalCard" onclick="startEditGoalInline()" style="cursor:pointer;" title="Click to edit your monthly goal">
-      <div class="kpi-icon icon-orange">🎯</div><div class="label">Monthly income goal</div>
-      <div class="value" id="kpiGoalValue">₱1,000,000.00</div>
-      <div class="delta" id="kpiGoalDelta">Click to edit</div>
-    </div>
-    <div class="kpi"><div class="kpi-icon icon-blue">₱</div><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
-    <div class="kpi admin-only-kpi"><div class="kpi-icon icon-green">●</div><div class="label">Master Baccarat income</div><div class="value" id="kpiMbIncome">₱0.00</div><div class="delta" id="kpiMbIncomeFoot">This month</div></div>
-    <div class="kpi admin-only-kpi"><div class="kpi-icon icon-pink">▲</div><div class="label">Prokora income</div><div class="value" id="kpiPkIncome">₱0.00</div><div class="delta">This month</div></div>
-  </div>
-
   <!-- DASHBOARD (merged Overview + Executive + Goal Tracker) -->
   <div class="view active" id="mainDashboard">
+    <div class="kpi-row">
+      <div class="kpi admin-only-kpi" id="kpiGoalCard" onclick="startEditGoalInline()" style="cursor:pointer;" title="Click to edit your monthly goal">
+        <div class="kpi-icon icon-orange">🎯</div><div class="label">Monthly income goal</div>
+        <div class="value" id="kpiGoalValue">₱1,000,000.00</div>
+        <div class="delta" id="kpiGoalDelta">Click to edit</div>
+      </div>
+      <div class="kpi"><div class="kpi-icon icon-blue">₱</div><div class="label">Combined revenue</div><div class="value" id="kpiRevenue">₱7.75M</div><div class="delta">Across all 4 businesses</div></div>
+      <div class="kpi admin-only-kpi"><div class="kpi-icon icon-green">●</div><div class="label">Master Baccarat income</div><div class="value" id="kpiMbIncome">₱0.00</div><div class="delta" id="kpiMbIncomeFoot">This month</div></div>
+      <div class="kpi admin-only-kpi"><div class="kpi-icon icon-pink">▲</div><div class="label">Prokora income</div><div class="value" id="kpiPkIncome">₱0.00</div><div class="delta">This month</div></div>
+    </div>
     <div class="grid-2" style="margin-bottom:16px;">
       <div class="card" style="--accent:#2f6fed">
         <h3><span class="dot"></span>Revenue by business unit</h3>
