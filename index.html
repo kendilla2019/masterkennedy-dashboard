@@ -613,7 +613,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
           <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log a month's MRR (builds the trend chart)</h4>
           <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;">
-            <div class="field"><label>Month</label><input type="month" id="sales_mrrLogMonth"></div>
+            <div class="field"><label>Month</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="month" id="sales_mrrLogMonth" style="flex:1;min-width:0;">
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('sales_mrrLogMonth',0)">This</button>
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('sales_mrrLogMonth',-1)">Last</button>
+          </div></div>
             <div class="field"><label>MRR (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_mrrLogValue" onblur="formatCurrencyField(this)"></div>
             <button class="btn small" onclick="addMrrLogEntry()">+ Log</button>
           </div>
@@ -627,7 +632,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div style="text-align:right;margin-top:6px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="salesAddlIncomeTotal">Total: ₱0.00</div>
         <div style="text-align:right;font-size:12px;color:var(--muted);margin-top:2px;" id="salesAddlIncomeSplit">—</div>
         <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.1fr 1fr auto;align-items:end;margin-top:10px;">
-          <div class="field"><label>Month</label><input type="month" id="sales_addlIncomeMonth"></div>
+          <div class="field"><label>Month</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="month" id="sales_addlIncomeMonth" style="flex:1;min-width:0;">
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('sales_addlIncomeMonth',0)">This</button>
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('sales_addlIncomeMonth',-1)">Last</button>
+          </div></div>
           <div class="field"><label>Type</label>
             <select id="sales_addlIncomeType">
               <option value="talentFee">Talent Fee</option>
@@ -692,7 +702,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
         <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log monthly follower count</h4>
         <div class="edit-grid" style="grid-template-columns:1fr 1fr auto;align-items:end;">
-          <div class="field"><label>Month</label><input type="month" id="mkt_followerMonth"></div>
+          <div class="field"><label>Month</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="month" id="mkt_followerMonth" style="flex:1;min-width:0;">
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('mkt_followerMonth',0)">This</button>
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('mkt_followerMonth',-1)">Last</button>
+          </div></div>
           <div class="field"><label>Followers</label><input type="text" inputmode="numeric" id="mkt_followerCount"></div>
           <button class="btn small" onclick="addFollowerEntry()">+ Log</button>
         </div>
@@ -757,7 +772,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="card" style="--accent:#e0453f;">
         <h3><span class="dot"></span>Running costs</h3>
         <div class="edit-grid" style="grid-template-columns:1fr 1.3fr 1fr auto;align-items:end;">
-          <div class="field"><label>Month</label><input type="month" id="mbExp_month"></div>
+          <div class="field"><label>Month</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="month" id="mbExp_month" style="flex:1;min-width:0;">
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('mbExp_month',0)">This</button>
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;white-space:nowrap;" onclick="fillMonthField('mbExp_month',-1)">Last</button>
+          </div></div>
           <div class="field"><label>Category</label>
             <select id="mbExp_category">
               <option value="Tools">Tools</option>
@@ -3516,6 +3536,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // (or a blank template if that exact date range has never been saved) without touching
   // what the rest of the dashboard is currently showing until Save is clicked.
   function ymd(d){ return d.toISOString().slice(0,10); }
+
+  // Quick-fills any type="month" input with the current month (offset 0) or a prior month (offset -1, -2, ...)
+  function fillMonthField(inputId, offset){
+    const now = new Date();
+    const d = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    document.getElementById(inputId).value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+
 
   function computePeriodPreset(preset){
     const now = new Date();
