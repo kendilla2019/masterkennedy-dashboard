@@ -1893,12 +1893,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   function mbTotal(snap){ return Object.values(snap.mb).reduce((a,b)=>a+b,0); }
   function pkRevenue(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
+  // Talent fees logged for the currently selected reporting period (month falls within start–end)
+  function mbTalentFeeTotal(){
+    const cp = dashboardData.currentPeriod;
+    return dashboardData.mbSales.additionalIncome
+      .filter(i => (i.month + '-01') >= cp.start && (i.month + '-01') <= cp.end)
+      .reduce((a,i)=>a+i.amount, 0);
+  }
+  // Master Baccarat's full income for dashboard-level totals: platform commission + talent fees.
+  // (The Master Baccarat business page's own per-platform breakdown uses mbTotal() alone, since
+  // talent fees aren't tied to any one platform and would throw off the percentage-of-platform math.)
+  function mbEffectiveRevenue(snap){ return mbTotal(snap) + mbTalentFeeTotal(); }
 
   /* ---------------- Render everything from the active snapshot ---------------- */
   function renderAllInner(){
     const snap = getCurrentSnapshot();
     const mb = snap.mb, bw = snap.bw, ns = snap.ns, pk = snap.pk;
-    const mbTot = mbTotal(snap);
+    const mbCommission = mbTotal(snap);
+    const mbTot = mbEffectiveRevenue(snap); // used for dashboard-level totals (combined, overview card)
     const pkRev = pkRevenue(snap);
     const combined = mbTot + bw.revenue + ns.revenue + pkRev;
     const activeStudents = bw.students + ns.students;
@@ -1919,18 +1931,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('ovPkRevenue').textContent = fmtPeso(pkRev);
     document.getElementById('ovPkFoot').textContent = `${pk.projects.length} projects delivered`;
 
-    // Master Baccarat
+    // Master Baccarat (platform breakdown uses pure commission — talent fees aren't tied to a platform)
     const mbEntries = Object.entries(mb).sort((a,b)=>b[1]-a[1]);
     const [topName, topVal] = mbEntries[0] || ['—',0];
-    document.getElementById('mbRevenueStat').textContent = fmtPeso(mbTot);
+    document.getElementById('mbRevenueStat').textContent = fmtPeso(mbCommission);
     document.getElementById('mbTopPlatform').textContent = topName;
-    document.getElementById('mbTopPlatformFoot').textContent = `${fmtPeso(topVal)} · ${mbTot? Math.round(topVal/mbTot*100):0}% of revenue`;
+    document.getElementById('mbTopPlatformFoot').textContent = `${fmtPeso(topVal)} · ${mbCommission? Math.round(topVal/mbCommission*100):0}% of revenue`;
     document.getElementById('mbPlatformCount').textContent = mbEntries.length;
     document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
-    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbTot)} total`;
+    document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbCommission)} total`;
     const mbMax = mbEntries.length ? mbEntries[0][1] : 1;
     document.getElementById('mbBarlist').innerHTML = mbEntries.map(([name,val])=>`
-      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtPeso(val)} · ${mbTot? Math.round(val/mbTot*100):0}%</div></div>
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtPeso(val)} · ${mbCommission? Math.round(val/mbCommission*100):0}%</div></div>
     `).join('');
 
     // Baccarat Win
@@ -2046,7 +2058,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     const snap = getCurrentSnapshot();
     const mb = snap.mb, bw = snap.bw, ns = snap.ns;
-    const mbTot = mbTotal(snap), pkRev = pkRevenue(snap);
+    const mbTot = mbEffectiveRevenue(snap), pkRev = pkRevenue(snap);
 
     function scaledLine(canvasId, shape, newTotal, color){
       const oldSum = shape.reduce((a,b)=>a+b,0) || 1;
@@ -2077,7 +2089,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   /* ---------------- Executive Overview (admin only): goals, cash, expenses, assets ---------------- */
   function bizRevenue(snap, biz){
-    if(biz === 'mb') return mbTotal(snap);
+    if(biz === 'mb') return mbEffectiveRevenue(snap);
     if(biz === 'pk') return pkRevenue(snap);
     return snap[biz].revenue || 0;
   }
@@ -2093,7 +2105,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   /* ---------------- Income Overview: single combined monthly goal, ranked business breakdown ---------------- */
   function renderIncomeOverview(snap){
-    const mbIncome = mbTotal(snap);
+    const mbIncome = mbEffectiveRevenue(snap);
     const bwIncome = snap.bw.revenue;
     const nsIncome = snap.ns.revenue;
     const pkIncome = pkRevenue(snap);
