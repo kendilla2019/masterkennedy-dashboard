@@ -608,6 +608,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div id="salesMrrLogList" style="margin-top:10px;"></div>
         </div>
       </div>
+
+      <div class="card" style="--accent:#e0453f;">
+        <h3><span class="dot"></span>Additional income</h3>
+        <div class="sub">Talent fees, bonuses, or anything outside the regular platform commission</div>
+        <div style="text-align:right;margin-top:6px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="salesAddlIncomeTotal">Total: ₱0.00</div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr auto;align-items:end;margin-top:10px;">
+          <div class="field"><label>Month</label><input type="month" id="sales_addlIncomeMonth"></div>
+          <div class="field"><label>Source (e.g. 22Win talent fee)</label><input type="text" id="sales_addlIncomeDesc"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_addlIncomeAmount" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addSalesAdditionalIncome()">+ Add</button>
+        </div>
+        <div id="salesAddlIncomeList" style="margin-top:10px;"></div>
+      </div>
     </div>
 
     <div class="mb-subview" id="mbSubview-marketing" style="display:none;">
@@ -1038,17 +1051,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
       <h3><span class="dot"></span>Properties</h3>
-      <div class="sub">Value, loan balance, and equity per property</div>
+      <div class="sub">Value, loan, equity, income, expenses, and net cash flow — per property</div>
       <table style="margin-top:12px;" id="propertyTable">
-        <tr><th>Property</th><th>Value</th><th>Loan balance</th><th>Equity</th></tr>
+        <tr><th>Property</th><th>Value</th><th>Loan</th><th>Equity</th><th>Income</th><th>Expenses</th><th>Net cash flow</th></tr>
       </table>
-    </div>
-
-    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:10px;">
-        <div><h3 style="margin:0;"><span class="dot"></span>Property income &amp; expenses</h3><div class="sub" style="margin:4px 0 0;">Rental/other income and specific costs (tax, insurance, dues) per property</div></div>
-      </div>
-      <table id="propertyCashflowTable"><tr><th>Property</th><th>Income</th><th>Expenses</th><th>Net</th></tr></table>
       <div style="display:flex;gap:24px;margin-top:14px;flex-wrap:wrap;">
         <div><div style="font-size:12px;color:var(--muted);">Total monthly income</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="propIncomeTotal">₱0.00</div></div>
         <div><div style="font-size:12px;color:var(--muted);">Total monthly expenses</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="propExpenseTotal">₱0.00</div></div>
@@ -1462,7 +1468,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     paidConversions: 0,
     monthlyGoal: 0,
     quarterlyGoal: 0,
-    mrrHistory: [] // [{ month:'2026-09', mrr:50000 }, ...]
+    mrrHistory: [], // [{ month:'2026-09', mrr:50000 }, ...]
+    additionalIncome: [] // [{ id, month, description, amount }] — talent fees, bonuses, etc.
   };
 
   const defaultMbMarketing = {
@@ -1582,6 +1589,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.mbSales){
       parsed.mbSales = JSON.parse(JSON.stringify(defaultMbSales));
     }
+    if(!parsed.mbSales.additionalIncome) parsed.mbSales.additionalIncome = [];
     if(!parsed.mbMarketing){
       parsed.mbMarketing = JSON.parse(JSON.stringify(defaultMbMarketing));
     }
@@ -1718,7 +1726,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         exec: { goals, cash, thresholds, expenses, assets },
         calendar: { events },
         monthlyIncome: settings.monthlyIncome || JSON.parse(JSON.stringify(defaultData.monthlyIncome)),
-        mbSales: settings.mbSales || JSON.parse(JSON.stringify(defaultMbSales)),
+        mbSales: settings.mbSales ? Object.assign(JSON.parse(JSON.stringify(defaultMbSales)), settings.mbSales, { additionalIncome: settings.mbSales.additionalIncome || [] }) : JSON.parse(JSON.stringify(defaultMbSales)),
         mbMarketing: settings.mbMarketing || JSON.parse(JSON.stringify(defaultMbMarketing)),
         mbTeam: settings.mbTeam || JSON.parse(JSON.stringify(defaultMbTeam)),
         mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
@@ -2244,6 +2252,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </div>
         `).join('')
       : '<div style="color:var(--muted);font-size:13px;">No months logged yet.</div>';
+
+    // Additional income (talent fees, bonuses, etc.)
+    const addlTotal = s.additionalIncome.reduce((a,i)=>a+i.amount,0);
+    document.getElementById('salesAddlIncomeTotal').textContent = `Total: ${fmtPeso(addlTotal)}`;
+    document.getElementById('salesAddlIncomeList').innerHTML = s.additionalIncome.length
+      ? [...s.additionalIncome].reverse().map(i => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <span style="font-size:13px;">${i.month} — ${i.description}</span>
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(i.amount)}</span>
+              <button class="del-btn" onclick="removeSalesAdditionalIncome('${i.id}')">Remove</button>
+            </span>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No additional income logged yet.</div>';
   }
 
   function toggleSalesEdit(){
@@ -2304,6 +2327,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function removeMrrLogEntry(month){
     const s = dashboardData.mbSales;
     s.mrrHistory = s.mrrHistory.filter(e => e.month !== month);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
+  }
+
+  async function addSalesAdditionalIncome(){
+    const month = document.getElementById('sales_addlIncomeMonth').value;
+    const description = document.getElementById('sales_addlIncomeDesc').value.trim();
+    const amount = clampNonNeg(parseCurrency(document.getElementById('sales_addlIncomeAmount').value));
+    if(!month || !description || amount <= 0){ alert('Please fill in month, source, and a valid amount.'); return; }
+    const s = dashboardData.mbSales;
+    s.additionalIncome.push({ id:'addl'+Date.now(), month, description, amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('sales_addlIncomeDesc').value = '';
+    document.getElementById('sales_addlIncomeAmount').value = '';
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
+  }
+
+  async function removeSalesAdditionalIncome(id){
+    const s = dashboardData.mbSales;
+    s.additionalIncome = s.additionalIncome.filter(i => i.id !== id);
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderSalesDashboard();
     await saveSetting('mbSales', s);
@@ -2680,22 +2725,20 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('invVehicleNet').textContent = fmtPeso(vehicleNet);
     document.getElementById('invVehicleFoot').textContent = `${fmtPeso(inv.vehicle.currentValue)} current value (${fmtPeso(depreciation)} depreciated) − ${fmtPeso(inv.vehicle.maintenance)} maintenance`;
 
-    document.getElementById('propertyTable').innerHTML = '<tr><th>Property</th><th>Value</th><th>Loan balance</th><th>Equity</th></tr>' +
-      propKeys.map(k => {
-        const p = inv.properties[k];
-        return `<tr><td>${propLabels[k]}</td><td>${fmtPeso(p.value)}</td><td>${fmtPeso(p.loanBalance)}</td><td>${fmtPeso(p.value - p.loanBalance)}</td></tr>`;
-      }).join('') +
-      `<tr style="font-weight:700;"><td>Total</td><td>${fmtPeso(propValueTotal)}</td><td>${fmtPeso(propLoanTotal)}</td><td>${fmtPeso(propEquityTotal)}</td></tr>`;
-
-    // Property income & expenses
+    // Property income & expenses (computed first so the merged table can include them)
     const incomeByProp = {}; propKeys.forEach(k => incomeByProp[k] = inv.propertyIncome.filter(i=>i.property===k).reduce((a,i)=>a+i.amount,0));
     const expenseByProp = {}; propKeys.forEach(k => expenseByProp[k] = inv.propertyExpenses.filter(e=>e.property===k).reduce((a,e)=>a+e.amount,0));
     const totalPropIncome = Object.values(incomeByProp).reduce((a,v)=>a+v,0);
     const totalPropExpense = Object.values(expenseByProp).reduce((a,v)=>a+v,0);
 
-    document.getElementById('propertyCashflowTable').innerHTML = '<tr><th>Property</th><th>Income</th><th>Expenses</th><th>Net</th></tr>' +
-      propKeys.map(k => `<tr><td>${propLabels[k]}</td><td>${fmtPeso(incomeByProp[k])}</td><td>${fmtPeso(expenseByProp[k])}</td><td>${fmtPeso(incomeByProp[k]-expenseByProp[k])}</td></tr>`).join('') +
-      `<tr style="font-weight:700;"><td>Total</td><td>${fmtPeso(totalPropIncome)}</td><td>${fmtPeso(totalPropExpense)}</td><td>${fmtPeso(totalPropIncome-totalPropExpense)}</td></tr>`;
+    document.getElementById('propertyTable').innerHTML = '<tr><th>Property</th><th>Value</th><th>Loan</th><th>Equity</th><th>Income</th><th>Expenses</th><th>Net cash flow</th></tr>' +
+      propKeys.map(k => {
+        const p = inv.properties[k];
+        const netCf = incomeByProp[k] - expenseByProp[k];
+        return `<tr><td>${propLabels[k]}</td><td>${fmtPeso(p.value)}</td><td>${fmtPeso(p.loanBalance)}</td><td>${fmtPeso(p.value - p.loanBalance)}</td><td>${fmtPeso(incomeByProp[k])}</td><td>${fmtPeso(expenseByProp[k])}</td><td>${fmtPeso(netCf)}</td></tr>`;
+      }).join('') +
+      `<tr style="font-weight:700;"><td>Total</td><td>${fmtPeso(propValueTotal)}</td><td>${fmtPeso(propLoanTotal)}</td><td>${fmtPeso(propEquityTotal)}</td><td>${fmtPeso(totalPropIncome)}</td><td>${fmtPeso(totalPropExpense)}</td><td>${fmtPeso(totalPropIncome-totalPropExpense)}</td></tr>`;
+
     document.getElementById('propIncomeTotal').textContent = fmtPeso(totalPropIncome);
     document.getElementById('propExpenseTotal').textContent = fmtPeso(totalPropExpense);
     document.getElementById('propNetCashflow').textContent = fmtPeso(totalPropIncome - totalPropExpense);
