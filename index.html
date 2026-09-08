@@ -1939,13 +1939,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const [topName, topVal] = barEntries[0] || ['—',0];
     document.getElementById('mbRevenueStat').textContent = fmtPeso(mbGrandTotal);
     document.getElementById('mbTopPlatform').textContent = topName;
-    document.getElementById('mbTopPlatformFoot').textContent = `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue`;
+    document.getElementById('mbTopPlatformFoot').textContent = topName === 'TF'
+      ? `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue · talent fees, not a platform`
+      : `${fmtPeso(topVal)} · ${mbGrandTotal? Math.round(topVal/mbGrandTotal*100):0}% of revenue`;
     document.getElementById('mbPlatformCount').textContent = mbEntries.length;
     document.getElementById('mbPlatformList').textContent = mbEntries.map(e=>e[0]).join(', ');
     document.getElementById('mbBarlistSub').textContent = `YTD, ${fmtPeso(mbGrandTotal)} total`;
     const mbMax = barEntries.length ? barEntries[0][1] : 1;
     document.getElementById('mbBarlist').innerHTML = barEntries.map(([name,val])=>`
-      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
+      <div class="row"><div class="name">${name}</div><div class="track"><div class="fill" style="width:${mbMax? Math.round(val/mbMax*100):0}%;${name==='TF'?'background:var(--gold);':''}"></div></div><div class="num">${fmtPeso(val)} · ${mbGrandTotal? Math.round(val/mbGrandTotal*100):0}%</div></div>
     `).join('');
 
     // Baccarat Win
