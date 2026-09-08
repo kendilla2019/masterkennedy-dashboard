@@ -645,7 +645,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
               <option value="other">Other</option>
             </select>
           </div>
-          <div class="field"><label>Source (e.g. 22Win)</label><input type="text" id="sales_addlIncomeDesc"></div>
+          <div class="field"><label>Source</label>
+            <select id="sales_addlIncomeDesc" onchange="toggleOtherSourceField()">
+              <option value="22Win">22Win</option>
+              <option value="Jolibet">Jolibet</option>
+              <option value="1xBet">1xBet</option>
+              <option value="Tab66">Tab66</option>
+              <option value="747">747</option>
+              <option value="__other__">Other…</option>
+            </select>
+          </div>
+          <div class="field" id="sales_addlIncomeOtherField" style="display:none;"><label>Other source</label><input type="text" id="sales_addlIncomeOtherText" placeholder="Type the source"></div>
           <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="sales_addlIncomeAmount" onblur="formatCurrencyField(this)"></div>
           <button class="btn small" onclick="addSalesAdditionalIncome()">+ Add</button>
         </div>
@@ -2445,16 +2455,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('mbSales', s);
   }
 
+  function toggleOtherSourceField(){
+    const isOther = document.getElementById('sales_addlIncomeDesc').value === '__other__';
+    document.getElementById('sales_addlIncomeOtherField').style.display = isOther ? '' : 'none';
+  }
+
   async function addSalesAdditionalIncome(){
     const month = document.getElementById('sales_addlIncomeMonth').value;
     const type = document.getElementById('sales_addlIncomeType').value;
-    const description = document.getElementById('sales_addlIncomeDesc').value.trim();
+    const rawSource = document.getElementById('sales_addlIncomeDesc').value;
+    const description = rawSource === '__other__' ? document.getElementById('sales_addlIncomeOtherText').value.trim() : rawSource;
     const amount = clampNonNeg(parseCurrency(document.getElementById('sales_addlIncomeAmount').value));
     if(!month || !description || amount <= 0){ alert('Please fill in month, source, and a valid amount.'); return; }
     const s = dashboardData.mbSales;
     s.additionalIncome.push({ id:'addl'+Date.now(), month, type, description, amount });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-    document.getElementById('sales_addlIncomeDesc').value = '';
+    document.getElementById('sales_addlIncomeOtherText').value = '';
     document.getElementById('sales_addlIncomeAmount').value = '';
     renderAll(); // talent fees/bonuses touch KPI cards, charts, and Income Overview too, not just this Sales subview
     renderSalesDashboard();
