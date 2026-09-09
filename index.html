@@ -866,24 +866,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="sub">Interest from loans + commission on project value — this is what Prokora actually earns</div>
       <div class="grid-3" style="margin-top:14px;margin-bottom:16px;">
         <div class="stat"><div class="label">Interest income (monthly)</div><div class="value" id="pkInterestStat">₱0.00</div><div class="foot" id="pkInterestFoot">From active loans</div></div>
-        <div class="stat"><div class="label">Total to collect</div><div class="value" id="pkPayablesStat">₱0.00</div><div class="foot">Principal + accrued interest, all loans</div></div>
+        <div class="stat"><div class="label">Total receivable</div><div class="value" id="pkPayablesStat">₱0.00</div><div class="foot">Principal + accrued interest, all loans</div></div>
         <div class="stat"><div class="label">Commission income</div><div class="value" id="pkCommissionStat">₱0.00</div><div class="foot" id="pkCommissionFoot">This period</div></div>
       </div>
 
-      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Loans (earning interest)</h4>
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Outstanding loans</h4>
       <div class="edit-grid" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end;">
         <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="pkLoan_principal" onblur="formatCurrencyField(this)"></div>
-        <div class="field"><label>Date</label><input type="date" id="pkLoan_date"></div>
+        <div class="field"><label>Date given</label><input type="date" id="pkLoan_date"></div>
         <div class="field"><label>Interest (%/month)</label><input type="text" inputmode="decimal" id="pkLoan_rate" value="5"></div>
         <button class="btn small" onclick="addPkLoan()">+ Add loan</button>
       </div>
       <table id="pkLoanTable" style="margin-top:14px;"><tr>
-        <th style="cursor:pointer;" onclick="sortPkLoans('date')" title="Click to sort">Date <span id="pkSortIcon_date"></span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('amount')" title="Click to sort">Amount <span id="pkSortIcon_amount"></span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('rate')" title="Click to sort">Interest <span id="pkSortIcon_rate"></span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('months')" title="Click to sort">Months <span id="pkSortIcon_months"></span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('interestAmount')" title="Click to sort">Interest amount <span id="pkSortIcon_interestAmount"></span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('payable')" title="Click to sort">Total payables <span id="pkSortIcon_payable"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('date')" title="Click to sort">Date given <span id="pkSortIcon_date"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('amount')" title="Click to sort">Principal <span id="pkSortIcon_amount"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('rate')" title="Click to sort">Rate <span id="pkSortIcon_rate"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('months')" title="Click to sort">Months elapsed <span id="pkSortIcon_months"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('interestAmount')" title="Click to sort">Interest accrued <span id="pkSortIcon_interestAmount"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('payable')" title="Click to sort">Total payable <span id="pkSortIcon_payable"></span></th>
         <th></th>
       </tr></table>
 
@@ -2194,12 +2194,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(iconEl) iconEl.textContent = pkLoanSortState.col === col ? (pkLoanSortState.dir === 'asc' ? '▲' : '▼') : '';
     });
     const pkHeaderRow = `<tr>
-        <th style="cursor:pointer;" onclick="sortPkLoans('date')" title="Click to sort">Date <span id="pkSortIcon_date">${pkLoanSortState.col==='date'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('amount')" title="Click to sort">Amount <span id="pkSortIcon_amount">${pkLoanSortState.col==='amount'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('rate')" title="Click to sort">Interest <span id="pkSortIcon_rate">${pkLoanSortState.col==='rate'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('months')" title="Click to sort">Months <span id="pkSortIcon_months">${pkLoanSortState.col==='months'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('interestAmount')" title="Click to sort">Interest amount <span id="pkSortIcon_interestAmount">${pkLoanSortState.col==='interestAmount'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
-        <th style="cursor:pointer;" onclick="sortPkLoans('payable')" title="Click to sort">Total payables <span id="pkSortIcon_payable">${pkLoanSortState.col==='payable'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('date')" title="Click to sort">Date given <span id="pkSortIcon_date">${pkLoanSortState.col==='date'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('amount')" title="Click to sort">Principal <span id="pkSortIcon_amount">${pkLoanSortState.col==='amount'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('rate')" title="Click to sort">Rate <span id="pkSortIcon_rate">${pkLoanSortState.col==='rate'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('months')" title="Click to sort">Months elapsed <span id="pkSortIcon_months">${pkLoanSortState.col==='months'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('interestAmount')" title="Click to sort">Interest accrued <span id="pkSortIcon_interestAmount">${pkLoanSortState.col==='interestAmount'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('payable')" title="Click to sort">Total payable <span id="pkSortIcon_payable">${pkLoanSortState.col==='payable'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
         <th></th>
       </tr>`;
     document.getElementById('pkLoanTable').innerHTML = pkHeaderRow +
