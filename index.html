@@ -2363,16 +2363,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // the split summary below only counts what falls in the currently selected period.
     const typeLabels = { talentFee:'Talent Fee', bonus:'Bonus', other:'Other' };
     const addlTotal = s.additionalIncome.reduce((a,i)=>a+i.amount,0);
+    const addlReceivedTotal = s.additionalIncome.filter(i=>i.received).reduce((a,i)=>a+i.amount,0);
+    const addlPendingTotal = s.additionalIncome.filter(i=>!i.received).reduce((a,i)=>a+i.amount,0);
     document.getElementById('salesAddlIncomeTotal').textContent = `Total logged: ${fmtPeso(addlTotal)}`;
     const periodSplit = mbAdditionalIncomeByType();
-    document.getElementById('salesAddlIncomeSplit').textContent =
-      `This period: TF ${fmtPeso(periodSplit.talentFee)} · Bonus ${fmtPeso(periodSplit.bonus)} · Other ${fmtPeso(periodSplit.other)}`;
+    document.getElementById('salesAddlIncomeSplit').textContent = s.additionalIncome.length
+      ? `This period: TF ${fmtPeso(periodSplit.talentFee)} · Bonus ${fmtPeso(periodSplit.bonus)} · Other ${fmtPeso(periodSplit.other)} — Received ${fmtPeso(addlReceivedTotal)} · Pending ${fmtPeso(addlPendingTotal)}`
+      : '—';
     document.getElementById('salesAddlIncomeList').innerHTML = s.additionalIncome.length
       ? [...s.additionalIncome].reverse().map(i => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
             <span style="font-size:13px;">${i.month} — ${typeLabels[i.type || 'talentFee']}: ${i.description}</span>
             <span style="display:flex;align-items:center;gap:10px;">
               <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(i.amount)}</span>
+              <label style="display:flex;align-items:center;gap:5px;font-size:11.5px;cursor:pointer;padding:3px 9px;border-radius:12px;background:${i.received?'rgba(95,191,122,.16)':'rgba(217,167,39,.16)'};color:${i.received?'#5fbf7a':'#f0d38a'};">
+                <input type="checkbox" ${i.received?'checked':''} onchange="toggleAdditionalIncomeReceived('${i.id}')" style="width:13px;height:13px;margin:0;">
+                ${i.received?'Received':'Pending'}
+              </label>
               <button class="del-btn" onclick="removeSalesAdditionalIncome('${i.id}')">Remove</button>
             </span>
           </div>
@@ -2466,13 +2473,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const amount = clampNonNeg(parseCurrency(document.getElementById('sales_addlIncomeAmount').value));
     if(!month || !description || amount <= 0){ alert('Please fill in month, source, and a valid amount.'); return; }
     const s = dashboardData.mbSales;
-    s.additionalIncome.push({ id:'addl'+Date.now(), month, type, description, amount });
+    s.additionalIncome.push({ id:'addl'+Date.now(), month, type, description, amount, received:false });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('sales_addlIncomeOtherText').value = '';
     document.getElementById('sales_addlIncomeAmount').value = '';
     renderAll(); // talent fees/bonuses touch KPI cards, charts, and Income Overview too, not just this Sales subview
     renderSalesDashboard();
     await saveSetting('mbSales', s);
+  }
+
+  async function toggleAdditionalIncomeReceived(id){
+    const s = dashboardData.mbSales;
+    const entry = s.additionalIncome.find(i => i.id === id);
+    if(!entry) return;
+    entry.received = !entry.received;
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderSalesDashboard();
+    await saveSetting('mbSales', s);
+    if(entry.received) playChime(920);
   }
 
   async function removeSalesAdditionalIncome(id){
