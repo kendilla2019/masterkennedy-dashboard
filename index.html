@@ -861,15 +861,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="stat"><div class="label">Projects delivered</div><div class="value" id="pkDeliveredStat">14</div><div class="foot" id="pkDeliveredFoot">3 currently in build</div></div>
       <div class="stat"><div class="label">Avg project value</div><div class="value" id="pkAvgStat">₱94K</div><div class="foot">Contract value, delivered + active work</div></div>
     </div>
-    <div class="card" style="--accent:#1a4fc4">
-      <h3><span class="dot"></span>Project pipeline</h3>
-      <div class="sub">Active and recently delivered engagements — contract value, not Prokora's take</div>
-      <table id="pkTable">
-        <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
-      </table>
-    </div>
-
-    <div class="card" style="--accent:#1a4fc4;margin-top:16px;">
+    <div class="card" style="--accent:#1a4fc4;">
       <h3><span class="dot"></span>Prokora income breakdown</h3>
       <div class="sub">Interest from loans + commission on project value — this is what Prokora actually earns</div>
       <div class="grid-3" style="margin-top:14px;margin-bottom:16px;">
@@ -901,6 +893,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <button class="btn small" onclick="savePkCommissionRate()">Save rate</button>
       </div>
       <span id="pkCommissionRateConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+    </div>
+
+    <div class="card" style="--accent:#1a4fc4;margin-top:16px;">
+      <h3><span class="dot"></span>Project pipeline</h3>
+      <div class="sub">Active and recently delivered engagements — contract value, not Prokora's take</div>
+      <table id="pkTable">
+        <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
+      </table>
     </div>
   </div>
 
