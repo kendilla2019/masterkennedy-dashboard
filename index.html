@@ -858,7 +858,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="view" id="pk">
     <div class="grid-3">
       <div class="stat"><div class="label">Income YTD</div><div class="value" id="pkRevenueStat">₱1.60M</div><div class="foot">Interest + project commission — your actual take</div></div>
-      <div class="stat"><div class="label">Projects delivered</div><div class="value" id="pkDeliveredStat">14</div><div class="foot" id="pkDeliveredFoot">3 currently in build</div></div>
+      <div class="stat"><div class="label">Interest income</div><div class="value" id="pkDeliveredStat">₱0.00</div><div class="foot" id="pkDeliveredFoot">Monthly, from active loans</div></div>
       <div class="stat"><div class="label">Avg project value</div><div class="value" id="pkAvgStat">₱94K</div><div class="foot">Contract value, delivered + active work</div></div>
     </div>
     <div class="card" style="--accent:#1a4fc4;">
@@ -2153,8 +2153,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     // Prokora
     document.getElementById('pkRevenueStat').textContent = fmtPeso(pkRev);
-    document.getElementById('pkDeliveredStat').textContent = pkDelivered;
-    document.getElementById('pkDeliveredFoot').textContent = `${pkInProgress} currently in build`;
+    document.getElementById('pkDeliveredStat').textContent = fmtPeso(pkInterestIncomeTotal());
+    document.getElementById('pkDeliveredFoot').textContent = `${dashboardData.pkFinance.loans.length} active loan${dashboardData.pkFinance.loans.length===1?'':'s'}`;
     document.getElementById('pkAvgStat').textContent = fmtPeso(pkAvg);
     const pkTable = document.getElementById('pkTable');
     pkTable.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>' +
