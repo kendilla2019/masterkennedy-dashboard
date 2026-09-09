@@ -208,7 +208,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .card h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent,var(--gold));}
   .card .sub{color:var(--muted);font-size:12.5px;margin-top:-8px;margin-bottom:14px;}
 
-  .stat{background:var(--panel-2);border-radius:10px;padding:14px 16px;border:1px solid var(--line);}
+  .stat{background:var(--panel-2);border-radius:10px;padding:14px 16px;border:1px solid var(--line);transition:border-color .15s ease;}
+  .stat[title]{cursor:help;}
+  .stat[title]:hover{border-color:var(--gold);}
   .stat .label{color:var(--muted);font-size:12px;}
   .stat .value{font-family:'IBM Plex Sans',sans-serif;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:5px;}
   .stat .foot{font-size:11.5px;color:var(--muted);margin-top:4px;}
@@ -865,9 +867,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <h3><span class="dot"></span>Prokora income breakdown</h3>
       <div class="sub">Interest from loans + commission on project value — this is what Prokora actually earns</div>
       <div class="grid-3" style="margin-top:14px;margin-bottom:16px;">
-        <div class="stat"><div class="label">Interest income (monthly)</div><div class="value" id="pkInterestStat">₱0.00</div><div class="foot" id="pkInterestFoot">From active loans</div></div>
-        <div class="stat"><div class="label">Total receivable</div><div class="value" id="pkPayablesStat">₱0.00</div><div class="foot">Principal + accrued interest, all loans</div></div>
-        <div class="stat"><div class="label">Commission income</div><div class="value" id="pkCommissionStat">₱0.00</div><div class="foot" id="pkCommissionFoot">This period</div></div>
+        <div class="stat" title="The total amount owed back to Prokora across all loans — principal plus all interest accrued so far"><div class="label">Total receivable</div><div class="value" id="pkPayablesStat">₱0.00</div><div class="foot">Principal + accrued interest, all loans</div></div>
+        <div class="stat" title="This month's interest earnings — the sum of each active loan's principal × its monthly rate"><div class="label">Interest income (monthly)</div><div class="value" id="pkInterestStat">₱0.00</div><div class="foot" id="pkInterestFoot">From active loans</div></div>
+        <div class="stat" title="Your commission rate applied to the total project pipeline value for this period"><div class="label">Commission income</div><div class="value" id="pkCommissionStat">₱0.00</div><div class="foot" id="pkCommissionFoot">This period</div></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Outstanding loans</h4>
