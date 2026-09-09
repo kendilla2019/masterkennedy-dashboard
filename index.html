@@ -885,11 +885,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Interest (%/month)</label><input type="text" inputmode="decimal" id="pkLoan_rate" value="5"></div>
         <button class="btn small" onclick="addPkLoan()">+ Add loan</button>
       </div>
-      <div id="pkLoanFilterBadge" style="display:none;margin-top:12px;align-items:center;gap:10px;">
-        <span style="font-size:12.5px;color:var(--muted);">Filtering by: <b style="color:var(--ink);" id="pkLoanFilterDesc"></b></span>
-        <button class="btn secondary small" onclick="clearPkLoanFilters()">Clear filter</button>
-      </div>
-      <table id="pkLoanTable" style="margin-top:14px;"><tr><th>Date</th><th>Amount</th><th>Interest</th><th>Months</th><th>Interest amount</th><th>Total payables</th><th></th></tr></table>
+      <table id="pkLoanTable" style="margin-top:14px;"><tr>
+        <th style="cursor:pointer;" onclick="sortPkLoans('date')" title="Click to sort">Date <span id="pkSortIcon_date"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('amount')" title="Click to sort">Amount <span id="pkSortIcon_amount"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('rate')" title="Click to sort">Interest <span id="pkSortIcon_rate"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('months')" title="Click to sort">Months <span id="pkSortIcon_months"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('interestAmount')" title="Click to sort">Interest amount <span id="pkSortIcon_interestAmount"></span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('payable')" title="Click to sort">Total payables <span id="pkSortIcon_payable"></span></th>
+        <th></th>
+      </tr></table>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Commission rate</h4>
       <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;">
@@ -2168,40 +2172,48 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('pkCommissionStat').textContent = fmtPeso(pkCommission);
     document.getElementById('pkCommissionFoot').textContent = `${dashboardData.pkFinance.commissionRate}% of ${fmtPeso(pkProjectValueTotal(snap))} project value`;
 
-    const f = pkLoanFilterState;
-    const pkAnyFilterActive = f.date !== null || f.amount !== null || f.rate !== null || f.months !== null;
-    const pkFilteredLoans = dashboardData.pkFinance.loans.filter(l => {
-      const months = pkMonthsElapsed(l.dateGiven);
-      return (f.date === null || l.dateGiven === f.date)
-        && (f.amount === null || l.principal === f.amount)
-        && (f.rate === null || l.rate === f.rate)
-        && (f.months === null || months === f.months);
+    const pkPayablesAll = pkTotalPayablesAll();
+    const pkSortedLoans = [...dashboardData.pkFinance.loans].sort((a,b) => {
+      const dir = pkLoanSortState.dir === 'asc' ? 1 : -1;
+      const valFor = (l, col) => {
+        if(col === 'date') return l.dateGiven;
+        if(col === 'amount') return l.principal;
+        if(col === 'rate') return l.rate;
+        if(col === 'months') return pkMonthsElapsed(l.dateGiven);
+        if(col === 'interestAmount') return pkLoanInterestAmount(l);
+        if(col === 'payable') return pkLoanTotalPayable(l);
+        return 0;
+      };
+      const av = valFor(a, pkLoanSortState.col), bv = valFor(b, pkLoanSortState.col);
+      if(av < bv) return -1*dir;
+      if(av > bv) return 1*dir;
+      return 0;
     });
-    const pkFilteredPayables = pkFilteredLoans.reduce((a,l) => a + pkLoanTotalPayable(l), 0);
-    const pkFilterBadge = document.getElementById('pkLoanFilterBadge');
-    if(pkAnyFilterActive){
-      pkFilterBadge.style.display = 'flex';
-      const parts = [];
-      if(f.date !== null) parts.push(`date ${f.date}`);
-      if(f.amount !== null) parts.push(`amount ${fmtPeso(f.amount)}`);
-      if(f.rate !== null) parts.push(`${f.rate}% interest`);
-      if(f.months !== null) parts.push(`${f.months} months`);
-      document.getElementById('pkLoanFilterDesc').textContent = parts.join(', ');
-    } else {
-      pkFilterBadge.style.display = 'none';
-    }
-    document.getElementById('pkLoanTable').innerHTML = '<tr><th>Date</th><th>Amount</th><th>Interest</th><th>Months</th><th>Interest amount</th><th>Total payables</th><th></th></tr>' +
-      (pkFilteredLoans.length
-        ? pkFilteredLoans.map(l => `<tr>
-            <td style="cursor:pointer;" title="Click to filter to this date" onclick="filterPkLoansByDate('${l.dateGiven}')">${l.dateGiven}</td>
-            <td style="cursor:pointer;" title="Click to filter to this amount" onclick="filterPkLoansByAmount(${l.principal})">${fmtPeso(l.principal)}</td>
-            <td style="cursor:pointer;" title="Click to filter to this rate" onclick="filterPkLoansByRate(${l.rate})">${l.rate}%</td>
-            <td style="cursor:pointer;" title="Click to filter to this many months" onclick="filterPkLoansByMonths(${pkMonthsElapsed(l.dateGiven)})">${pkMonthsElapsed(l.dateGiven)}</td>
+    ['date','amount','rate','months','interestAmount','payable'].forEach(col => {
+      const iconEl = document.getElementById(`pkSortIcon_${col}`);
+      if(iconEl) iconEl.textContent = pkLoanSortState.col === col ? (pkLoanSortState.dir === 'asc' ? '▲' : '▼') : '';
+    });
+    const pkHeaderRow = `<tr>
+        <th style="cursor:pointer;" onclick="sortPkLoans('date')" title="Click to sort">Date <span id="pkSortIcon_date">${pkLoanSortState.col==='date'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('amount')" title="Click to sort">Amount <span id="pkSortIcon_amount">${pkLoanSortState.col==='amount'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('rate')" title="Click to sort">Interest <span id="pkSortIcon_rate">${pkLoanSortState.col==='rate'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('months')" title="Click to sort">Months <span id="pkSortIcon_months">${pkLoanSortState.col==='months'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('interestAmount')" title="Click to sort">Interest amount <span id="pkSortIcon_interestAmount">${pkLoanSortState.col==='interestAmount'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortPkLoans('payable')" title="Click to sort">Total payables <span id="pkSortIcon_payable">${pkLoanSortState.col==='payable'?(pkLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th></th>
+      </tr>`;
+    document.getElementById('pkLoanTable').innerHTML = pkHeaderRow +
+      (pkSortedLoans.length
+        ? pkSortedLoans.map(l => `<tr>
+            <td>${l.dateGiven}</td>
+            <td>${fmtPeso(l.principal)}</td>
+            <td>${l.rate}%</td>
+            <td>${pkMonthsElapsed(l.dateGiven)}</td>
             <td>${fmtPeso(pkLoanInterestAmount(l))}</td><td>${fmtPeso(pkLoanTotalPayable(l))}</td>
-            <td><button class="del-btn" onclick="event.stopPropagation();removePkLoan('${l.id}')">Remove</button></td>
+            <td><button class="del-btn" onclick="removePkLoan('${l.id}')">Remove</button></td>
           </tr>`).join('')
-          + `<tr style="font-weight:700;"><td colspan="5">Total${pkAnyFilterActive?' (filtered)':''}</td><td>${fmtPeso(pkFilteredPayables)}</td><td></td></tr>`
-        : `<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:16px;">${dashboardData.pkFinance.loans.length ? 'No loans match these filters.' : 'No loans logged yet.'}</td></tr>`);
+          + `<tr style="font-weight:700;"><td colspan="5">Total</td><td>${fmtPeso(pkPayablesAll)}</td><td></td></tr>`
+        : '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:16px;">No loans logged yet.</td></tr>');
     const pkRateInput = document.getElementById('pkCommissionRate');
     if(pkRateInput && document.activeElement !== pkRateInput) pkRateInput.value = dashboardData.pkFinance.commissionRate;
 
@@ -3188,27 +3200,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('investment', inv);
   }
 
-  let pkLoanFilterState = { date:null, amount:null, rate:null, months:null };
+  let pkLoanSortState = { col:'date', dir:'desc' }; // newest loans first by default
 
-  function filterPkLoansByDate(date){
-    pkLoanFilterState = { date, amount:null, rate:null, months:null };
-    renderAll();
-  }
-  function filterPkLoansByAmount(amount){
-    pkLoanFilterState = { date:null, amount, rate:null, months:null };
-    renderAll();
-  }
-  function filterPkLoansByRate(rate){
-    pkLoanFilterState = { date:null, amount:null, rate, months:null };
-    renderAll();
-  }
-  function filterPkLoansByMonths(months){
-    pkLoanFilterState = { date:null, amount:null, rate:null, months };
-    renderAll();
-  }
-
-  function clearPkLoanFilters(){
-    pkLoanFilterState = { date:null, amount:null, rate:null, months:null };
+  function sortPkLoans(col){
+    if(pkLoanSortState.col === col){
+      pkLoanSortState.dir = pkLoanSortState.dir === 'asc' ? 'desc' : 'asc'; // clicking the same header again flips direction
+    } else {
+      pkLoanSortState = { col, dir:'asc' };
+    }
     renderAll();
   }
 
