@@ -2198,7 +2198,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const pkFilteredPayables = pkFilteredLoans.reduce((a,l) => a + pkLoanTotalPayable(l), 0);
     document.getElementById('pkLoanTable').innerHTML = '<tr><th>Date</th><th>Amount</th><th>Interest</th><th>Months</th><th>Interest amount</th><th>Total payables</th><th></th></tr>' +
       (pkFilteredLoans.length
-        ? pkFilteredLoans.map(l => `<tr><td>${l.dateGiven}</td><td>${fmtPeso(l.principal)}</td><td>${l.rate}%</td><td>${pkMonthsElapsed(l.dateGiven)}</td><td>${fmtPeso(pkLoanInterestAmount(l))}</td><td>${fmtPeso(pkLoanTotalPayable(l))}</td><td><button class="del-btn" onclick="removePkLoan('${l.id}')">Remove</button></td></tr>`).join('')
+        ? pkFilteredLoans.map(l => `<tr>
+            <td style="cursor:pointer;" title="Click to filter to this date" onclick="filterPkLoansByDate('${l.dateGiven}')">${l.dateGiven}</td>
+            <td style="cursor:pointer;" title="Click to filter to this amount" onclick="filterPkLoansByAmount(${l.principal})">${fmtPeso(l.principal)}</td>
+            <td style="cursor:pointer;" title="Click to filter to this rate" onclick="filterPkLoansByRate(${l.rate})">${l.rate}%</td>
+            <td style="cursor:pointer;" title="Click to filter to this many months" onclick="filterPkLoansByMonths(${pkMonthsElapsed(l.dateGiven)})">${pkMonthsElapsed(l.dateGiven)}</td>
+            <td>${fmtPeso(pkLoanInterestAmount(l))}</td><td>${fmtPeso(pkLoanTotalPayable(l))}</td>
+            <td><button class="del-btn" onclick="event.stopPropagation();removePkLoan('${l.id}')">Remove</button></td>
+          </tr>`).join('')
           + `<tr style="font-weight:700;"><td colspan="5">Total${pkAnyFilterActive?' (filtered)':''}</td><td>${fmtPeso(pkFilteredPayables)}</td><td></td></tr>`
         : `<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:16px;">${dashboardData.pkFinance.loans.length ? 'No loans match these filters.' : 'No loans logged yet.'}</td></tr>`);
     const pkRateInput = document.getElementById('pkCommissionRate');
@@ -3185,6 +3192,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderInvestments();
     await saveSetting('investment', inv);
+  }
+
+  function filterPkLoansByDate(date){
+    document.getElementById('pkLoanFilter_from').value = date;
+    document.getElementById('pkLoanFilter_to').value = date;
+    renderAll();
+  }
+  function filterPkLoansByAmount(amount){
+    document.getElementById('pkLoanFilter_minAmount').value = amount;
+    document.getElementById('pkLoanFilter_maxAmount').value = amount;
+    renderAll();
+  }
+  function filterPkLoansByRate(rate){
+    document.getElementById('pkLoanFilter_rate').value = rate;
+    renderAll();
+  }
+  function filterPkLoansByMonths(months){
+    document.getElementById('pkLoanFilter_minMonths').value = months;
+    document.getElementById('pkLoanFilter_maxMonths').value = months;
+    renderAll();
   }
 
   function clearPkLoanFilters(){
