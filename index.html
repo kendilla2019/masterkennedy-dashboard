@@ -885,14 +885,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Interest (%/month)</label><input type="text" inputmode="decimal" id="pkLoan_rate" value="5"></div>
         <button class="btn small" onclick="addPkLoan()">+ Add loan</button>
       </div>
-      <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr));margin-top:14px;">
-        <div class="field"><label>Date from</label><input type="date" id="pkLoanFilter_from" onchange="renderAll()"></div>
-        <div class="field"><label>Date to</label><input type="date" id="pkLoanFilter_to" onchange="renderAll()"></div>
-        <div class="field"><label>Min amount (₱)</label><input type="text" inputmode="decimal" id="pkLoanFilter_minAmount" onblur="formatCurrencyField(this);renderAll();" placeholder="Any"></div>
-        <div class="field"><label>Max amount (₱)</label><input type="text" inputmode="decimal" id="pkLoanFilter_maxAmount" onblur="formatCurrencyField(this);renderAll();" placeholder="Any"></div>
-        <div class="field"><label>Interest (%)</label><input type="text" inputmode="decimal" id="pkLoanFilter_rate" onchange="renderAll()" placeholder="Any"></div>
-        <div class="field"><label>Min months</label><input type="text" inputmode="numeric" id="pkLoanFilter_minMonths" onchange="renderAll()" placeholder="Any"></div>
-        <div class="field"><label>Max months</label><input type="text" inputmode="numeric" id="pkLoanFilter_maxMonths" onchange="renderAll()" placeholder="Any"></div>
+      <div id="pkLoanFilterBadge" style="display:none;margin-top:12px;align-items:center;gap:10px;">
+        <span style="font-size:12.5px;color:var(--muted);">Filtering by: <b style="color:var(--ink);" id="pkLoanFilterDesc"></b></span>
         <button class="btn secondary small" onclick="clearPkLoanFilters()">Clear filter</button>
       </div>
       <table id="pkLoanTable" style="margin-top:14px;"><tr><th>Date</th><th>Amount</th><th>Interest</th><th>Months</th><th>Interest amount</th><th>Total payables</th><th></th></tr></table>
@@ -2174,28 +2168,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('pkCommissionStat').textContent = fmtPeso(pkCommission);
     document.getElementById('pkCommissionFoot').textContent = `${dashboardData.pkFinance.commissionRate}% of ${fmtPeso(pkProjectValueTotal(snap))} project value`;
 
-    const pkFilterFrom = document.getElementById('pkLoanFilter_from')?.value;
-    const pkFilterTo = document.getElementById('pkLoanFilter_to')?.value;
-    const pkFilterMinAmount = parseCurrency(document.getElementById('pkLoanFilter_minAmount')?.value || '');
-    const pkFilterMaxAmount = parseCurrency(document.getElementById('pkLoanFilter_maxAmount')?.value || '');
-    const pkFilterRateRaw = document.getElementById('pkLoanFilter_rate')?.value;
-    const pkFilterRate = pkFilterRateRaw ? parseFloat(pkFilterRateRaw) : null;
-    const pkFilterMinMonthsRaw = document.getElementById('pkLoanFilter_minMonths')?.value;
-    const pkFilterMaxMonthsRaw = document.getElementById('pkLoanFilter_maxMonths')?.value;
-    const pkFilterMinMonths = pkFilterMinMonthsRaw ? parseInt(pkFilterMinMonthsRaw) : null;
-    const pkFilterMaxMonths = pkFilterMaxMonthsRaw ? parseInt(pkFilterMaxMonthsRaw) : null;
-    const pkAnyFilterActive = pkFilterFrom || pkFilterTo || pkFilterMinAmount > 0 || pkFilterMaxAmount > 0 || pkFilterRate !== null || pkFilterMinMonths !== null || pkFilterMaxMonths !== null;
+    const f = pkLoanFilterState;
+    const pkAnyFilterActive = f.date !== null || f.amount !== null || f.rate !== null || f.months !== null;
     const pkFilteredLoans = dashboardData.pkFinance.loans.filter(l => {
       const months = pkMonthsElapsed(l.dateGiven);
-      return (!pkFilterFrom || l.dateGiven >= pkFilterFrom)
-        && (!pkFilterTo || l.dateGiven <= pkFilterTo)
-        && (!(pkFilterMinAmount > 0) || l.principal >= pkFilterMinAmount)
-        && (!(pkFilterMaxAmount > 0) || l.principal <= pkFilterMaxAmount)
-        && (pkFilterRate === null || l.rate === pkFilterRate)
-        && (pkFilterMinMonths === null || months >= pkFilterMinMonths)
-        && (pkFilterMaxMonths === null || months <= pkFilterMaxMonths);
+      return (f.date === null || l.dateGiven === f.date)
+        && (f.amount === null || l.principal === f.amount)
+        && (f.rate === null || l.rate === f.rate)
+        && (f.months === null || months === f.months);
     });
     const pkFilteredPayables = pkFilteredLoans.reduce((a,l) => a + pkLoanTotalPayable(l), 0);
+    const pkFilterBadge = document.getElementById('pkLoanFilterBadge');
+    if(pkAnyFilterActive){
+      pkFilterBadge.style.display = 'flex';
+      const parts = [];
+      if(f.date !== null) parts.push(`date ${f.date}`);
+      if(f.amount !== null) parts.push(`amount ${fmtPeso(f.amount)}`);
+      if(f.rate !== null) parts.push(`${f.rate}% interest`);
+      if(f.months !== null) parts.push(`${f.months} months`);
+      document.getElementById('pkLoanFilterDesc').textContent = parts.join(', ');
+    } else {
+      pkFilterBadge.style.display = 'none';
+    }
     document.getElementById('pkLoanTable').innerHTML = '<tr><th>Date</th><th>Amount</th><th>Interest</th><th>Months</th><th>Interest amount</th><th>Total payables</th><th></th></tr>' +
       (pkFilteredLoans.length
         ? pkFilteredLoans.map(l => `<tr>
@@ -3194,31 +3188,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('investment', inv);
   }
 
+  let pkLoanFilterState = { date:null, amount:null, rate:null, months:null };
+
   function filterPkLoansByDate(date){
-    document.getElementById('pkLoanFilter_from').value = date;
-    document.getElementById('pkLoanFilter_to').value = date;
+    pkLoanFilterState = { date, amount:null, rate:null, months:null };
     renderAll();
   }
   function filterPkLoansByAmount(amount){
-    document.getElementById('pkLoanFilter_minAmount').value = amount;
-    document.getElementById('pkLoanFilter_maxAmount').value = amount;
+    pkLoanFilterState = { date:null, amount, rate:null, months:null };
     renderAll();
   }
   function filterPkLoansByRate(rate){
-    document.getElementById('pkLoanFilter_rate').value = rate;
+    pkLoanFilterState = { date:null, amount:null, rate, months:null };
     renderAll();
   }
   function filterPkLoansByMonths(months){
-    document.getElementById('pkLoanFilter_minMonths').value = months;
-    document.getElementById('pkLoanFilter_maxMonths').value = months;
+    pkLoanFilterState = { date:null, amount:null, rate:null, months };
     renderAll();
   }
 
   function clearPkLoanFilters(){
-    ['pkLoanFilter_from','pkLoanFilter_to','pkLoanFilter_minAmount','pkLoanFilter_maxAmount','pkLoanFilter_rate','pkLoanFilter_minMonths','pkLoanFilter_maxMonths'].forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) el.value = '';
-    });
+    pkLoanFilterState = { date:null, amount:null, rate:null, months:null };
     renderAll();
   }
 
