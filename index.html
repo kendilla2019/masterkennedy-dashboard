@@ -875,7 +875,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="grid-3" style="margin-top:14px;margin-bottom:16px;">
         <div class="stat"><div class="label">Interest income (monthly)</div><div class="value" id="pkInterestStat">₱0.00</div><div class="foot" id="pkInterestFoot">From active loans</div></div>
         <div class="stat"><div class="label">Total to collect</div><div class="value" id="pkPayablesStat">₱0.00</div><div class="foot">Principal + accrued interest, all loans</div></div>
-        <div class="stat"><div class="label">Project commission</div><div class="value" id="pkCommissionStat">₱0.00</div><div class="foot" id="pkCommissionFoot">This period</div></div>
+        <div class="stat"><div class="label">Commission income</div><div class="value" id="pkCommissionStat">₱0.00</div><div class="foot" id="pkCommissionFoot">This period</div></div>
       </div>
 
       <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Loans (earning interest)</h4>
@@ -2170,7 +2170,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('pkInterestFoot').textContent = `${dashboardData.pkFinance.loans.length} active loan${dashboardData.pkFinance.loans.length===1?'':'s'}`;
     document.getElementById('pkPayablesStat').textContent = fmtPeso(pkPayablesTotal);
     document.getElementById('pkCommissionStat').textContent = fmtPeso(pkCommission);
-    document.getElementById('pkCommissionFoot').textContent = `${dashboardData.pkFinance.commissionRate}% of ${fmtPeso(pkProjectValueTotal(snap))} project value`;
+    document.getElementById('pkCommissionFoot').textContent = `${dashboardData.pkFinance.commissionRate}% commission on ${fmtPeso(pkProjectValueTotal(snap))} project value`;
 
     const pkPayablesAll = pkTotalPayablesAll();
     const pkSortedLoans = [...dashboardData.pkFinance.loans].sort((a,b) => {
