@@ -379,6 +379,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="tab" data-view="calendar" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
       <button class="tab" data-view="team" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◈</span><span class="nav-label">Team</span></button>
       <button class="tab" data-view="investments" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Investments</span></button>
+      <button class="tab" data-view="myprofile" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">☺</span><span class="nav-label">My Profile</span></button>
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f"><span class="nav-icon">●</span><span class="nav-label">Master Baccarat</span></button>
       <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4"><span class="nav-icon">●</span><span class="nav-label">Prokora</span></button>
@@ -1298,6 +1299,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
   </div>
 
+  <!-- MY PROFILE (admin only, personal) -->
+  <div class="view" id="myprofile">
+    <div class="card" style="--accent:#2f6fed;">
+      <h3><span class="dot"></span>My Goal in Life</h3>
+      <div class="sub">Your own space — write it, revisit it, revise it whenever you want</div>
+      <textarea id="myProfileGoal" rows="10" placeholder="What are you really working toward? Write it here..." style="width:100%;margin-top:14px;padding:14px 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);font-family:inherit;font-size:14.5px;line-height:1.7;resize:vertical;" onblur="saveMyProfileGoal()"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+        <span style="font-size:11.5px;color:var(--muted);" id="myProfileGoalSavedAt"></span>
+        <span id="myProfileGoalConfirm" class="save-confirm-text" style="font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+      </div>
+    </div>
+  </div>
+
   <div class="note">
     <b>Note:</b> use the Edit Data tab to enter your real numbers — everything below updates instantly once you save.
   </div>
@@ -1509,6 +1523,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('mobileSidebarBackdrop').classList.toggle('visible');
   }
 
+  function renderMyProfile(){
+    const el = document.getElementById('myProfileGoal');
+    if(!el) return; // not in DOM for this role
+    if(document.activeElement !== el) el.value = dashboardData.myProfile.goalInLife || '';
+    const savedAtEl = document.getElementById('myProfileGoalSavedAt');
+    if(savedAtEl){
+      savedAtEl.textContent = dashboardData.myProfile.goalSavedAt
+        ? `Last saved: ${new Date(dashboardData.myProfile.goalSavedAt).toLocaleString()}`
+        : '';
+    }
+  }
+
+  async function saveMyProfileGoal(){
+    dashboardData.myProfile.goalInLife = document.getElementById('myProfileGoal').value;
+    dashboardData.myProfile.goalSavedAt = Date.now();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderMyProfile();
+    await saveSetting('myProfile', dashboardData.myProfile);
+    playChime(920);
+    const el = document.getElementById('myProfileGoalConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
   function applyTheme(isLight){
     document.documentElement.classList.toggle('light-theme', isLight);
     const icon = document.getElementById('themeToggleIcon');
@@ -1642,8 +1680,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     commissionRate: 3 // % commission Prokora earns on project value (the project pipeline tracks contract value, not Prokora's actual take)
   };
 
+  const defaultMyProfile = {
+    goalInLife: '',
+    goalSavedAt: null
+  };
+
   const defaultData = {
-    dataVersion: 10,
+    dataVersion: 11,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -1658,7 +1701,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mbOperating: JSON.parse(JSON.stringify(defaultMbOperating)),
     mbExpenses: JSON.parse(JSON.stringify(defaultMbExpenses)),
     investment: JSON.parse(JSON.stringify(defaultInvestment)),
-    pkFinance: JSON.parse(JSON.stringify(defaultPkFinance))
+    pkFinance: JSON.parse(JSON.stringify(defaultPkFinance)),
+    myProfile: JSON.parse(JSON.stringify(defaultMyProfile))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -1745,7 +1789,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.pkFinance){
       parsed.pkFinance = JSON.parse(JSON.stringify(defaultPkFinance));
     }
-    parsed.dataVersion = 10;
+    if(!parsed.myProfile){
+      parsed.myProfile = JSON.parse(JSON.stringify(defaultMyProfile));
+    }
+    parsed.dataVersion = 11;
     return parsed;
   }
 
@@ -1857,7 +1904,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
 
       const assembled = {
-        dataVersion: 10,
+        dataVersion: 11,
         lastUpdated: settings.lastUpdated || null,
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
@@ -1870,7 +1917,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
         mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses)),
         investment: migrateInvestmentShape(settings.investment) || JSON.parse(JSON.stringify(defaultInvestment)),
-        pkFinance: settings.pkFinance || JSON.parse(JSON.stringify(defaultPkFinance))
+        pkFinance: settings.pkFinance || JSON.parse(JSON.stringify(defaultPkFinance)),
+        myProfile: settings.myProfile || JSON.parse(JSON.stringify(defaultMyProfile))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -2289,6 +2337,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         renderExecutive(snap);
         renderAlerts(snap);
         renderInvestments();
+        renderMyProfile();
       }
     }catch(e){ renderErrors.push(['executive/alerts', e]); }
     renderErrors.forEach(([section, e]) => showRenderError(section, e));
