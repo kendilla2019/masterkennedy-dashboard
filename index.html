@@ -857,16 +857,41 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <!-- PROKORA -->
   <div class="view" id="pk">
     <div class="grid-3">
-      <div class="stat"><div class="label">Revenue YTD</div><div class="value" id="pkRevenueStat">₱1.60M</div><div class="foot">Across all projects</div></div>
+      <div class="stat"><div class="label">Income YTD</div><div class="value" id="pkRevenueStat">₱1.60M</div><div class="foot">Interest + project commission — your actual take</div></div>
       <div class="stat"><div class="label">Projects delivered</div><div class="value" id="pkDeliveredStat">14</div><div class="foot" id="pkDeliveredFoot">3 currently in build</div></div>
-      <div class="stat"><div class="label">Avg project value</div><div class="value" id="pkAvgStat">₱94K</div><div class="foot">Across delivered + active work</div></div>
+      <div class="stat"><div class="label">Avg project value</div><div class="value" id="pkAvgStat">₱94K</div><div class="foot">Contract value, delivered + active work</div></div>
     </div>
     <div class="card" style="--accent:#1a4fc4">
       <h3><span class="dot"></span>Project pipeline</h3>
-      <div class="sub">Active and recently delivered engagements</div>
+      <div class="sub">Active and recently delivered engagements — contract value, not Prokora's take</div>
       <table id="pkTable">
         <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
       </table>
+    </div>
+
+    <div class="card" style="--accent:#1a4fc4;margin-top:16px;">
+      <h3><span class="dot"></span>Prokora income breakdown</h3>
+      <div class="sub">Interest from loans + commission on project value — this is what Prokora actually earns</div>
+      <div class="grid-2" style="margin-top:14px;margin-bottom:16px;">
+        <div class="stat"><div class="label">Interest income (monthly)</div><div class="value" id="pkInterestStat">₱0.00</div><div class="foot" id="pkInterestFoot">From active loans</div></div>
+        <div class="stat"><div class="label">Project commission</div><div class="value" id="pkCommissionStat">₱0.00</div><div class="foot" id="pkCommissionFoot">This period</div></div>
+      </div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Loans (earning interest)</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end;">
+        <div class="field"><label>Principal (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="pkLoan_principal" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Date given</label><input type="date" id="pkLoan_date"></div>
+        <div class="field"><label>Monthly rate (%)</label><input type="text" inputmode="decimal" id="pkLoan_rate" value="5"></div>
+        <button class="btn small" onclick="addPkLoan()">+ Add loan</button>
+      </div>
+      <table id="pkLoanTable" style="margin-top:14px;"><tr><th>Principal</th><th>Date given</th><th>Rate</th><th>Monthly interest</th><th></th></tr></table>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Commission rate</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;">
+        <div class="field"><label>% of project value Prokora earns as commission</label><input type="text" inputmode="decimal" id="pkCommissionRate" value="3"></div>
+        <button class="btn small" onclick="savePkCommissionRate()">Save rate</button>
+      </div>
+      <span id="pkCommissionRateConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
     </div>
   </div>
 
@@ -1553,8 +1578,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     monthlyExpenses: 0 // used to compute months of runway
   };
 
+  const defaultPkFinance = {
+    loans: [], // [{ id, principal, dateGiven, rate }] — money Prokora lent out, earning monthly interest at `rate`%
+    commissionRate: 3 // % commission Prokora earns on project value (the project pipeline tracks contract value, not Prokora's actual take)
+  };
+
   const defaultData = {
-    dataVersion: 9,
+    dataVersion: 10,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -1568,7 +1598,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mbTeam: JSON.parse(JSON.stringify(defaultMbTeam)),
     mbOperating: JSON.parse(JSON.stringify(defaultMbOperating)),
     mbExpenses: JSON.parse(JSON.stringify(defaultMbExpenses)),
-    investment: JSON.parse(JSON.stringify(defaultInvestment))
+    investment: JSON.parse(JSON.stringify(defaultInvestment)),
+    pkFinance: JSON.parse(JSON.stringify(defaultPkFinance))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -1652,7 +1683,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     } else {
       parsed.investment = migrateInvestmentShape(parsed.investment);
     }
-    parsed.dataVersion = 9;
+    if(!parsed.pkFinance){
+      parsed.pkFinance = JSON.parse(JSON.stringify(defaultPkFinance));
+    }
+    parsed.dataVersion = 10;
     return parsed;
   }
 
@@ -1764,7 +1798,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
 
       const assembled = {
-        dataVersion: 9,
+        dataVersion: 10,
         lastUpdated: settings.lastUpdated || null,
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
@@ -1776,7 +1810,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbTeam: settings.mbTeam || JSON.parse(JSON.stringify(defaultMbTeam)),
         mbOperating: settings.mbOperating || JSON.parse(JSON.stringify(defaultMbOperating)),
         mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses)),
-        investment: migrateInvestmentShape(settings.investment) || JSON.parse(JSON.stringify(defaultInvestment))
+        investment: migrateInvestmentShape(settings.investment) || JSON.parse(JSON.stringify(defaultInvestment)),
+        pkFinance: settings.pkFinance || JSON.parse(JSON.stringify(defaultPkFinance))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -1957,7 +1992,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return combined;
   }
   function mbTotal(snap){ return Object.values(mbCombinedPlatformTotals(snap)).reduce((a,b)=>a+b,0); }
-  function pkRevenue(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
+  // Prokora's project pipeline tracks contract value, but Prokora's actual take is a commission
+  // off that value, plus interest income from money it has lent out. This is Prokora's real income.
+  function pkProjectValueTotal(snap){ return snap.pk.projects.reduce((a,p)=>a+p.value,0); }
+  function pkInterestIncomeTotal(){
+    return (dashboardData.pkFinance.loans || []).reduce((a,l) => a + (l.principal * l.rate / 100), 0);
+  }
+  function pkCommissionTotal(snap){
+    return pkProjectValueTotal(snap) * (dashboardData.pkFinance.commissionRate / 100);
+  }
+  function pkRevenue(snap){ return pkInterestIncomeTotal() + pkCommissionTotal(snap); }
   // Additional income (talent fees, bonuses, other) logged for the currently selected reporting
   // period (month falls within start–end), split by type. Entries saved before the Type field
   // existed default to 'talentFee', since that's what the feature originally tracked.
@@ -2087,6 +2131,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       (pk.projects.length
         ? pk.projects.map(p=>`<tr><td>${p.client}</td><td>${p.scope}</td><td class="num-cell">${fmtPeso(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td></tr>`).join('')
         : '<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one from the Edit Data tab.</td></tr>');
+
+    // Prokora income breakdown (interest from loans + project commission)
+    const pkInterest = pkInterestIncomeTotal();
+    const pkCommission = pkCommissionTotal(snap);
+    document.getElementById('pkInterestStat').textContent = fmtPeso(pkInterest);
+    document.getElementById('pkInterestFoot').textContent = `${dashboardData.pkFinance.loans.length} active loan${dashboardData.pkFinance.loans.length===1?'':'s'}`;
+    document.getElementById('pkCommissionStat').textContent = fmtPeso(pkCommission);
+    document.getElementById('pkCommissionFoot').textContent = `${dashboardData.pkFinance.commissionRate}% of ${fmtPeso(pkProjectValueTotal(snap))} project value`;
+    document.getElementById('pkLoanTable').innerHTML = '<tr><th>Principal</th><th>Date given</th><th>Rate</th><th>Monthly interest</th><th></th></tr>' +
+      dashboardData.pkFinance.loans.map(l => `<tr><td>${fmtPeso(l.principal)}</td><td>${l.dateGiven}</td><td>${l.rate}%</td><td>${fmtPeso(l.principal*l.rate/100)}</td><td><button class="del-btn" onclick="removePkLoan('${l.id}')">Remove</button></td></tr>`).join('');
+    const pkRateInput = document.getElementById('pkCommissionRate');
+    if(pkRateInput && document.activeElement !== pkRateInput) pkRateInput.value = dashboardData.pkFinance.commissionRate;
 
     // Period label
     document.getElementById('periodBadge').textContent = formatPeriod(dashboardData.currentPeriod.start, dashboardData.currentPeriod.end);
@@ -3069,6 +3125,38 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderInvestments();
     await saveSetting('investment', inv);
+  }
+
+  async function addPkLoan(){
+    const principal = clampNonNeg(parseCurrency(document.getElementById('pkLoan_principal').value));
+    const dateGiven = document.getElementById('pkLoan_date').value;
+    const rate = clampNonNeg(parseFloat(document.getElementById('pkLoan_rate').value) || 0);
+    if(principal <= 0 || !dateGiven){ alert('Please enter a valid principal amount and date.'); return; }
+    dashboardData.pkFinance.loans.push({ id:'loan'+Date.now(), principal, dateGiven, rate });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('pkLoan_principal').value = '';
+    document.getElementById('pkLoan_date').value = '';
+    renderAll();
+    await saveSetting('pkFinance', dashboardData.pkFinance);
+    playChime(920);
+  }
+
+  async function removePkLoan(id){
+    dashboardData.pkFinance.loans = dashboardData.pkFinance.loans.filter(l => l.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderAll();
+    await saveSetting('pkFinance', dashboardData.pkFinance);
+  }
+
+  async function savePkCommissionRate(){
+    dashboardData.pkFinance.commissionRate = clampNonNeg(parseFloat(document.getElementById('pkCommissionRate').value) || 0);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderAll();
+    await saveSetting('pkFinance', dashboardData.pkFinance);
+    playChime(920);
+    const el = document.getElementById('pkCommissionRateConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
   }
 
   async function addLiability(){
