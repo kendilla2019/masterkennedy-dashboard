@@ -3200,7 +3200,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('investment', inv);
   }
 
-  let pkLoanSortState = { col:'date', dir:'desc' }; // newest loans first by default
+  let pkLoanSortState = { col:'interestAmount', dir:'desc' }; // biggest earner at the top by default
 
   function sortPkLoans(col){
     if(pkLoanSortState.col === col){
