@@ -314,6 +314,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .wc-yellow{background:linear-gradient(135deg,#eab308,#a16207);color:#1a1400;}
   .wc-yellow .wc-balance-label{opacity:.65;}
 
+  #walletDetailBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;}
+  #walletDetailBackdrop.visible{display:block;}
+  #walletDetailModal{
+    display:none;position:fixed;top:5%;left:50%;transform:translateX(-50%);
+    width:min(640px,92vw);max-height:90vh;overflow-y:auto;z-index:301;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;
+    box-shadow:0 10px 40px rgba(0,0,0,.4);
+  }
+  #walletDetailModal.visible{display:block;}
+  .wallet-detail-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px;}
+  .wallet-detail-balance{font-size:34px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;text-align:center;margin-top:6px;}
+  .wallet-tx-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;}
+  .wallet-tx-amount.income{color:#5fbf7a;}
+  .wallet-tx-amount.expense{color:#e0453f;}
+
   #mobileMenuBtn{display:none;}
   #mobileSidebarBackdrop{display:none;}
 
@@ -1376,6 +1391,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="wallet-grid" id="walletGrid"></div>
   </div>
 
+  <div id="walletDetailBackdrop" onclick="closeWalletDetail()"></div>
+  <div id="walletDetailModal">
+    <div class="wallet-detail-header">
+      <button class="btn secondary small" onclick="closeWalletDetail()">← Back</button>
+      <h3 id="walletDetailName" style="margin:0;">Account</h3>
+      <button class="btn secondary small" onclick="deleteWalletAccountFromDetail()" style="color:#e0453f;border-color:#e0453f;">Delete</button>
+    </div>
+    <div class="wallet-detail-balance" id="walletDetailBalance">₱0.00</div>
+    <div class="sub" style="text-align:center;margin-bottom:20px;">Current balance</div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Add transaction</h3>
+      <div class="edit-grid" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end;">
+        <div class="field"><label>Description</label><input type="text" id="wtx_desc" placeholder="e.g. Client payment"></div>
+        <div class="field"><label>Type</label>
+          <select id="wtx_type">
+            <option value="income">Income (+)</option>
+            <option value="expense">Expense (−)</option>
+          </select>
+        </div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="wtx_amount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addWalletTransaction()">+ Add</button>
+      </div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;">
+      <h3><span class="dot"></span>Transaction history</h3>
+      <div id="walletTxList" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
   <div class="note">
     <b>Note:</b> use the Edit Data tab to enter your real numbers — everything below updates instantly once you save.
   </div>
@@ -1613,6 +1659,83 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   let walletDraggedId = null;
 
+  let walletDetailAccountId = null;
+
+  function openWalletDetail(id){
+    walletDetailAccountId = id;
+    renderWalletDetail();
+    document.getElementById('walletDetailBackdrop').classList.add('visible');
+    document.getElementById('walletDetailModal').classList.add('visible');
+  }
+
+  function closeWalletDetail(){
+    walletDetailAccountId = null;
+    document.getElementById('walletDetailBackdrop').classList.remove('visible');
+    document.getElementById('walletDetailModal').classList.remove('visible');
+  }
+
+  function renderWalletDetail(){
+    const acc = dashboardData.wallet.accounts.find(a => a.id === walletDetailAccountId);
+    if(!acc) return;
+    document.getElementById('walletDetailName').textContent = acc.name;
+    document.getElementById('walletDetailBalance').textContent = fmtPeso(acc.balance);
+    const txs = acc.transactions || [];
+    document.getElementById('walletTxList').innerHTML = txs.length
+      ? [...txs].reverse().map(tx => `
+          <div class="wallet-tx-row">
+            <div>
+              <div style="font-size:13.5px;">${tx.description}</div>
+              <div style="font-size:11px;color:var(--muted);">${new Date(tx.date).toLocaleDateString()}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="wallet-tx-amount ${tx.type}" style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${tx.type==='income'?'+':'−'}${fmtPeso(tx.amount)}</span>
+              <button class="del-btn" onclick="removeWalletTransaction('${tx.id}')">Remove</button>
+            </div>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">No transactions yet for this account.</div>';
+  }
+
+  async function addWalletTransaction(){
+    const acc = dashboardData.wallet.accounts.find(a => a.id === walletDetailAccountId);
+    if(!acc) return;
+    const description = document.getElementById('wtx_desc').value.trim();
+    const type = document.getElementById('wtx_type').value;
+    const amount = clampNonNeg(parseCurrency(document.getElementById('wtx_amount').value));
+    if(!description || amount <= 0){ alert('Please enter a description and a valid amount.'); return; }
+    if(!acc.transactions) acc.transactions = [];
+    acc.transactions.push({ id:'wtx'+Date.now(), description, type, amount, date: Date.now() });
+    acc.balance = type === 'income' ? acc.balance + amount : acc.balance - amount;
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('wtx_desc').value = '';
+    document.getElementById('wtx_amount').value = '';
+    renderWalletDetail();
+    renderWallet();
+    await saveSetting('wallet', dashboardData.wallet);
+    playChime(920);
+  }
+
+  async function removeWalletTransaction(txId){
+    const acc = dashboardData.wallet.accounts.find(a => a.id === walletDetailAccountId);
+    if(!acc) return;
+    const tx = (acc.transactions||[]).find(t => t.id === txId);
+    if(!tx) return;
+    acc.balance = tx.type === 'income' ? acc.balance - tx.amount : acc.balance + tx.amount; // undo its effect
+    acc.transactions = acc.transactions.filter(t => t.id !== txId);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderWalletDetail();
+    renderWallet();
+    await saveSetting('wallet', dashboardData.wallet);
+  }
+
+  async function deleteWalletAccountFromDetail(){
+    if(!walletDetailAccountId) return;
+    if(!confirm('Delete this account? This cannot be undone.')) return;
+    const idToDelete = walletDetailAccountId;
+    closeWalletDetail();
+    await removeWalletAccount(idToDelete);
+  }
+
   function renderWallet(){
     const grid = document.getElementById('walletGrid');
     if(!grid) return; // not in DOM for this role
@@ -1626,13 +1749,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                ondragstart="walletDragStart(event,'${acc.id}')"
                ondragover="event.preventDefault();"
                ondrop="walletDrop(event,'${acc.id}')"
-               title="Drag to reorder">
-            <button class="wc-remove" onclick="cycleWalletColor('${acc.id}')" title="Change color" style="right:40px;">🎨</button>
-            <button class="wc-remove" onclick="removeWalletAccount('${acc.id}')" title="Remove">✕</button>
+               onclick="openWalletDetail('${acc.id}')"
+               title="Click for transaction history · drag to reorder">
+            <button class="wc-remove" onclick="event.stopPropagation();cycleWalletColor('${acc.id}')" title="Change color" style="right:40px;">🎨</button>
+            <button class="wc-remove" onclick="event.stopPropagation();removeWalletAccount('${acc.id}')" title="Remove">✕</button>
             <div class="wc-name">${acc.name}</div>
             <div>
               <div class="wc-balance-label">Balance <span style="opacity:.6;">(click to edit)</span></div>
-              <div class="wc-balance" id="wc-balance-${acc.id}" onclick="editWalletBalance('${acc.id}')">${fmtPeso(acc.balance)}</div>
+              <div class="wc-balance" id="wc-balance-${acc.id}" onclick="event.stopPropagation();editWalletBalance('${acc.id}')">${fmtPeso(acc.balance)}</div>
             </div>
           </div>
         `).join('')
@@ -1683,7 +1807,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const balance = clampNonNeg(parseCurrency(document.getElementById('wallet_balance').value));
     const color = document.getElementById('wallet_color').value;
     if(!name){ alert('Please enter an account name.'); return; }
-    dashboardData.wallet.accounts.push({ id:'wa'+Date.now(), name, balance, color });
+    dashboardData.wallet.accounts.push({ id:'wa'+Date.now(), name, balance, color, transactions:[] });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('wallet_name').value = '';
     document.getElementById('wallet_balance').value = '';
