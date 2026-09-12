@@ -422,7 +422,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="tab" data-view="investments" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Investments</span></button>
       <button class="tab" data-view="myprofile" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">☺</span><span class="nav-label">My Profile</span></button>
       <button class="tab" data-view="wallet" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Wallet</span></button>
-      <button class="tab" data-view="personalexpenses" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Expenses</span></button>
+      <button class="tab" data-view="personalexpenses" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Housing Expenses</span></button>
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f"><span class="nav-icon">●</span><span class="nav-label">Master Baccarat</span></button>
       <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4"><span class="nav-icon">●</span><span class="nav-label">Prokora</span></button>
@@ -1396,7 +1396,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="view" id="personalexpenses">
     <div class="wallet-hero">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div class="wallet-hero-label">Expense overview</div>
+        <div class="wallet-hero-label">Housing expense overview</div>
       </div>
       <div class="wallet-hero-value" id="pexpTotal" style="font-size:28px;">₱0.00</div>
       <div class="wallet-hero-sub" id="pexpCount">0 transactions</div>
@@ -1417,8 +1417,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;" id="pexpCategoryTabs">
-      <button class="mb-subtab active" onclick="setPexpCategory('all')" data-cat="all">All</button>
-      <button class="mb-subtab" onclick="setPexpCategory('housing')" data-cat="housing">🏠 Housing</button>
+      <button class="mb-subtab active" onclick="setPexpCategory('all')" data-cat="all">🏠 Housing (all)</button>
       <button class="mb-subtab" onclick="setPexpCategory('utility')" data-cat="utility">💡 Utility</button>
       <button class="mb-subtab" onclick="setPexpCategory('subscription')" data-cat="subscription">📺 Subscription</button>
       <button class="mb-subtab" onclick="setPexpCategory('loan')" data-cat="loan">💳 Loan</button>
@@ -1431,7 +1430,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="field"><label>Description</label><input type="text" id="pexp_desc" placeholder="e.g. Rent, Meralco"></div>
         <div class="field"><label>Category</label>
           <select id="pexp_category">
-            <option value="housing">🏠 Housing</option>
             <option value="utility">💡 Utility</option>
             <option value="subscription">📺 Subscription</option>
             <option value="loan">💳 Loan</option>
@@ -1463,7 +1461,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="card" style="--accent:#2f6fed;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <h3 style="margin:0;"><span class="dot"></span>Your expenses</h3>
+        <h3 style="margin:0;"><span class="dot"></span>Your housing expenses</h3>
         <span style="font-size:12.5px;color:var(--muted);" id="pexpItemCount">0 items</span>
       </div>
       <div id="pexpList" style="margin-top:12px;"></div>
