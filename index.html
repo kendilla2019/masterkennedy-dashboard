@@ -442,7 +442,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <h2 id="pageTitle" style="margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:600;">Dashboard</h2>
     </div>
     <div class="masthead-right">
-      <button class="period" id="hideAmountsBtn" onclick="toggleAmountsHidden()" title="Hide all amounts before showing someone your screen" style="cursor:pointer;">Hide amounts</button>
+      <button class="period" id="hideAmountsBtn" onclick="toggleAmountsHidden()" title="Hide all amounts before showing someone your screen" style="cursor:pointer;">Hide</button>
       <div class="period" id="syncStatus" title="Whether your last save reached the shared database">
         <span id="syncDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b93a6;margin-right:6px;"></span><span id="syncText">Checking sync…</span>
       </div>
@@ -1505,7 +1505,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     { username:'nexstack', password:'ns2026', role:'ns' },
     { username:'prokora', password:'pk2026', role:'pk' },
   ];
-  const roleLabels = { admin:'Admin · full access', mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
+  const roleLabels = { admin:'Admin', mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora' };
   let currentUser = null;
   // Portable build: no backend/storage available on static hosting (Netlify/Vercel/GitHub Pages),
   // so the account list lives here in the code and resets to this list on every page load.
@@ -1702,7 +1702,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     amountsHidden = !amountsHidden;
     try{ localStorage.setItem('amountsHidden', amountsHidden ? 'true' : 'false'); }catch(e){}
     const btn = document.getElementById('hideAmountsBtn');
-    btn.textContent = amountsHidden ? 'Show amounts' : 'Hide amounts';
+    btn.textContent = amountsHidden ? 'Show' : 'Hide';
     btn.style.color = amountsHidden ? 'var(--gold)' : '';
     btn.style.borderColor = amountsHidden ? 'var(--gold)' : '';
     renderAll();
@@ -2045,7 +2045,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!amountsHidden) return;
     const btn = document.getElementById('hideAmountsBtn');
     if(!btn) return;
-    btn.textContent = 'Show amounts';
+    btn.textContent = 'Show';
     btn.style.color = 'var(--gold)';
     btn.style.borderColor = 'var(--gold)';
   })();
@@ -2326,10 +2326,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!dot || !text) return;
     if(connected){
       dot.style.background = '#1f9d5c';
-      text.textContent = 'Synced to shared database';
+      text.textContent = 'Synced';
     } else {
       dot.style.background = '#c23a3a';
-      text.textContent = 'Local only — not synced';
+      text.textContent = 'Local only';
     }
   }
 
@@ -2800,9 +2800,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const lu = document.getElementById('lastUpdatedBadge');
     if(dashboardData.lastUpdated){
       const d = new Date(dashboardData.lastUpdated);
-      lu.textContent = `Last updated: ${d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })} ${d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })}`;
+      lu.textContent = `Updated ${d.toLocaleDateString('en-US', { month:'short', day:'numeric' })}, ${d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })}`;
     } else {
-      lu.textContent = 'Last updated: sample data, not yet edited';
+      lu.textContent = 'Sample data, not yet edited';
     }
 
     document.getElementById('alertBanner').innerHTML = ''; // clear before this render pass so old errors/alerts don't linger
