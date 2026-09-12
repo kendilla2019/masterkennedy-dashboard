@@ -448,11 +448,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       </div>
       <div class="period" id="periodBadge" onclick="toggleDashPeriodPicker()" style="cursor:pointer;" title="Click to quickly switch period">YTD 2026 · Jan – Aug</div>
       <div class="period" id="lastUpdatedBadge">Last updated: —</div>
-      <div class="who">
-        <span id="whoName">—</span>
-        <span class="role-badge" id="whoRole">—</span>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:nowrap;">
+        <div class="who">
+          <span id="whoName">—</span>
+          <span class="role-badge" id="whoRole">—</span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Sign out</button>
       </div>
-      <button class="logout-btn" onclick="logout()">Sign out</button>
     </div>
   </div>
 
