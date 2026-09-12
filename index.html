@@ -311,6 +311,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .wc-green{background:linear-gradient(135deg,#16a34a,#14532d);}
   .wc-gray{background:linear-gradient(135deg,#6b7280,#374151);}
   .wc-dark{background:linear-gradient(135deg,#374151,#0f1117);}
+  .wc-yellow{background:linear-gradient(135deg,#eab308,#a16207);color:#1a1400;}
+  .wc-yellow .wc-balance-label{opacity:.65;}
 
   #mobileMenuBtn{display:none;}
   #mobileSidebarBackdrop{display:none;}
@@ -1364,6 +1366,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <option value="green">Green</option>
             <option value="gray">Gray</option>
             <option value="dark">Dark</option>
+            <option value="yellow">Yellow</option>
           </select>
         </div>
         <button class="btn small" onclick="addWalletAccount()">+ Add</button>
@@ -1624,6 +1627,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                ondragover="event.preventDefault();"
                ondrop="walletDrop(event,'${acc.id}')"
                title="Drag to reorder">
+            <button class="wc-remove" onclick="cycleWalletColor('${acc.id}')" title="Change color" style="right:40px;">🎨</button>
             <button class="wc-remove" onclick="removeWalletAccount('${acc.id}')" title="Remove">✕</button>
             <div class="wc-name">${acc.name}</div>
             <div>
@@ -1686,6 +1690,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     renderWallet();
     await saveSetting('wallet', dashboardData.wallet);
     playChime(920);
+  }
+
+  const walletColorPalette = ['blue','pink','red','navy','teal','green','gray','dark','yellow'];
+
+  async function cycleWalletColor(id){
+    const acc = dashboardData.wallet.accounts.find(a => a.id === id);
+    if(!acc) return;
+    const idx = walletColorPalette.indexOf(acc.color || 'blue');
+    acc.color = walletColorPalette[(idx + 1) % walletColorPalette.length];
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderWallet();
+    await saveSetting('wallet', dashboardData.wallet);
   }
 
   async function removeWalletAccount(id){
