@@ -442,6 +442,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <h2 id="pageTitle" style="margin:0;font-family:'Fraunces',serif;font-size:20px;font-weight:600;">Dashboard</h2>
     </div>
     <div class="masthead-right">
+      <button class="logout-btn" id="hideAmountsBtn" onclick="toggleAmountsHidden()" title="Hide all amounts before showing someone your screen">👁 Hide amounts</button>
       <div class="period" id="syncStatus" title="Whether your last save reached the shared database">
         <span id="syncDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b93a6;margin-right:6px;"></span><span id="syncText">Checking sync…</span>
       </div>
@@ -1488,6 +1489,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </div>
 
 <script>
+  /* Hide-amounts mode: read first, before anything else in this script references it */
+  let amountsHidden = false;
+  try{ amountsHidden = localStorage.getItem('amountsHidden') === 'true'; }catch(e){}
+
   /* ---------------- User store (shared, plain-text — not real security) ---------------- */
   const USERS_KEY = 'apex_users';
   const defaultUsers = [
@@ -1689,6 +1694,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function toggleMobileSidebar(){
     document.getElementById('sidebar').classList.toggle('mobile-open');
     document.getElementById('mobileSidebarBackdrop').classList.toggle('visible');
+  }
+
+  function toggleAmountsHidden(){
+    amountsHidden = !amountsHidden;
+    try{ localStorage.setItem('amountsHidden', amountsHidden ? 'true' : 'false'); }catch(e){}
+    const btn = document.getElementById('hideAmountsBtn');
+    btn.textContent = amountsHidden ? '🙈 Show amounts' : '👁 Hide amounts';
+    btn.style.color = amountsHidden ? 'var(--gold)' : '';
+    btn.style.borderColor = amountsHidden ? 'var(--gold)' : '';
+    renderAll();
   }
 
   function renderMyProfile(){
@@ -2022,6 +2037,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     let saved = null;
     try{ saved = localStorage.getItem('mk_theme'); }catch(e){}
     applyTheme(saved === 'light');
+  })();
+
+  (function initHideAmountsButton(){
+    if(!amountsHidden) return;
+    const btn = document.getElementById('hideAmountsBtn');
+    if(!btn) return;
+    btn.textContent = '🙈 Show amounts';
+    btn.style.color = 'var(--gold)';
+    btn.style.borderColor = 'var(--gold)';
   })();
 
   /* ---------------- Dashboard data (editable, saved per-browser, one snapshot per date range) ---------------- */
@@ -2508,7 +2532,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   const statusLabel = { dev:'In development', done:'Delivered', live:'In progress', pause:'On hold' };
-  const fmtPeso = n => `₱${(n||0).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+  const fmtPeso = n => amountsHidden ? '₱••••••' : `₱${(n||0).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
   // parses a comma-formatted string the user typed back into a plain number
   const parseCurrency = val => parseFloat(String(val).replace(/,/g,'')) || 0;
   // re-formats a currency text field with commas when the user leaves it
