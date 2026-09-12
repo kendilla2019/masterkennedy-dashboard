@@ -4003,9 +4003,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const endD = new Date(cp.end + 'T00:00:00');
     const today = new Date();
     const totalSpan = endD - startD;
+    let elapsedPct = 0, remainingPct = 100;
     if(totalSpan > 0 && today >= startD){
-      const elapsedPct = Math.min(100, Math.max(0, ((today - startD) / totalSpan) * 100));
-      const remainingPct = 100 - elapsedPct;
+      elapsedPct = Math.min(100, Math.max(0, ((today - startD) / totalSpan) * 100));
+      remainingPct = 100 - elapsedPct;
       ['mb','bw','ns','pk'].forEach(biz=>{
         const target = exec.goals[biz] || 0;
         if(target <= 0) return;
@@ -4015,6 +4016,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           alerts.push({ level:'yellow', text:`<b>${bizNames[biz]}</b> is at ${Math.round(goalPct)}% of its goal with only ${Math.round(remainingPct)}% of the period left.` });
         }
       });
+
+      // Rule 3: overall monthly income goal falling behind pace (compares combined revenue to
+      // the single "Monthly income goal" figure, not any one business's own goal)
+      const overallGoal = dashboardData.monthlyIncome.goal || 0;
+      if(overallGoal > 0){
+        const combinedRevenue = mbEffectiveRevenue(snap) + snap.bw.revenue + snap.ns.revenue + pkRevenue(snap);
+        const overallGoalPct = (combinedRevenue / overallGoal) * 100;
+        if(overallGoalPct < 50){
+          alerts.push({ level: overallGoalPct < 30 ? 'red' : 'yellow', text:`Monthly income goal is at ${Math.round(overallGoalPct)}% (${fmtPeso(combinedRevenue)} of ${fmtPeso(overallGoal)}).` });
+        }
+      }
     }
 
     // Rules for Team / Operations / Calendar (unpaid commissions, overdue tasks, upcoming events)
