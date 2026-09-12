@@ -422,6 +422,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="tab" data-view="investments" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Investments</span></button>
       <button class="tab" data-view="myprofile" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">☺</span><span class="nav-label">My Profile</span></button>
       <button class="tab" data-view="wallet" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Wallet</span></button>
+      <button class="tab" data-view="personalexpenses" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Expenses</span></button>
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f"><span class="nav-icon">●</span><span class="nav-label">Master Baccarat</span></button>
       <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4"><span class="nav-icon">●</span><span class="nav-label">Prokora</span></button>
@@ -1391,6 +1392,84 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="wallet-grid" id="walletGrid"></div>
   </div>
 
+  <!-- PERSONAL EXPENSES (admin only, personal) -->
+  <div class="view" id="personalexpenses">
+    <div class="wallet-hero">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="wallet-hero-label">Expense overview</div>
+      </div>
+      <div class="wallet-hero-value" id="pexpTotal" style="font-size:28px;">₱0.00</div>
+      <div class="wallet-hero-sub" id="pexpCount">0 transactions</div>
+      <div class="grid-3" style="margin-top:16px;">
+        <div class="stat" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);">
+          <div class="label" style="color:#9aa3b8;">Average</div>
+          <div class="value" id="pexpAverage" style="color:#fff;font-size:18px;">₱0.00</div>
+        </div>
+        <div class="stat" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);">
+          <div class="label" style="color:#9aa3b8;">Recurring</div>
+          <div class="value" id="pexpRecurring" style="color:#fff;font-size:18px;">₱0.00</div>
+        </div>
+        <div class="stat" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);">
+          <div class="label" style="color:#9aa3b8;">One-time</div>
+          <div class="value" id="pexpOneTime" style="color:#fff;font-size:18px;">₱0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;" id="pexpCategoryTabs">
+      <button class="mb-subtab active" onclick="setPexpCategory('all')" data-cat="all">All</button>
+      <button class="mb-subtab" onclick="setPexpCategory('housing')" data-cat="housing">🏠 Housing</button>
+      <button class="mb-subtab" onclick="setPexpCategory('utility')" data-cat="utility">💡 Utility</button>
+      <button class="mb-subtab" onclick="setPexpCategory('subscription')" data-cat="subscription">📺 Subscription</button>
+      <button class="mb-subtab" onclick="setPexpCategory('loan')" data-cat="loan">💳 Loan</button>
+      <button class="mb-subtab" onclick="setPexpCategory('gas')" data-cat="gas">⛽ Gas/Fuel</button>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Add expense</h3>
+      <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));">
+        <div class="field"><label>Description</label><input type="text" id="pexp_desc" placeholder="e.g. Rent, Meralco"></div>
+        <div class="field"><label>Category</label>
+          <select id="pexp_category">
+            <option value="housing">🏠 Housing</option>
+            <option value="utility">💡 Utility</option>
+            <option value="subscription">📺 Subscription</option>
+            <option value="loan">💳 Loan</option>
+            <option value="gas">⛽ Gas/Fuel</option>
+          </select>
+        </div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="pexp_amount" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Essential?</label>
+          <select id="pexp_essential">
+            <option value="essential">Essential</option>
+            <option value="nonessential">Non Essential</option>
+          </select>
+        </div>
+        <div class="field"><label>Frequency</label>
+          <select id="pexp_frequency">
+            <option value="onetime">One-Time</option>
+            <option value="recurring">Recurring</option>
+          </select>
+        </div>
+        <div class="field"><label>Date</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="date" id="pexp_date" style="flex:1;min-width:0;">
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;" onclick="fillTodayField('pexp_date')">Today</button>
+          </div>
+        </div>
+      </div>
+      <button class="btn small" style="margin-top:10px;" onclick="addPersonalExpense()">+ Add expense</button>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <h3 style="margin:0;"><span class="dot"></span>Your expenses</h3>
+        <span style="font-size:12.5px;color:var(--muted);" id="pexpItemCount">0 items</span>
+      </div>
+      <div id="pexpList" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
   <div id="walletDetailBackdrop" onclick="closeWalletDetail()"></div>
   <div id="walletDetailModal">
     <div class="wallet-detail-header">
@@ -1736,6 +1815,92 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await removeWalletAccount(idToDelete);
   }
 
+  const pexpCategoryMeta = {
+    housing: { icon:'🏠', label:'Housing' },
+    utility: { icon:'💡', label:'Utility' },
+    subscription: { icon:'📺', label:'Subscription' },
+    loan: { icon:'💳', label:'Loan' },
+    gas: { icon:'⛽', label:'Gas/Fuel' }
+  };
+  let pexpActiveCategory = 'all';
+
+  function fillTodayField(inputId){
+    document.getElementById(inputId).value = ymd(new Date());
+  }
+
+  function setPexpCategory(cat){
+    pexpActiveCategory = cat;
+    document.querySelectorAll('#pexpCategoryTabs .mb-subtab').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.cat === cat);
+    });
+    renderPersonalExpenses();
+  }
+
+  function renderPersonalExpenses(){
+    const list = document.getElementById('pexpList');
+    if(!list) return; // not in DOM for this role
+    const items = dashboardData.personalExpenses.items;
+    const total = items.reduce((a,i)=>a+i.amount,0);
+    const recurringTotal = items.filter(i=>i.frequency==='recurring').reduce((a,i)=>a+i.amount,0);
+    const oneTimeTotal = items.filter(i=>i.frequency!=='recurring').reduce((a,i)=>a+i.amount,0);
+    const avg = items.length ? total / items.length : 0;
+    document.getElementById('pexpTotal').textContent = fmtPeso(total);
+    document.getElementById('pexpCount').textContent = `${items.length} transaction${items.length===1?'':'s'}`;
+    document.getElementById('pexpAverage').textContent = fmtPeso(avg);
+    document.getElementById('pexpRecurring').textContent = fmtPeso(recurringTotal);
+    document.getElementById('pexpOneTime').textContent = fmtPeso(oneTimeTotal);
+
+    const filtered = pexpActiveCategory === 'all' ? items : items.filter(i => i.category === pexpActiveCategory);
+    document.getElementById('pexpItemCount').textContent = `${filtered.length} item${filtered.length===1?'':'s'}`;
+    list.innerHTML = filtered.length
+      ? [...filtered].reverse().map(i => {
+          const meta = pexpCategoryMeta[i.category] || { icon:'📄', label:i.category };
+          return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:10px;background:var(--panel-2);margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:22px;">${meta.icon}</span>
+                <div>
+                  <div style="font-weight:600;font-size:14px;">${i.description}</div>
+                  <div style="font-size:11.5px;color:var(--muted);">${i.date}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span class="pill" style="background:${i.essential==='essential'?'rgba(107,114,128,.25)':'rgba(217,167,39,.2)'};color:${i.essential==='essential'?'var(--muted)':'#f0d38a'};">${i.essential==='essential'?'Essential':'Non Essential'}</span>
+                <span class="pill" style="background:rgba(47,111,237,.18);color:#8fb2f5;">${meta.label}</span>
+                <span class="pill" style="background:rgba(255,255,255,.08);color:var(--muted);">${i.frequency==='recurring'?'Recurring':'One-Time'}</span>
+                <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;min-width:90px;text-align:right;">${fmtPeso(i.amount)}</span>
+                <button class="del-btn" onclick="removePersonalExpense('${i.id}')">Remove</button>
+              </div>
+            </div>
+          `;
+        }).join('')
+      : '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No expenses in this category yet.</div>';
+  }
+
+  async function addPersonalExpense(){
+    const description = document.getElementById('pexp_desc').value.trim();
+    const category = document.getElementById('pexp_category').value;
+    const amount = clampNonNeg(parseCurrency(document.getElementById('pexp_amount').value));
+    const essential = document.getElementById('pexp_essential').value;
+    const frequency = document.getElementById('pexp_frequency').value;
+    const date = document.getElementById('pexp_date').value || ymd(new Date());
+    if(!description || amount <= 0){ alert('Please enter a description and a valid amount.'); return; }
+    dashboardData.personalExpenses.items.push({ id:'pexp'+Date.now(), description, category, amount, essential, frequency, date });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('pexp_desc').value = '';
+    document.getElementById('pexp_amount').value = '';
+    renderPersonalExpenses();
+    await saveSetting('personalExpenses', dashboardData.personalExpenses);
+    playChime(920);
+  }
+
+  async function removePersonalExpense(id){
+    dashboardData.personalExpenses.items = dashboardData.personalExpenses.items.filter(i => i.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderPersonalExpenses();
+    await saveSetting('personalExpenses', dashboardData.personalExpenses);
+  }
+
   function renderWallet(){
     const grid = document.getElementById('walletGrid');
     if(!grid) return; // not in DOM for this role
@@ -1977,8 +2142,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     accounts: [] // [{ id, name, balance, color }]
   };
 
+  const defaultPersonalExpenses = {
+    items: [] // [{ id, description, category, amount, essential, frequency, date }]
+  };
+
   const defaultData = {
-    dataVersion: 12,
+    dataVersion: 13,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -1995,7 +2164,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     investment: JSON.parse(JSON.stringify(defaultInvestment)),
     pkFinance: JSON.parse(JSON.stringify(defaultPkFinance)),
     myProfile: JSON.parse(JSON.stringify(defaultMyProfile)),
-    wallet: JSON.parse(JSON.stringify(defaultWallet))
+    wallet: JSON.parse(JSON.stringify(defaultWallet)),
+    personalExpenses: JSON.parse(JSON.stringify(defaultPersonalExpenses))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -2088,7 +2258,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.wallet){
       parsed.wallet = JSON.parse(JSON.stringify(defaultWallet));
     }
-    parsed.dataVersion = 12;
+    if(!parsed.personalExpenses){
+      parsed.personalExpenses = JSON.parse(JSON.stringify(defaultPersonalExpenses));
+    }
+    parsed.dataVersion = 13;
     return parsed;
   }
 
@@ -2200,7 +2373,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
 
       const assembled = {
-        dataVersion: 12,
+        dataVersion: 13,
         lastUpdated: settings.lastUpdated || null,
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
@@ -2215,7 +2388,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         investment: migrateInvestmentShape(settings.investment) || JSON.parse(JSON.stringify(defaultInvestment)),
         pkFinance: settings.pkFinance || JSON.parse(JSON.stringify(defaultPkFinance)),
         myProfile: settings.myProfile || JSON.parse(JSON.stringify(defaultMyProfile)),
-        wallet: settings.wallet || JSON.parse(JSON.stringify(defaultWallet))
+        wallet: settings.wallet || JSON.parse(JSON.stringify(defaultWallet)),
+        personalExpenses: settings.personalExpenses || JSON.parse(JSON.stringify(defaultPersonalExpenses))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -2636,6 +2810,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         renderInvestments();
         renderMyProfile();
         renderWallet();
+        renderPersonalExpenses();
       }
     }catch(e){ renderErrors.push(['executive/alerts', e]); }
     renderErrors.forEach(([section, e]) => showRenderError(section, e));
