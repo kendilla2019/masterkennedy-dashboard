@@ -288,11 +288,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .del-btn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;}
   .del-btn:hover{color:#d97757;border-color:#d97757;}
 
-  .wallet-hero{background:linear-gradient(135deg,#1a1d29,#0a0b10);border-radius:16px;padding:26px 28px;color:#fff;border:1px solid var(--line);}
-  .wallet-hero-label{font-size:11px;letter-spacing:1.2px;color:#9aa3b8;text-transform:uppercase;}
-  .wallet-hero-value{font-size:34px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;margin:8px 0 4px;}
-  .wallet-hero-sub{font-size:13px;color:#9aa3b8;}
-
+  
   .wallet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
   .wallet-card{border-radius:16px;padding:18px;color:#fff;position:relative;min-height:130px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 4px 14px rgba(0,0,0,.25);}
   .wallet-card .wc-name{font-weight:700;font-size:16px;letter-spacing:.3px;}
@@ -1357,10 +1353,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- WALLET (admin only, personal) -->
   <div class="view" id="wallet">
-    <div class="wallet-hero">
-      <div class="wallet-hero-label">Total balance</div>
-      <div class="wallet-hero-value" id="walletTotalBalance">₱0.00</div>
-      <div class="wallet-hero-sub" id="walletAccountCount">0 accounts</div>
+    <div class="grid-3">
+      <div class="stat"><div class="label">Total balance</div><div class="value" id="walletTotalBalance">₱0.00</div><div class="foot" id="walletAccountCount">0 accounts</div></div>
+      <div class="stat"><div class="label">Accounts</div><div class="value" id="walletAccountsStat">0</div><div class="foot">Across all your wallets and banks</div></div>
+      <div class="stat"><div class="label">Average per account</div><div class="value" id="walletAvgStat">₱0.00</div><div class="foot">Total balance ÷ accounts</div></div>
     </div>
 
     <div class="card" style="--accent:#2f6fed;margin-top:16px;margin-bottom:16px;">
@@ -1394,26 +1390,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- PERSONAL EXPENSES (admin only, personal) -->
   <div class="view" id="personalexpenses">
-    <div class="wallet-hero">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div class="wallet-hero-label">Housing expense overview</div>
-      </div>
-      <div class="wallet-hero-value" id="pexpTotal" style="font-size:28px;">₱0.00</div>
-      <div class="wallet-hero-sub" id="pexpCount">0 transactions</div>
-      <div class="grid-3" style="margin-top:16px;">
-        <div class="stat" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);">
-          <div class="label" style="color:#9aa3b8;">Average</div>
-          <div class="value" id="pexpAverage" style="color:#fff;font-size:18px;">₱0.00</div>
-        </div>
-        <div class="stat" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);">
-          <div class="label" style="color:#9aa3b8;">Recurring</div>
-          <div class="value" id="pexpRecurring" style="color:#fff;font-size:18px;">₱0.00</div>
-        </div>
-        <div class="stat" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);">
-          <div class="label" style="color:#9aa3b8;">One-time</div>
-          <div class="value" id="pexpOneTime" style="color:#fff;font-size:18px;">₱0.00</div>
-        </div>
-      </div>
+    <div class="grid-4">
+      <div class="stat"><div class="label">Total expenses</div><div class="value" id="pexpTotal">₱0.00</div><div class="foot" id="pexpCount">0 transactions</div></div>
+      <div class="stat"><div class="label">Average</div><div class="value" id="pexpAverage">₱0.00</div><div class="foot">Per transaction</div></div>
+      <div class="stat"><div class="label">Recurring</div><div class="value" id="pexpRecurring">₱0.00</div><div class="foot">Monthly commitments</div></div>
+      <div class="stat"><div class="label">One-time</div><div class="value" id="pexpOneTime">₱0.00</div><div class="foot">Single purchases</div></div>
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;" id="pexpCategoryTabs">
@@ -1906,6 +1887,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const total = accounts.reduce((a,acc)=>a+acc.balance,0);
     document.getElementById('walletTotalBalance').textContent = fmtPeso(total);
     document.getElementById('walletAccountCount').textContent = `${accounts.length} account${accounts.length===1?'':'s'}`;
+    document.getElementById('walletAccountsStat').textContent = accounts.length;
+    document.getElementById('walletAvgStat').textContent = fmtPeso(accounts.length ? total/accounts.length : 0);
     grid.innerHTML = accounts.length
       ? accounts.map(acc => `
           <div class="wallet-card wc-${acc.color||'blue'}" draggable="true"
