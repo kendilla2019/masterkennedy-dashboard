@@ -339,6 +339,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .org-child-wrap{position:relative;display:flex;flex-direction:column;align-items:center;}
   .org-child-wrap::before{content:'';position:absolute;top:-26px;left:50%;width:1px;height:26px;background:var(--line);}
 
+  /* Horizontal layout: parent on the left, children stacked vertically to the right */
+  .org-tree.horizontal .org-child-wrap{flex-direction:row;align-items:center;}
+  .org-tree.horizontal .org-children{flex-direction:column;gap:14px;padding-top:0;padding-left:34px;border-top:none !important;}
+  .org-tree.horizontal .org-children::before{top:50%;left:0;width:34px;height:1px;transform:translateY(-50%);}
+  .org-tree.horizontal .org-child-wrap > .org-child-wrap::before{top:50%;left:-34px;width:34px;height:1px;transform:translateY(-50%);}
+  .org-tree.horizontal .org-node{margin-right:0;}
+
+  /* List layout: simple indented list, no pills or connector lines */
+  .org-tree.list{align-items:flex-start;}
+  .org-tree.list .org-child-wrap{align-items:flex-start;}
+  .org-tree.list .org-child-wrap::before{display:none;}
+  .org-tree.list .org-children{flex-direction:column;gap:4px;padding-top:6px;padding-left:22px;border-top:none !important;border-left:1px solid var(--line);}
+  .org-tree.list .org-children::before{display:none;}
+  .org-tree.list .org-node{background:none !important;color:var(--ink);padding:4px 0;box-shadow:none;}
+  .org-tree.list .org-node button{background:var(--panel-2);color:var(--muted);}
+
   #mobileMenuBtn{display:none;}
   #mobileSidebarBackdrop{display:none;}
 
@@ -1181,6 +1197,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     <div class="card" style="--accent:#2f6fed;overflow-x:auto;">
       <h3><span class="dot"></span>Team org chart</h3>
       <div class="sub">Click a name to rename it, + to add someone under them, ✕ to remove (and everyone below them)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;" id="orgLayoutTabs">
+        <button class="mb-subtab active" onclick="setOrgLayout('vertical')" data-layout="vertical">Vertical</button>
+        <button class="mb-subtab" onclick="setOrgLayout('horizontal')" data-layout="horizontal">Horizontal</button>
+        <button class="mb-subtab" onclick="setOrgLayout('list')" data-layout="list">List</button>
+      </div>
       <div id="orgChartRoot" style="margin-top:20px;padding-bottom:10px;"></div>
     </div>
   </div>
@@ -1904,10 +1925,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('personalExpenses', dashboardData.personalExpenses);
   }
 
+  let orgLayout = 'vertical';
+  try{ orgLayout = localStorage.getItem('orgLayout') || 'vertical'; }catch(e){}
+
+  function setOrgLayout(layout){
+    orgLayout = layout;
+    try{ localStorage.setItem('orgLayout', layout); }catch(e){}
+    document.querySelectorAll('#orgLayoutTabs .mb-subtab').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.layout === layout);
+    });
+    renderOrgChart();
+  }
+
   function renderOrgChart(){
     const root = document.getElementById('orgChartRoot');
     if(!root) return; // not in DOM for this role
-    root.innerHTML = `<div class="org-tree">${renderOrgNode(dashboardData.teamOrgChart, true)}</div>`;
+    root.innerHTML = `<div class="org-tree ${orgLayout}">${renderOrgNode(dashboardData.teamOrgChart, true)}</div>`;
+    document.querySelectorAll('#orgLayoutTabs .mb-subtab').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.layout === orgLayout);
+    });
   }
 
   function renderOrgNode(node, isRoot){
