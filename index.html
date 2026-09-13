@@ -1204,7 +1204,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="view" id="team">
     <div class="card" style="--accent:#2f6fed;overflow-x:auto;">
       <h3><span class="dot"></span>Team org chart</h3>
-      <div class="sub" id="orgHintText">Double-click a name to rename it, + to add someone under them, ✕ to remove (and everyone below them)</div>
+      <div class="sub" id="orgHintText">Click a name to show its + / ✕ options, double-click to rename</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
         <div id="orgLayoutTabs" style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="mb-subtab active" onclick="setOrgLayout('vertical')" data-layout="vertical">Vertical</button>
@@ -2040,12 +2040,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const isHex = node.color && node.color.startsWith('#');
     const colorClass = (node.color && !isHex) ? `org-${node.color}` : '';
     const colorStyle = isHex ? `style="background:${node.color};"` : '';
+    const isSelected = orgSelectedNodeId === node.id;
     const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}')" title="Remove">✕</button>`;
     const nodeHtml = `
       <div class="org-node ${colorClass}" ${colorStyle}>
-        <span class="org-name" onclick="orgNameClicked('${node.id}')" ondblclick="renameOrgNode('${node.id}')" title="Double-click to rename, or single-click to paint if a color is picked">${node.name}</span>
-        <button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>
-        ${removeBtn}
+        <span class="org-name" onclick="orgNameClicked('${node.id}')" ondblclick="renameOrgNode('${node.id}')" title="Click to show add/remove, double-click to rename, or single-click to paint if a color is picked">${node.name}</span>
+        ${isSelected ? `<button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>${removeBtn}` : ''}
       </div>`;
     if(!node.children || !node.children.length){
       return `<div class="org-child-wrap">${nodeHtml}</div>`;
@@ -2099,18 +2099,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const btn = document.getElementById('orgPaintBtn');
     btn.textContent = '🎨 Pick a color';
     btn.onclick = pickOrgPaintColor;
-    document.getElementById('orgHintText').textContent = 'Double-click a name to rename it, + to add someone under them, ✕ to remove (and everyone below them)';
+    document.getElementById('orgHintText').textContent = 'Click a name to show its + / ✕ options, double-click to rename';
   }
 
+  let orgSelectedNodeId = null;
+
   async function orgNameClicked(id){
-    if(!orgPaintColor) return; // renaming now happens via double-click instead
-    const found = findOrgNode(dashboardData.teamOrgChart, id, null);
-    if(!found) return;
-    found.node.color = orgPaintColor;
-    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    if(orgPaintColor){
+      const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+      if(!found) return;
+      found.node.color = orgPaintColor;
+      try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+      renderOrgChart();
+      await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+      playChime(920);
+      return;
+    }
+    orgSelectedNodeId = (orgSelectedNodeId === id) ? null : id; // click again to hide the buttons
     renderOrgChart();
-    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
-    playChime(920);
   }
 
   async function addOrgChild(parentId){
