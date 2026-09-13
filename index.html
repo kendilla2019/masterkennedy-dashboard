@@ -334,16 +334,24 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .org-node button{background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:50%;width:19px;height:19px;font-size:10.5px;cursor:pointer;line-height:1;flex-shrink:0;}
   .org-node button:hover{background:rgba(255,255,255,.4);}
   .org-children{display:flex;gap:48px;padding-top:36px;position:relative;}
-  .org-children.multi{border-top:2px solid #4a5a7a;}
   .org-children::before{content:'';position:absolute;top:0;left:50%;width:2px;height:36px;background:#4a5a7a;}
   .org-child-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding-bottom:8px;}
   .org-child-wrap::before{content:'';position:absolute;top:-36px;left:50%;width:2px;height:36px;background:#4a5a7a;}
+  /* Horizontal segment between siblings: each child draws the line from its own center to the
+     next child's center, so the line always matches up exactly with each vertical stub above —
+     first child only extends right, last child only extends left, avoiding any overshoot. */
+  .org-children.multi > .org-child-wrap::after{content:'';position:absolute;top:-36px;left:0;right:0;height:2px;background:#4a5a7a;}
+  .org-children.multi > .org-child-wrap:first-child::after{left:50%;}
+  .org-children.multi > .org-child-wrap:last-child::after{right:50%;}
 
   /* Horizontal layout: parent on the left, children stacked vertically to the right */
   .org-tree.horizontal .org-child-wrap{flex-direction:row;align-items:center;}
-  .org-tree.horizontal .org-children{flex-direction:column;gap:22px;padding-top:0;padding-left:44px;border-top:none !important;}
+  .org-tree.horizontal .org-children{flex-direction:column;gap:22px;padding-top:0;padding-left:44px;}
   .org-tree.horizontal .org-children::before{top:50%;left:0;width:44px;height:2px;transform:translateY(-50%);}
   .org-tree.horizontal .org-child-wrap > .org-child-wrap::before{top:50%;left:-44px;width:44px;height:2px;transform:translateY(-50%);}
+  .org-tree.horizontal .org-children.multi > .org-child-wrap::after{content:'';position:absolute;left:-44px;right:auto;top:0;bottom:0;width:2px;height:auto;background:#4a5a7a;}
+  .org-tree.horizontal .org-children.multi > .org-child-wrap:first-child::after{top:50%;left:-44px;}
+  .org-tree.horizontal .org-children.multi > .org-child-wrap:last-child::after{bottom:50%;left:-44px;}
   .org-tree.horizontal .org-node{margin-right:0;}
 
   /* List layout: simple indented list, no pills or connector lines */
