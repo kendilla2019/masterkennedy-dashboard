@@ -1203,7 +1203,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="mb-subtab" onclick="setOrgLayout('horizontal')" data-layout="horizontal">Horizontal</button>
           <button class="mb-subtab" onclick="setOrgLayout('list')" data-layout="list">List</button>
         </div>
-        <button class="mb-subtab" id="orgPaintBtn" onclick="pickOrgPaintColor()" style="margin-left:auto;">🎨 Pick a color</button>
+        <div style="position:relative;margin-left:auto;">
+          <button class="mb-subtab" id="orgPaintBtn" onclick="pickOrgPaintColor()">🎨 Pick a color</button>
+          <div id="orgPalettePopover" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid"></div>
+            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker').click();document.getElementById('orgPalettePopover').style.display='none';">Custom…</button>
+          </div>
+        </div>
       </div>
       <div id="orgChartRoot" style="margin-top:20px;padding-bottom:10px;"></div>
       <input type="color" id="orgColorPicker" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value)">
@@ -1980,8 +1986,25 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   let orgPaintColor = null; // when set, clicking a node's name paints it this color instead of renaming
 
+  const orgPresetPalette = [
+    '#f4f4f5','#d4d4d8','#a1a1aa','#71717a','#3f3f46','#18181b',
+    '#1e3a8a','#1d4ed8','#2563eb','#7c3aed','#a855f7','#c026d3',
+    '#7f1d1d','#dc2626','#e0453f','#ea580c','#f59e0b','#eab308',
+    '#166534','#16a34a','#22c55e','#0d9488','#06b6d4','#0284c7'
+  ];
+
   function pickOrgPaintColor(){
-    document.getElementById('orgColorPicker').click();
+    const popover = document.getElementById('orgPalettePopover');
+    const grid = document.getElementById('orgPaletteGrid');
+    if(!grid.innerHTML){
+      grid.innerHTML = orgPresetPalette.map(hex => `<div onclick="chooseOrgPresetColor('${hex}')" style="width:26px;height:26px;border-radius:6px;background:${hex};cursor:pointer;border:1px solid rgba(255,255,255,.15);"></div>`).join('');
+    }
+    popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function chooseOrgPresetColor(hex){
+    document.getElementById('orgPalettePopover').style.display = 'none';
+    setOrgPaintColor(hex);
   }
 
   function setOrgPaintColor(hex){
