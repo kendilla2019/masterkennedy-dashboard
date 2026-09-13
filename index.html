@@ -1196,14 +1196,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   <div class="view" id="team">
     <div class="card" style="--accent:#2f6fed;overflow-x:auto;">
       <h3><span class="dot"></span>Team org chart</h3>
-      <div class="sub">Click a name to rename it, + to add someone under them, ✕ to remove (and everyone below them)</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;" id="orgLayoutTabs">
-        <button class="mb-subtab active" onclick="setOrgLayout('vertical')" data-layout="vertical">Vertical</button>
-        <button class="mb-subtab" onclick="setOrgLayout('horizontal')" data-layout="horizontal">Horizontal</button>
-        <button class="mb-subtab" onclick="setOrgLayout('list')" data-layout="list">List</button>
+      <div class="sub" id="orgHintText">Tap ✏️ to rename, + to add someone under them, ✕ to remove (and everyone below them)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+        <div id="orgLayoutTabs" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mb-subtab active" onclick="setOrgLayout('vertical')" data-layout="vertical">Vertical</button>
+          <button class="mb-subtab" onclick="setOrgLayout('horizontal')" data-layout="horizontal">Horizontal</button>
+          <button class="mb-subtab" onclick="setOrgLayout('list')" data-layout="list">List</button>
+        </div>
+        <button class="mb-subtab" id="orgPaintBtn" onclick="pickOrgPaintColor()" style="margin-left:auto;">🎨 Pick a color</button>
       </div>
       <div id="orgChartRoot" style="margin-top:20px;padding-bottom:10px;"></div>
-      <input type="color" id="orgColorPicker" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="applyOrgNodeColor(this.value)">
+      <input type="color" id="orgColorPicker" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value)">
     </div>
   </div>
 
@@ -1954,8 +1957,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}')" title="Remove">✕</button>`;
     const nodeHtml = `
       <div class="org-node ${colorClass}" ${colorStyle}>
-        <span class="org-name" onclick="renameOrgNode('${node.id}')" title="Click to rename">${node.name}</span>
-        <button onclick="pickOrgNodeColor('${node.id}')" title="Change color">🎨</button>
+        <span class="org-name" onclick="orgNameClicked('${node.id}')" title="Click to rename, or to paint if a color is picked">${node.name}</span>
+        <button onclick="renameOrgNode('${node.id}')" title="Rename">✏️</button>
         <button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>
         ${removeBtn}
       </div>`;
@@ -1975,24 +1978,40 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return null;
   }
 
-  let orgColorTargetId = null;
+  let orgPaintColor = null; // when set, clicking a node's name paints it this color instead of renaming
 
-  function pickOrgNodeColor(id){
-    orgColorTargetId = id;
-    const found = findOrgNode(dashboardData.teamOrgChart, id, null);
-    const picker = document.getElementById('orgColorPicker');
-    if(found && found.node.color && found.node.color.startsWith('#')) picker.value = found.node.color;
-    picker.click();
+  function pickOrgPaintColor(){
+    document.getElementById('orgColorPicker').click();
   }
 
-  async function applyOrgNodeColor(hex){
-    if(!orgColorTargetId) return;
-    const found = findOrgNode(dashboardData.teamOrgChart, orgColorTargetId, null);
-    if(!found) return;
-    found.node.color = hex;
-    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-    renderOrgChart();
-    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+  function setOrgPaintColor(hex){
+    orgPaintColor = hex;
+    const btn = document.getElementById('orgPaintBtn');
+    btn.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${hex};margin-right:4px;vertical-align:-1px;"></span>Painting — tap ✕ to stop`;
+    btn.onclick = stopOrgPaintMode;
+    document.getElementById('orgHintText').textContent = `Click any name to paint it that color. Tap "Painting — tap ✕ to stop" above to turn this off.`;
+  }
+
+  function stopOrgPaintMode(){
+    orgPaintColor = null;
+    const btn = document.getElementById('orgPaintBtn');
+    btn.textContent = '🎨 Pick a color';
+    btn.onclick = pickOrgPaintColor;
+    document.getElementById('orgHintText').textContent = 'Tap ✏️ to rename, + to add someone under them, ✕ to remove (and everyone below them)';
+  }
+
+  async function orgNameClicked(id){
+    if(orgPaintColor){
+      const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+      if(!found) return;
+      found.node.color = orgPaintColor;
+      try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+      renderOrgChart();
+      await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+      playChime(920);
+    } else {
+      renameOrgNode(id);
+    }
   }
 
   async function addOrgChild(parentId){
