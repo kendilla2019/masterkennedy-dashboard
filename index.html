@@ -325,6 +325,20 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .wallet-tx-amount.income{color:#5fbf7a;}
   .wallet-tx-amount.expense{color:#e0453f;}
 
+  .org-tree{display:flex;flex-direction:column;align-items:center;}
+  .org-node{display:inline-flex;align-items:center;gap:6px;background:#1a4fc4;color:#fff;border-radius:20px;padding:8px 16px;font-weight:700;font-size:13px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+  .org-node.org-red{background:#e0453f;}
+  .org-node.org-blue{background:#1c6fe0;}
+  .org-node.org-dark{background:#1e293b;}
+  .org-node .org-name{cursor:pointer;}
+  .org-node button{background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:50%;width:19px;height:19px;font-size:10.5px;cursor:pointer;line-height:1;flex-shrink:0;}
+  .org-node button:hover{background:rgba(255,255,255,.4);}
+  .org-children{display:flex;gap:28px;padding-top:26px;position:relative;}
+  .org-children.multi{border-top:1px solid var(--line);}
+  .org-children::before{content:'';position:absolute;top:0;left:50%;width:1px;height:26px;background:var(--line);}
+  .org-child-wrap{position:relative;display:flex;flex-direction:column;align-items:center;}
+  .org-child-wrap::before{content:'';position:absolute;top:-26px;left:50%;width:1px;height:26px;background:var(--line);}
+
   #mobileMenuBtn{display:none;}
   #mobileSidebarBackdrop{display:none;}
 
@@ -1164,13 +1178,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- TEAM (placeholder — coming soon) -->
   <div class="view" id="team">
-    <div class="card" style="--accent:#2f6fed">
-      <h3><span class="dot"></span>Team</h3>
-      <div class="sub">Coming soon</div>
-      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;">
-        Employee list per business and a commission tracker (name, deal reference, commission %, amount owed, paid status).
-        Once this exists, the alert banner will automatically start flagging unpaid commissions older than a set number of days.
-      </p>
+    <div class="card" style="--accent:#2f6fed;overflow-x:auto;">
+      <h3><span class="dot"></span>Team org chart</h3>
+      <div class="sub">Click a name to rename it, + to add someone under them, ✕ to remove (and everyone below them)</div>
+      <div id="orgChartRoot" style="margin-top:20px;padding-bottom:10px;"></div>
     </div>
   </div>
 
@@ -1222,23 +1233,19 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div><div style="font-size:12px;color:var(--muted);">Net monthly cash flow</div><div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;font-size:18px;" id="propNetCashflow">₱0.00</div></div>
       </div>
 
-      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log income</h4>
-      <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr auto;align-items:end;">
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log a transaction</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.2fr 1fr auto;align-items:end;">
         <div class="field"><label>Property</label>
-          <select id="propInc_property"><option value="condo">Condo</option><option value="astoria">Astoria</option><option value="land">Land</option></select>
+          <select id="propTx_property"><option value="condo">Condo</option><option value="astoria">Astoria</option><option value="land">Land</option></select>
         </div>
-        <div class="field"><label>Description (e.g. Rental income)</label><input type="text" id="propInc_desc"></div>
-        <div class="field"><label>Amount (₱/month)</label><input type="text" inputmode="decimal" class="currency-field" id="propInc_amount" onblur="formatCurrencyField(this)"></div>
-        <button class="btn small" onclick="addPropertyIncome()">+ Add</button>
-      </div>
-      <div id="propertyIncomeList" style="margin-top:10px;"></div>
-
-      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Log a specific expense</h4>
-      <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr auto;align-items:end;">
-        <div class="field"><label>Property</label>
-          <select id="propExp_property"><option value="condo">Condo</option><option value="astoria">Astoria</option><option value="land">Land</option></select>
+        <div class="field"><label>Type</label>
+          <select id="propTx_type" onchange="togglePropTxType()">
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
         </div>
-        <div class="field"><label>Category</label>
+        <div class="field" id="propTx_descField"><label>Description (e.g. Rental income)</label><input type="text" id="propInc_desc"></div>
+        <div class="field" id="propTx_catField" style="display:none;"><label>Category</label>
           <select id="propExp_category">
             <option value="Property tax">Property tax</option>
             <option value="Insurance">Insurance</option>
@@ -1247,10 +1254,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <option value="Misc">Misc</option>
           </select>
         </div>
-        <div class="field"><label>Amount (₱/month)</label><input type="text" inputmode="decimal" class="currency-field" id="propExp_amount" onblur="formatCurrencyField(this)"></div>
-        <button class="btn small" onclick="addPropertyExpense()">+ Add</button>
+        <div class="field" id="propTx_amountField"><label>Amount (₱/month)</label><input type="text" inputmode="decimal" class="currency-field" id="propTx_amount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addPropertyTransaction()">+ Add</button>
       </div>
-      <div id="propertyExpenseList" style="margin-top:10px;"></div>
+      <div id="propertyTxList" style="margin-top:10px;"></div>
     </div>
 
     <div class="grid-2" style="margin-bottom:16px;">
@@ -1897,6 +1904,71 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('personalExpenses', dashboardData.personalExpenses);
   }
 
+  function renderOrgChart(){
+    const root = document.getElementById('orgChartRoot');
+    if(!root) return; // not in DOM for this role
+    root.innerHTML = `<div class="org-tree">${renderOrgNode(dashboardData.teamOrgChart, true)}</div>`;
+  }
+
+  function renderOrgNode(node, isRoot){
+    const colorClass = node.color ? `org-${node.color}` : '';
+    const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}')" title="Remove">✕</button>`;
+    const nodeHtml = `
+      <div class="org-node ${colorClass}">
+        <span class="org-name" onclick="renameOrgNode('${node.id}')" title="Click to rename">${node.name}</span>
+        <button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>
+        ${removeBtn}
+      </div>`;
+    if(!node.children || !node.children.length){
+      return `<div class="org-child-wrap">${nodeHtml}</div>`;
+    }
+    const childrenHtml = node.children.map(c => `<div class="org-child-wrap">${renderOrgNode(c, false)}</div>`).join('');
+    return `<div class="org-child-wrap">${nodeHtml}<div class="org-children${node.children.length>1?' multi':''}">${childrenHtml}</div></div>`;
+  }
+
+  function findOrgNode(node, id, parent){
+    if(node.id === id) return { node, parent };
+    for(const c of (node.children||[])){
+      const found = findOrgNode(c, id, node);
+      if(found) return found;
+    }
+    return null;
+  }
+
+  async function addOrgChild(parentId){
+    const name = prompt('Name of the person to add:');
+    if(!name || !name.trim()) return;
+    const found = findOrgNode(dashboardData.teamOrgChart, parentId, null);
+    if(!found) return;
+    found.node.children = found.node.children || [];
+    found.node.children.push({ id:'orgnode'+Date.now(), name: name.trim().toUpperCase(), color:null, children:[] });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderOrgChart();
+    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+    playChime(920);
+  }
+
+  async function renameOrgNode(id){
+    const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+    if(!found) return;
+    const name = prompt('Rename to:', found.node.name);
+    if(!name || !name.trim()) return;
+    found.node.name = name.trim().toUpperCase();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderOrgChart();
+    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+  }
+
+  async function removeOrgNode(id){
+    const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+    if(!found || !found.parent) return; // never remove the root
+    if(!confirm(`Remove "${found.node.name}" and everyone below them?`)) return;
+    found.parent.children = found.parent.children.filter(c => c.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderOrgChart();
+    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+  }
+
   function renderWallet(){
     const grid = document.getElementById('walletGrid');
     if(!grid) return; // not in DOM for this role
@@ -2153,8 +2225,39 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     items: [] // [{ id, description, category, amount, essential, frequency, date }]
   };
 
+  const defaultTeamOrgChart = {
+    id: 'root', name: 'MASTER KENNEDY', color: null,
+    children: [
+      { id: 'n_business', name: 'BUSINESS', color: 'dark', children: [
+        { id: 'n_mb', name: 'MASTER BACCARAT', color: 'red', children: [
+          { id: 'n_alfred', name: 'ALFRED TAN', color: null, children: [
+            { id: 'n_edgie', name: 'EDGIE', color: null, children: [
+              { id: 'n_jonas1', name: 'JONAS', color: null, children: [] }
+            ]}
+          ]}
+        ]},
+        { id: 'n_ns', name: 'NEXTSTACK', color: 'blue', children: [
+          { id: 'n_jhoeriz1', name: 'JHOERIZ', color: null, children: [
+            { id: 'n_jonas2', name: 'JONAS', color: null, children: [] }
+          ]}
+        ]},
+        { id: 'n_bw', name: 'BACCARAT WIN', color: null, children: [
+          { id: 'n_jhoeriz2', name: 'JHOERIZ', color: null, children: [
+            { id: 'n_jonas3', name: 'JONAS', color: null, children: [] }
+          ]}
+        ]},
+        { id: 'n_pk', name: 'PROKORA', color: 'red', children: [
+          { id: 'n_mark', name: 'MARK', color: null, children: [
+            { id: 'n_cisco', name: 'CISCO', color: null, children: [] },
+            { id: 'n_eagles', name: 'EAGLES', color: null, children: [] }
+          ]}
+        ]}
+      ]}
+    ]
+  };
+
   const defaultData = {
-    dataVersion: 13,
+    dataVersion: 14,
     lastUpdated: null,
     currentPeriod: { start:'2026-01-01', end:'2026-08-31' },
     history: {
@@ -2172,7 +2275,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     pkFinance: JSON.parse(JSON.stringify(defaultPkFinance)),
     myProfile: JSON.parse(JSON.stringify(defaultMyProfile)),
     wallet: JSON.parse(JSON.stringify(defaultWallet)),
-    personalExpenses: JSON.parse(JSON.stringify(defaultPersonalExpenses))
+    personalExpenses: JSON.parse(JSON.stringify(defaultPersonalExpenses)),
+    teamOrgChart: JSON.parse(JSON.stringify(defaultTeamOrgChart))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -2268,7 +2372,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.personalExpenses){
       parsed.personalExpenses = JSON.parse(JSON.stringify(defaultPersonalExpenses));
     }
-    parsed.dataVersion = 13;
+    if(!parsed.teamOrgChart){
+      parsed.teamOrgChart = JSON.parse(JSON.stringify(defaultTeamOrgChart));
+    }
+    parsed.dataVersion = 14;
     return parsed;
   }
 
@@ -2380,7 +2487,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const events = (eventsRes.data||[]).map(r=>({ id:String(r.id), title:r.title, date:r.date, time:r.time, business:r.business }));
 
       const assembled = {
-        dataVersion: 13,
+        dataVersion: 14,
         lastUpdated: settings.lastUpdated || null,
         currentPeriod: settings.currentPeriod || defaultData.currentPeriod,
         history,
@@ -2396,7 +2503,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         pkFinance: settings.pkFinance || JSON.parse(JSON.stringify(defaultPkFinance)),
         myProfile: settings.myProfile || JSON.parse(JSON.stringify(defaultMyProfile)),
         wallet: settings.wallet || JSON.parse(JSON.stringify(defaultWallet)),
-        personalExpenses: settings.personalExpenses || JSON.parse(JSON.stringify(defaultPersonalExpenses))
+        personalExpenses: settings.personalExpenses || JSON.parse(JSON.stringify(defaultPersonalExpenses)),
+        teamOrgChart: settings.teamOrgChart || JSON.parse(JSON.stringify(defaultTeamOrgChart))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -2810,6 +2918,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ renderCharts(); }catch(e){ renderErrors.push(['charts', e]); }
     try{ if(document.getElementById('editdata')) populateEditForm(); }catch(e){ renderErrors.push(['edit form', e]); }
     try{ renderCalendar(); }catch(e){ renderErrors.push(['calendar', e]); }
+    try{ renderOrgChart(); }catch(e){ renderErrors.push(['org chart', e]); }
     try{
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
@@ -3612,23 +3721,23 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('propExpenseTotal').textContent = fmtPeso(totalPropExpense);
     document.getElementById('propNetCashflow').textContent = fmtPeso(totalPropIncome - totalPropExpense);
 
-    document.getElementById('propertyIncomeList').innerHTML = inv.propertyIncome.length
-      ? inv.propertyIncome.map(i => `
+    const propTxCombined = [
+      ...inv.propertyIncome.map(i => ({ ...i, kind:'income', label:i.description })),
+      ...inv.propertyExpenses.map(e => ({ ...e, kind:'expense', label:e.category }))
+    ];
+    document.getElementById('propertyTxList').innerHTML = propTxCombined.length
+      ? propTxCombined.map(t => `
           <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
-            <span style="font-size:13px;">${propLabels[i.property]} — ${i.description}</span>
-            <span style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(i.amount)}</span><button class="del-btn" onclick="removePropertyIncome('${i.id}')">Remove</button></span>
+            <span style="font-size:13px;">${propLabels[t.property]} — ${t.label}
+              <span class="pill" style="margin-left:8px;background:${t.kind==='income'?'rgba(95,191,122,.16)':'rgba(224,69,63,.16)'};color:${t.kind==='income'?'#5fbf7a':'#ff8a83'};">${t.kind==='income'?'Income':'Expense'}</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;color:${t.kind==='income'?'#5fbf7a':'#ff8a83'};">${t.kind==='income'?'+':'−'}${fmtPeso(t.amount)}</span>
+              <button class="del-btn" onclick="${t.kind==='income'?'removePropertyIncome':'removePropertyExpense'}('${t.id}')">Remove</button>
+            </span>
           </div>
         `).join('')
-      : '<div style="color:var(--muted);font-size:13px;">No income logged yet.</div>';
-
-    document.getElementById('propertyExpenseList').innerHTML = inv.propertyExpenses.length
-      ? inv.propertyExpenses.map(e => `
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
-            <span style="font-size:13px;">${propLabels[e.property]} — ${e.category}</span>
-            <span style="display:flex;align-items:center;gap:10px;"><span style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.amount)}</span><button class="del-btn" onclick="removePropertyExpense('${e.id}')">Remove</button></span>
-          </div>
-        `).join('')
-      : '<div style="color:var(--muted);font-size:13px;">No expenses logged yet.</div>';
+      : '<div style="color:var(--muted);font-size:13px;">No transactions logged yet.</div>';
 
     document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.nexstackEquity);
 
@@ -3693,16 +3802,28 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
   }
 
+  function togglePropTxType(){
+    const isExpense = document.getElementById('propTx_type').value === 'expense';
+    document.getElementById('propTx_descField').style.display = isExpense ? 'none' : '';
+    document.getElementById('propTx_catField').style.display = isExpense ? '' : 'none';
+  }
+
+  async function addPropertyTransaction(){
+    const type = document.getElementById('propTx_type').value;
+    if(type === 'expense') await addPropertyExpense();
+    else await addPropertyIncome();
+  }
+
   async function addPropertyIncome(){
-    const property = document.getElementById('propInc_property').value;
+    const property = document.getElementById('propTx_property').value;
     const description = document.getElementById('propInc_desc').value.trim();
-    const amount = clampNonNeg(parseCurrency(document.getElementById('propInc_amount').value));
+    const amount = clampNonNeg(parseCurrency(document.getElementById('propTx_amount').value));
     if(!description || amount <= 0){ alert('Please enter a description and a valid amount.'); return; }
     const inv = dashboardData.investment;
     inv.propertyIncome.push({ id:'pinc'+Date.now(), property, description, amount });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('propInc_desc').value = '';
-    document.getElementById('propInc_amount').value = '';
+    document.getElementById('propTx_amount').value = '';
     renderInvestments();
     await saveSetting('investment', inv);
   }
@@ -3716,14 +3837,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   async function addPropertyExpense(){
-    const property = document.getElementById('propExp_property').value;
+    const property = document.getElementById('propTx_property').value;
     const category = document.getElementById('propExp_category').value;
-    const amount = clampNonNeg(parseCurrency(document.getElementById('propExp_amount').value));
+    const amount = clampNonNeg(parseCurrency(document.getElementById('propTx_amount').value));
     if(amount <= 0){ alert('Please enter a valid amount.'); return; }
     const inv = dashboardData.investment;
     inv.propertyExpenses.push({ id:'pexp'+Date.now(), property, category, amount });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-    document.getElementById('propExp_amount').value = '';
+    document.getElementById('propTx_amount').value = '';
     renderInvestments();
     await saveSetting('investment', inv);
   }
