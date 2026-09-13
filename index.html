@@ -1211,7 +1211,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </div>
         </div>
       </div>
-      <div id="orgChartRoot" style="margin-top:20px;padding-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+        <button class="btn secondary small" onclick="zoomOrgChart(-0.1)" title="Zoom out">−</button>
+        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel">100%</span>
+        <button class="btn secondary small" onclick="zoomOrgChart(0.1)" title="Zoom in">+</button>
+        <button class="btn secondary small" onclick="resetOrgZoom()">Reset</button>
+      </div>
+      <div style="overflow:auto;margin-top:10px;">
+        <div id="orgChartRoot" style="padding-bottom:10px;transform-origin:top left;"></div>
+      </div>
       <input type="color" id="orgColorPicker" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value)">
     </div>
   </div>
@@ -1938,6 +1946,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   let orgLayout = 'vertical';
   try{ orgLayout = localStorage.getItem('orgLayout') || 'vertical'; }catch(e){}
 
+  let orgZoom = 1;
+  try{ orgZoom = parseFloat(localStorage.getItem('orgZoom')) || 1; }catch(e){}
+
   function setOrgLayout(layout){
     orgLayout = layout;
     try{ localStorage.setItem('orgLayout', layout); }catch(e){}
@@ -1947,6 +1958,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     renderOrgChart();
   }
 
+  function zoomOrgChart(delta){
+    orgZoom = Math.min(2, Math.max(0.4, Math.round((orgZoom + delta) * 10) / 10));
+    try{ localStorage.setItem('orgZoom', orgZoom); }catch(e){}
+    applyOrgZoom();
+  }
+
+  function resetOrgZoom(){
+    orgZoom = 1;
+    try{ localStorage.setItem('orgZoom', orgZoom); }catch(e){}
+    applyOrgZoom();
+  }
+
+  function applyOrgZoom(){
+    const root = document.getElementById('orgChartRoot');
+    const label = document.getElementById('orgZoomLabel');
+    if(!root || !label) return;
+    root.style.transform = `scale(${orgZoom})`;
+    label.textContent = `${Math.round(orgZoom * 100)}%`;
+  }
+
   function renderOrgChart(){
     const root = document.getElementById('orgChartRoot');
     if(!root) return; // not in DOM for this role
@@ -1954,6 +1985,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.querySelectorAll('#orgLayoutTabs .mb-subtab').forEach(btn=>{
       btn.classList.toggle('active', btn.dataset.layout === orgLayout);
     });
+    applyOrgZoom();
   }
 
   function renderOrgNode(node, isRoot){
