@@ -1217,7 +1217,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <button class="btn secondary small" onclick="zoomOrgChart(0.1)" title="Zoom in">+</button>
         <button class="btn secondary small" onclick="resetOrgZoom()">Reset</button>
       </div>
-      <div style="overflow:auto;margin-top:10px;">
+      <div style="overflow:auto;margin-top:10px;" id="orgChartWrapper">
         <div id="orgChartRoot" style="padding-bottom:10px;transform-origin:top left;"></div>
       </div>
       <input type="color" id="orgColorPicker" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value)">
@@ -1977,6 +1977,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     root.style.transform = `scale(${orgZoom})`;
     label.textContent = `${Math.round(orgZoom * 100)}%`;
   }
+
+  // Native zoom gestures: Mac trackpad pinch (reported as wheel+ctrlKey by the browser) and
+  // touch pinch on phones/tablets — in addition to the +/- buttons.
+  (function initOrgChartGestures(){
+    const wrapper = document.getElementById('orgChartWrapper');
+    if(!wrapper) return;
+
+    let wheelZoomSaveTimer = null;
+    wrapper.addEventListener('wheel', (e) => {
+      if(!e.ctrlKey) return; // only hijack pinch/ctrl-zoom; leave normal scrolling alone
+      e.preventDefault();
+      orgZoom = Math.min(2, Math.max(0.4, orgZoom - e.deltaY * 0.01));
+      applyOrgZoom();
+      clearTimeout(wheelZoomSaveTimer);
+      wheelZoomSaveTimer = setTimeout(() => { try{ localStorage.setItem('orgZoom', orgZoom); }catch(err){} }, 300);
+    }, { passive: false });
+
+    let pinchStartDist = null, pinchStartZoom = 1;
+    const touchDist = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx*dx + dy*dy);
+    };
+    wrapper.addEventListener('touchstart', (e) => {
+      if(e.touches.length === 2){ pinchStartDist = touchDist(e.touches); pinchStartZoom = orgZoom; }
+    }, { passive: true });
+    wrapper.addEventListener('touchmove', (e) => {
+      if(e.touches.length === 2 && pinchStartDist){
+        e.preventDefault();
+        orgZoom = Math.min(2, Math.max(0.4, pinchStartZoom * (touchDist(e.touches) / pinchStartDist)));
+        applyOrgZoom();
+      }
+    }, { passive: false });
+    wrapper.addEventListener('touchend', (e) => {
+      if(e.touches.length < 2 && pinchStartDist !== null){
+        pinchStartDist = null;
+        try{ localStorage.setItem('orgZoom', orgZoom); }catch(err){}
+      }
+    }, { passive: true });
+  })();
 
   function renderOrgChart(){
     const root = document.getElementById('orgChartRoot');
