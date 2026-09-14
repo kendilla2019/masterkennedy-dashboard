@@ -840,6 +840,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="btn small" onclick="addTeamTask()">+ Add</button>
         </div>
       </div>
+
+      <div class="card" style="--accent:#e0453f;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Team org chart</h3>
+        <div class="sub" id="orgHintText_mb">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_mb" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','mb')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','mb')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','mb')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_mb" onclick="pickOrgPaintColor('mb')">Pick a color</button>
+            <div id="orgPalettePopover_mb" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_mb"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_mb').click();document.getElementById('orgPalettePopover_mb').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'mb')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_mb">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'mb')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('mb')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_mb">
+          <svg id="orgConnectorSvg_mb" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_mb" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_mb" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'mb')">
+      </div>
     </div>
 
     <div class="mb-subview" id="mbSubview-operating" style="display:none;">
@@ -946,6 +976,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </table>
       </div>
     </div>
+
+    <div class="card" style="--accent:#b8323a;overflow-x:auto;margin-top:16px;">
+      <h3><span class="dot"></span>Team org chart</h3>
+      <div class="sub" id="orgHintText_bw">Click a name to show its + / ✕ options, double-click to rename</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+        <div id="orgLayoutTabs_bw" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mb-subtab active" onclick="setOrgLayout('vertical','bw')" data-layout="vertical">Vertical</button>
+          <button class="mb-subtab" onclick="setOrgLayout('horizontal','bw')" data-layout="horizontal">Horizontal</button>
+          <button class="mb-subtab" onclick="setOrgLayout('list','bw')" data-layout="list">List</button>
+        </div>
+        <div style="position:relative;margin-left:auto;">
+          <button class="mb-subtab" id="orgPaintBtn_bw" onclick="pickOrgPaintColor('bw')">Pick a color</button>
+          <div id="orgPalettePopover_bw" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_bw"></div>
+            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_bw').click();document.getElementById('orgPalettePopover_bw').style.display='none';">Custom…</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+        <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'bw')" title="Zoom out">−</button>
+        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_bw">100%</span>
+        <button class="btn secondary small" onclick="zoomOrgChart(0.1,'bw')" title="Zoom in">+</button>
+        <button class="btn secondary small" onclick="resetOrgZoom('bw')">Reset</button>
+      </div>
+      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_bw">
+        <svg id="orgConnectorSvg_bw" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+        <div id="orgChartRoot_bw" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+      </div>
+      <input type="color" id="orgColorPicker_bw" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'bw')">
+    </div>
   </div>
 
   <!-- NEXSTACK -->
@@ -971,6 +1031,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="row"><div class="name">Cloud/DevOps</div><div class="track"><div class="fill" style="width:28%"></div></div><div class="num">24 students</div></div>
         </div>
       </div>
+    </div>
+
+    <div class="card" style="--accent:#1c9fe0;overflow-x:auto;margin-top:16px;">
+      <h3><span class="dot"></span>Team org chart</h3>
+      <div class="sub" id="orgHintText_ns">Click a name to show its + / ✕ options, double-click to rename</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+        <div id="orgLayoutTabs_ns" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mb-subtab active" onclick="setOrgLayout('vertical','ns')" data-layout="vertical">Vertical</button>
+          <button class="mb-subtab" onclick="setOrgLayout('horizontal','ns')" data-layout="horizontal">Horizontal</button>
+          <button class="mb-subtab" onclick="setOrgLayout('list','ns')" data-layout="list">List</button>
+        </div>
+        <div style="position:relative;margin-left:auto;">
+          <button class="mb-subtab" id="orgPaintBtn_ns" onclick="pickOrgPaintColor('ns')">Pick a color</button>
+          <div id="orgPalettePopover_ns" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_ns"></div>
+            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_ns').click();document.getElementById('orgPalettePopover_ns').style.display='none';">Custom…</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+        <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'ns')" title="Zoom out">−</button>
+        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_ns">100%</span>
+        <button class="btn secondary small" onclick="zoomOrgChart(0.1,'ns')" title="Zoom in">+</button>
+        <button class="btn secondary small" onclick="resetOrgZoom('ns')">Reset</button>
+      </div>
+      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_ns">
+        <svg id="orgConnectorSvg_ns" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+        <div id="orgChartRoot_ns" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+      </div>
+      <input type="color" id="orgColorPicker_ns" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'ns')">
     </div>
   </div>
 
@@ -1021,6 +1111,36 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <table id="pkTable">
         <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
       </table>
+    </div>
+
+    <div class="card" style="--accent:#1a4fc4;overflow-x:auto;margin-top:16px;">
+      <h3><span class="dot"></span>Team org chart</h3>
+      <div class="sub" id="orgHintText_pk">Click a name to show its + / ✕ options, double-click to rename</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+        <div id="orgLayoutTabs_pk" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="mb-subtab active" onclick="setOrgLayout('vertical','pk')" data-layout="vertical">Vertical</button>
+          <button class="mb-subtab" onclick="setOrgLayout('horizontal','pk')" data-layout="horizontal">Horizontal</button>
+          <button class="mb-subtab" onclick="setOrgLayout('list','pk')" data-layout="list">List</button>
+        </div>
+        <div style="position:relative;margin-left:auto;">
+          <button class="mb-subtab" id="orgPaintBtn_pk" onclick="pickOrgPaintColor('pk')">Pick a color</button>
+          <div id="orgPalettePopover_pk" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_pk"></div>
+            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_pk').click();document.getElementById('orgPalettePopover_pk').style.display='none';">Custom…</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+        <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'pk')" title="Zoom out">−</button>
+        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_pk">100%</span>
+        <button class="btn secondary small" onclick="zoomOrgChart(0.1,'pk')" title="Zoom in">+</button>
+        <button class="btn secondary small" onclick="resetOrgZoom('pk')">Reset</button>
+      </div>
+      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_pk">
+        <svg id="orgConnectorSvg_pk" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+        <div id="orgChartRoot_pk" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+      </div>
+      <input type="color" id="orgColorPicker_pk" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'pk')">
     </div>
   </div>
 
@@ -2001,56 +2121,75 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     playChime(920);
   }
 
-  let orgLayout = 'vertical';
-  try{ orgLayout = localStorage.getItem('orgLayout') || 'vertical'; }catch(e){}
+  // Org chart engine — supports multiple independent instances keyed by 'main' (the global
+  // Team page) plus one per business ('mb','ns','bw','pk'), each with its own data, layout,
+  // zoom, and DOM ids so they don't interfere with each other.
+  const orgChartKeys = ['main','mb','ns','bw','pk'];
+  function orgDataKeyFor(key){ return key === 'main' ? 'teamOrgChart' : key + 'OrgChart'; }
+  function orgTreeFor(key){ return dashboardData[orgDataKeyFor(key)]; }
+  function orgDomId(base, key){ return key === 'main' ? base : `${base}_${key}`; }
+  function orgLayoutStorageKey(key){ return key === 'main' ? 'orgLayout' : 'orgLayout_'+key; }
+  function orgZoomStorageKey(key){ return key === 'main' ? 'orgZoom' : 'orgZoom_'+key; }
 
-  let orgZoom = 1;
-  try{ orgZoom = parseFloat(localStorage.getItem('orgZoom')) || 1; }catch(e){}
+  let orgLayoutByKey = {};
+  let orgZoomByKey = {};
+  let orgPaintColorByKey = {}; // when set for a key, clicking that chart's node names paints instead of selecting
+  let orgSelectedNodeIdByKey = {};
+  orgChartKeys.forEach(key => {
+    try{ orgLayoutByKey[key] = localStorage.getItem(orgLayoutStorageKey(key)) || 'vertical'; }catch(e){ orgLayoutByKey[key] = 'vertical'; }
+    try{ orgZoomByKey[key] = parseFloat(localStorage.getItem(orgZoomStorageKey(key))) || 1; }catch(e){ orgZoomByKey[key] = 1; }
+    orgPaintColorByKey[key] = null;
+    orgSelectedNodeIdByKey[key] = null;
+  });
 
-  function setOrgLayout(layout){
-    orgLayout = layout;
-    try{ localStorage.setItem('orgLayout', layout); }catch(e){}
-    document.querySelectorAll('#orgLayoutTabs .mb-subtab').forEach(btn=>{
+  function setOrgLayout(layout, key){
+    key = key || 'main';
+    orgLayoutByKey[key] = layout;
+    try{ localStorage.setItem(orgLayoutStorageKey(key), layout); }catch(e){}
+    document.querySelectorAll('#'+orgDomId('orgLayoutTabs', key)+' .mb-subtab').forEach(btn=>{
       btn.classList.toggle('active', btn.dataset.layout === layout);
     });
-    renderOrgChart();
+    renderOrgChart(key);
   }
 
-  function zoomOrgChart(delta){
-    orgZoom = Math.min(2, Math.max(0.4, Math.round((orgZoom + delta) * 10) / 10));
-    try{ localStorage.setItem('orgZoom', orgZoom); }catch(e){}
-    applyOrgZoom();
+  function zoomOrgChart(delta, key){
+    key = key || 'main';
+    orgZoomByKey[key] = Math.min(2, Math.max(0.4, Math.round((orgZoomByKey[key] + delta) * 10) / 10));
+    try{ localStorage.setItem(orgZoomStorageKey(key), orgZoomByKey[key]); }catch(e){}
+    applyOrgZoom(key);
   }
 
-  function resetOrgZoom(){
-    orgZoom = 1;
-    try{ localStorage.setItem('orgZoom', orgZoom); }catch(e){}
-    applyOrgZoom();
+  function resetOrgZoom(key){
+    key = key || 'main';
+    orgZoomByKey[key] = 1;
+    try{ localStorage.setItem(orgZoomStorageKey(key), 1); }catch(e){}
+    applyOrgZoom(key);
   }
 
-  function applyOrgZoom(){
-    const root = document.getElementById('orgChartRoot');
-    const label = document.getElementById('orgZoomLabel');
+  function applyOrgZoom(key){
+    key = key || 'main';
+    const root = document.getElementById(orgDomId('orgChartRoot', key));
+    const label = document.getElementById(orgDomId('orgZoomLabel', key));
     if(!root || !label) return;
-    root.style.transform = `scale(${orgZoom})`;
-    label.textContent = `${Math.round(orgZoom * 100)}%`;
-    requestAnimationFrame(drawOrgConnectors);
+    root.style.transform = `scale(${orgZoomByKey[key]})`;
+    label.textContent = `${Math.round(orgZoomByKey[key] * 100)}%`;
+    requestAnimationFrame(() => drawOrgConnectors(key));
   }
 
   // Native zoom gestures: Mac trackpad pinch (reported as wheel+ctrlKey by the browser) and
   // touch pinch on phones/tablets — in addition to the +/- buttons.
-  (function initOrgChartGestures(){
-    const wrapper = document.getElementById('orgChartWrapper');
+  function initOrgChartGestures(key){
+    const wrapper = document.getElementById(orgDomId('orgChartWrapper', key));
     if(!wrapper) return;
 
     let wheelZoomSaveTimer = null;
     wrapper.addEventListener('wheel', (e) => {
       if(!e.ctrlKey) return; // only hijack pinch/ctrl-zoom; leave normal scrolling alone
       e.preventDefault();
-      orgZoom = Math.min(2, Math.max(0.4, orgZoom - e.deltaY * 0.01));
-      applyOrgZoom();
+      orgZoomByKey[key] = Math.min(2, Math.max(0.4, orgZoomByKey[key] - e.deltaY * 0.01));
+      applyOrgZoom(key);
       clearTimeout(wheelZoomSaveTimer);
-      wheelZoomSaveTimer = setTimeout(() => { try{ localStorage.setItem('orgZoom', orgZoom); }catch(err){} }, 300);
+      wheelZoomSaveTimer = setTimeout(() => { try{ localStorage.setItem(orgZoomStorageKey(key), orgZoomByKey[key]); }catch(err){} }, 300);
     }, { passive: false });
 
     let pinchStartDist = null, pinchStartZoom = 1;
@@ -2060,39 +2199,44 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       return Math.sqrt(dx*dx + dy*dy);
     };
     wrapper.addEventListener('touchstart', (e) => {
-      if(e.touches.length === 2){ pinchStartDist = touchDist(e.touches); pinchStartZoom = orgZoom; }
+      if(e.touches.length === 2){ pinchStartDist = touchDist(e.touches); pinchStartZoom = orgZoomByKey[key]; }
     }, { passive: true });
     wrapper.addEventListener('touchmove', (e) => {
       if(e.touches.length === 2 && pinchStartDist){
         e.preventDefault();
-        orgZoom = Math.min(2, Math.max(0.4, pinchStartZoom * (touchDist(e.touches) / pinchStartDist)));
-        applyOrgZoom();
+        orgZoomByKey[key] = Math.min(2, Math.max(0.4, pinchStartZoom * (touchDist(e.touches) / pinchStartDist)));
+        applyOrgZoom(key);
       }
     }, { passive: false });
     wrapper.addEventListener('touchend', (e) => {
       if(e.touches.length < 2 && pinchStartDist !== null){
         pinchStartDist = null;
-        try{ localStorage.setItem('orgZoom', orgZoom); }catch(err){}
+        try{ localStorage.setItem(orgZoomStorageKey(key), orgZoomByKey[key]); }catch(err){}
       }
     }, { passive: true });
-  })();
+  }
+  orgChartKeys.forEach(key => initOrgChartGestures(key));
 
-  function renderOrgChart(){
-    const root = document.getElementById('orgChartRoot');
+  function renderOrgChart(key){
+    key = key || 'main';
+    const root = document.getElementById(orgDomId('orgChartRoot', key));
     if(!root) return; // not in DOM for this role
-    root.innerHTML = `<div class="org-tree ${orgLayout}">${renderOrgNode(dashboardData.teamOrgChart, true)}</div>`;
-    document.querySelectorAll('#orgLayoutTabs .mb-subtab').forEach(btn=>{
-      btn.classList.toggle('active', btn.dataset.layout === orgLayout);
+    const layout = orgLayoutByKey[key];
+    root.innerHTML = `<div class="org-tree ${layout}">${renderOrgNode(orgTreeFor(key), true, key)}</div>`;
+    document.querySelectorAll('#'+orgDomId('orgLayoutTabs', key)+' .mb-subtab').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.layout === layout);
     });
-    applyOrgZoom();
+    applyOrgZoom(key);
     // Wait a frame so the browser has actually laid out the new nodes before measuring them
-    requestAnimationFrame(() => requestAnimationFrame(drawOrgConnectors));
+    requestAnimationFrame(() => requestAnimationFrame(() => drawOrgConnectors(key)));
   }
 
-  function drawOrgConnectors(){
-    const svg = document.getElementById('orgConnectorSvg');
-    const wrapper = document.getElementById('orgChartWrapper');
-    if(!svg || !wrapper || orgLayout === 'list'){ if(svg) svg.innerHTML = ''; return; }
+  function drawOrgConnectors(key){
+    key = key || 'main';
+    const svg = document.getElementById(orgDomId('orgConnectorSvg', key));
+    const wrapper = document.getElementById(orgDomId('orgChartWrapper', key));
+    const layout = orgLayoutByKey[key];
+    if(!svg || !wrapper || layout === 'list'){ if(svg) svg.innerHTML = ''; return; }
     const wrapperRect = wrapper.getBoundingClientRect();
     const contentW = wrapper.scrollWidth, contentH = wrapper.scrollHeight;
     svg.setAttribute('width', contentW);
@@ -2103,12 +2247,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const pairs = []; // { parentId, childId }
     (function collect(node){
       (node.children||[]).forEach(c => { pairs.push({ parentId: node.id, childId: c.id }); collect(c); });
-    })(dashboardData.teamOrgChart);
+    })(orgTreeFor(key));
 
     const pointFor = (rect, side) => {
       const x = rect.left - wrapperRect.left + wrapper.scrollLeft;
       const y = rect.top - wrapperRect.top + wrapper.scrollTop;
-      if(orgLayout === 'horizontal'){
+      if(layout === 'horizontal'){
         return side === 'from' ? { x: x + rect.width, y: y + rect.height/2 } : { x: x, y: y + rect.height/2 };
       }
       return side === 'from' ? { x: x + rect.width/2, y: y + rect.height } : { x: x + rect.width/2, y: y };
@@ -2120,8 +2264,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(!pEl || !cEl) return '';
       const from = pointFor(pEl.getBoundingClientRect(), 'from');
       const to = pointFor(cEl.getBoundingClientRect(), 'to');
-      const mid = orgLayout === 'horizontal' ? (from.x + to.x) / 2 : (from.y + to.y) / 2;
-      const d = orgLayout === 'horizontal'
+      const mid = layout === 'horizontal' ? (from.x + to.x) / 2 : (from.y + to.y) / 2;
+      const d = layout === 'horizontal'
         ? `M ${from.x} ${from.y} L ${mid} ${from.y} L ${mid} ${to.y} L ${to.x} ${to.y}`
         : `M ${from.x} ${from.y} L ${from.x} ${mid} L ${to.x} ${mid} L ${to.x} ${to.y}`;
       return `<path d="${d}" fill="none" stroke="#4a5a7a" stroke-width="2"/>`;
@@ -2129,22 +2273,22 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     svg.innerHTML = paths;
   }
 
-  function renderOrgNode(node, isRoot){
+  function renderOrgNode(node, isRoot, key){
     const isHex = node.color && node.color.startsWith('#');
     const colorClass = (node.color && !isHex) ? `org-${node.color}` : '';
     const colorStyle = isHex ? `style="background:${node.color};"` : '';
-    const isSelected = orgSelectedNodeId === node.id;
-    const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}')" title="Remove">✕</button>`;
+    const isSelected = orgSelectedNodeIdByKey[key] === node.id;
+    const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}','${key}')" title="Remove">✕</button>`;
     const displayName = (node.name && node.name.trim()) ? node.name : '(unnamed — click ✕ to remove)';
     const nodeHtml = `
       <div class="org-node ${colorClass}" id="org-node-${node.id}" ${colorStyle}${!(node.name && node.name.trim()) ? ' style="border:2px dashed #e0453f;"' : ''}>
-        <span class="org-name" onclick="orgNameClicked('${node.id}')" ondblclick="renameOrgNode('${node.id}')" title="Click to show add/remove, double-click to rename, or single-click to paint if a color is picked">${displayName}</span>
-        ${isSelected ? `<button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>${removeBtn}` : ''}
+        <span class="org-name" onclick="orgNameClicked('${node.id}','${key}')" ondblclick="renameOrgNode('${node.id}','${key}')" title="Click to show add/remove, double-click to rename, or single-click to paint if a color is picked">${displayName}</span>
+        ${isSelected ? `<button onclick="addOrgChild('${node.id}','${key}')" title="Add person under this">+</button>${removeBtn}` : ''}
       </div>`;
     if(!node.children || !node.children.length){
       return `<div class="org-child-wrap">${nodeHtml}</div>`;
     }
-    const childrenHtml = node.children.map(c => `<div class="org-child-wrap">${renderOrgNode(c, false)}</div>`).join('');
+    const childrenHtml = node.children.map(c => `<div class="org-child-wrap">${renderOrgNode(c, false, key)}</div>`).join('');
     return `<div class="org-child-wrap">${nodeHtml}<div class="org-children">${childrenHtml}</div></div>`;
   }
 
@@ -2157,8 +2301,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     return null;
   }
 
-  let orgPaintColor = null; // when set, clicking a node's name paints it this color instead of renaming
-
   const orgPresetPalette = [
     '#f4f4f5','#d4d4d8','#a1a1aa','#71717a','#3f3f46','#18181b',
     '#1e3a8a','#1d4ed8','#2563eb','#7c3aed','#a855f7','#c026d3',
@@ -2166,85 +2308,95 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     '#166534','#16a34a','#22c55e','#0d9488','#06b6d4','#0284c7'
   ];
 
-  function pickOrgPaintColor(){
-    const popover = document.getElementById('orgPalettePopover');
-    const grid = document.getElementById('orgPaletteGrid');
+  function pickOrgPaintColor(key){
+    key = key || 'main';
+    const popover = document.getElementById(orgDomId('orgPalettePopover', key));
+    const grid = document.getElementById(orgDomId('orgPaletteGrid', key));
     if(!grid.innerHTML){
-      grid.innerHTML = orgPresetPalette.map(hex => `<div onclick="chooseOrgPresetColor('${hex}')" style="width:26px;height:26px;border-radius:6px;background:${hex};cursor:pointer;border:1px solid rgba(255,255,255,.15);"></div>`).join('');
+      grid.innerHTML = orgPresetPalette.map(hex => `<div onclick="chooseOrgPresetColor('${hex}','${key}')" style="width:26px;height:26px;border-radius:6px;background:${hex};cursor:pointer;border:1px solid rgba(255,255,255,.15);"></div>`).join('');
     }
     popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
   }
 
-  function chooseOrgPresetColor(hex){
-    document.getElementById('orgPalettePopover').style.display = 'none';
-    setOrgPaintColor(hex);
+  function chooseOrgPresetColor(hex, key){
+    key = key || 'main';
+    document.getElementById(orgDomId('orgPalettePopover', key)).style.display = 'none';
+    setOrgPaintColor(hex, key);
   }
 
-  function setOrgPaintColor(hex){
-    orgPaintColor = hex;
-    const btn = document.getElementById('orgPaintBtn');
+  function setOrgPaintColor(hex, key){
+    key = key || 'main';
+    orgPaintColorByKey[key] = hex;
+    const btn = document.getElementById(orgDomId('orgPaintBtn', key));
     btn.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${hex};margin-right:4px;vertical-align:-1px;"></span>Painting — tap ✕ to stop`;
-    btn.onclick = stopOrgPaintMode;
-    document.getElementById('orgHintText').textContent = `Click any name to paint it that color. Tap "Painting — tap ✕ to stop" above to turn this off.`;
+    btn.onclick = () => stopOrgPaintMode(key);
+    document.getElementById(orgDomId('orgHintText', key)).textContent = `Click any name to paint it that color. Tap "Painting — tap ✕ to stop" above to turn this off.`;
   }
 
-  function stopOrgPaintMode(){
-    orgPaintColor = null;
-    const btn = document.getElementById('orgPaintBtn');
+  function stopOrgPaintMode(key){
+    key = key || 'main';
+    orgPaintColorByKey[key] = null;
+    const btn = document.getElementById(orgDomId('orgPaintBtn', key));
     btn.textContent = 'Pick a color';
-    btn.onclick = pickOrgPaintColor;
-    document.getElementById('orgHintText').textContent = 'Click a name to show its + / ✕ options, double-click to rename';
+    btn.onclick = () => pickOrgPaintColor(key);
+    document.getElementById(orgDomId('orgHintText', key)).textContent = 'Click a name to show its + / ✕ options, double-click to rename';
   }
 
-  let orgSelectedNodeId = null;
-
-  async function orgNameClicked(id){
-    if(orgPaintColor){
-      const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+  async function orgNameClicked(id, key){
+    key = key || 'main';
+    const tree = orgTreeFor(key);
+    if(orgPaintColorByKey[key]){
+      const found = findOrgNode(tree, id, null);
       if(!found) return;
-      found.node.color = orgPaintColor;
+      found.node.color = orgPaintColorByKey[key];
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-      renderOrgChart();
-      await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+      renderOrgChart(key);
+      await saveSetting(orgDataKeyFor(key), tree);
       playChime(920);
       return;
     }
-    orgSelectedNodeId = (orgSelectedNodeId === id) ? null : id; // click again to hide the buttons
-    renderOrgChart();
+    orgSelectedNodeIdByKey[key] = (orgSelectedNodeIdByKey[key] === id) ? null : id; // click again to hide the buttons
+    renderOrgChart(key);
   }
 
-  async function addOrgChild(parentId){
+  async function addOrgChild(parentId, key){
+    key = key || 'main';
     const name = prompt('Name of the person to add:');
     if(!name || !name.trim()) return;
-    const found = findOrgNode(dashboardData.teamOrgChart, parentId, null);
+    const tree = orgTreeFor(key);
+    const found = findOrgNode(tree, parentId, null);
     if(!found) return;
     found.node.children = found.node.children || [];
     found.node.children.push({ id:'orgnode'+Date.now(), name: name.trim().toUpperCase(), color:null, children:[] });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-    renderOrgChart();
-    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+    renderOrgChart(key);
+    await saveSetting(orgDataKeyFor(key), tree);
     playChime(920);
   }
 
-  async function renameOrgNode(id){
-    const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+  async function renameOrgNode(id, key){
+    key = key || 'main';
+    const tree = orgTreeFor(key);
+    const found = findOrgNode(tree, id, null);
     if(!found) return;
     const name = prompt('Rename to:', found.node.name);
     if(!name || !name.trim()) return;
     found.node.name = name.trim().toUpperCase();
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-    renderOrgChart();
-    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+    renderOrgChart(key);
+    await saveSetting(orgDataKeyFor(key), tree);
   }
 
-  async function removeOrgNode(id){
-    const found = findOrgNode(dashboardData.teamOrgChart, id, null);
+  async function removeOrgNode(id, key){
+    key = key || 'main';
+    const tree = orgTreeFor(key);
+    const found = findOrgNode(tree, id, null);
     if(!found || !found.parent) return; // never remove the root
     if(!confirm(`Remove "${found.node.name}" and everyone below them?`)) return;
     found.parent.children = found.parent.children.filter(c => c.id !== id);
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
-    renderOrgChart();
-    await saveSetting('teamOrgChart', dashboardData.teamOrgChart);
+    renderOrgChart(key);
+    await saveSetting(orgDataKeyFor(key), tree);
   }
 
   function renderWallet(){
@@ -2536,6 +2688,42 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ]
   };
 
+  const defaultMbOrgChart = {
+    id: 'mbc_root', name: 'MASTER BACCARAT', color: '#e0453f',
+    children: [
+      { id: 'mbc_alfred', name: 'ALFRED TAN', color: null, children: [
+        { id: 'mbc_edgie', name: 'EDGIE', color: null, children: [
+          { id: 'mbc_jonas', name: 'JONAS', color: null, children: [] }
+        ]}
+      ]}
+    ]
+  };
+  const defaultNsOrgChart = {
+    id: 'nsc_root', name: 'NEXTSTACK', color: '#1c9fe0',
+    children: [
+      { id: 'nsc_jhoeriz', name: 'JHOERIZ', color: null, children: [
+        { id: 'nsc_jonas', name: 'JONAS', color: null, children: [] }
+      ]}
+    ]
+  };
+  const defaultBwOrgChart = {
+    id: 'bwc_root', name: 'BACCARAT WIN', color: '#b8323a',
+    children: [
+      { id: 'bwc_jhoeriz', name: 'JHOERIZ', color: null, children: [
+        { id: 'bwc_jonas', name: 'JONAS', color: null, children: [] }
+      ]}
+    ]
+  };
+  const defaultPkOrgChart = {
+    id: 'pkc_root', name: 'PROKORA', color: '#1a4fc4',
+    children: [
+      { id: 'pkc_mark', name: 'MARK', color: null, children: [
+        { id: 'pkc_cisco', name: 'CISCO', color: null, children: [] },
+        { id: 'pkc_eagles', name: 'EAGLES', color: null, children: [] }
+      ]}
+    ]
+  };
+
   const defaultData = {
     dataVersion: 14,
     lastUpdated: null,
@@ -2556,7 +2744,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     myProfile: JSON.parse(JSON.stringify(defaultMyProfile)),
     wallet: JSON.parse(JSON.stringify(defaultWallet)),
     personalExpenses: JSON.parse(JSON.stringify(defaultPersonalExpenses)),
-    teamOrgChart: JSON.parse(JSON.stringify(defaultTeamOrgChart))
+    teamOrgChart: JSON.parse(JSON.stringify(defaultTeamOrgChart)),
+    mbOrgChart: JSON.parse(JSON.stringify(defaultMbOrgChart)),
+    nsOrgChart: JSON.parse(JSON.stringify(defaultNsOrgChart)),
+    bwOrgChart: JSON.parse(JSON.stringify(defaultBwOrgChart)),
+    pkOrgChart: JSON.parse(JSON.stringify(defaultPkOrgChart))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -2654,6 +2846,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     if(!parsed.teamOrgChart){
       parsed.teamOrgChart = JSON.parse(JSON.stringify(defaultTeamOrgChart));
+    }
+    if(!parsed.mbOrgChart){
+      parsed.mbOrgChart = JSON.parse(JSON.stringify(defaultMbOrgChart));
+    }
+    if(!parsed.nsOrgChart){
+      parsed.nsOrgChart = JSON.parse(JSON.stringify(defaultNsOrgChart));
+    }
+    if(!parsed.bwOrgChart){
+      parsed.bwOrgChart = JSON.parse(JSON.stringify(defaultBwOrgChart));
+    }
+    if(!parsed.pkOrgChart){
+      parsed.pkOrgChart = JSON.parse(JSON.stringify(defaultPkOrgChart));
     }
     parsed.dataVersion = 14;
     return parsed;
@@ -2786,7 +2990,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         myProfile: settings.myProfile || JSON.parse(JSON.stringify(defaultMyProfile)),
         wallet: settings.wallet || JSON.parse(JSON.stringify(defaultWallet)),
         personalExpenses: settings.personalExpenses || JSON.parse(JSON.stringify(defaultPersonalExpenses)),
-        teamOrgChart: settings.teamOrgChart || JSON.parse(JSON.stringify(defaultTeamOrgChart))
+        teamOrgChart: settings.teamOrgChart || JSON.parse(JSON.stringify(defaultTeamOrgChart)),
+        mbOrgChart: settings.mbOrgChart || JSON.parse(JSON.stringify(defaultMbOrgChart)),
+        nsOrgChart: settings.nsOrgChart || JSON.parse(JSON.stringify(defaultNsOrgChart)),
+        bwOrgChart: settings.bwOrgChart || JSON.parse(JSON.stringify(defaultBwOrgChart)),
+        pkOrgChart: settings.pkOrgChart || JSON.parse(JSON.stringify(defaultPkOrgChart))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -3200,7 +3408,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ renderCharts(); }catch(e){ renderErrors.push(['charts', e]); }
     try{ if(document.getElementById('editdata')) populateEditForm(); }catch(e){ renderErrors.push(['edit form', e]); }
     try{ renderCalendar(); }catch(e){ renderErrors.push(['calendar', e]); }
-    try{ renderOrgChart(); }catch(e){ renderErrors.push(['org chart', e]); }
+    orgChartKeys.forEach(k => { try{ renderOrgChart(k); }catch(e){ renderErrors.push(['org chart '+k, e]); } });
     try{
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
