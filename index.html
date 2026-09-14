@@ -1947,13 +1947,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await saveSetting('personalExpenses', dashboardData.personalExpenses);
   }
 
+  const customTilePalette = ['#2563eb','#db2777','#dc2626','#16a34a','#0d9488','#7c3aed','#eab308','#6b7280'];
+
   async function addCustomTile(){
     const inv = dashboardData.investment;
-    inv.customTiles.push({ id:'tile'+Date.now(), name:'New tile', amount:0 });
+    inv.customTiles.push({ id:'tile'+Date.now(), name:'New tile', amount:0, subtitle:'', color:null });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderInvestments();
     await saveSetting('investment', inv);
     playChime(920);
+  }
+
+  async function cycleCustomTileColor(id){
+    const inv = dashboardData.investment;
+    const tile = inv.customTiles.find(t => t.id === id);
+    if(!tile) return;
+    const idx = customTilePalette.indexOf(tile.color);
+    tile.color = customTilePalette[(idx + 1) % customTilePalette.length];
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
+  }
+
+  function editCustomTileSubtitle(id){
+    const inv = dashboardData.investment;
+    const tile = inv.customTiles.find(t => t.id === id);
+    if(!tile) return;
+    const el = document.getElementById(`tile-subtitle-${id}`);
+    el.innerHTML = `<input type="text" value="${tile.subtitle||''}" placeholder="e.g. Across all 4 businesses" style="width:100%;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:#5fbf7a;font-size:11.5px;" onblur="saveCustomTileSubtitle('${id}',this.value)" onkeydown="if(event.key==='Enter')this.blur();" onclick="event.stopPropagation();">`;
+    const input = el.querySelector('input');
+    input.focus(); input.select();
+  }
+
+  async function saveCustomTileSubtitle(id, value){
+    const inv = dashboardData.investment;
+    const tile = inv.customTiles.find(t => t.id === id);
+    if(!tile) return;
+    tile.subtitle = value.trim();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderInvestments();
+    await saveSetting('investment', inv);
   }
 
   async function removeCustomTile(id){
@@ -3957,13 +3990,21 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const tilesGrid = document.getElementById('customTilesGrid');
     if(tilesGrid){
       tilesGrid.innerHTML = inv.customTiles.length
-        ? inv.customTiles.map(t => `
-            <div class="stat">
-              <div class="label" id="tile-name-${t.id}" onclick="editCustomTileName('${t.id}')" style="cursor:pointer;" title="Click to rename">${t.name || 'Untitled'}</div>
+        ? inv.customTiles.map(t => {
+            const isHex = t.color && t.color.startsWith('#');
+            const tileStyle = isHex ? `style="border-color:${t.color};background:${t.color}22;"` : '';
+            return `
+            <div class="stat" ${tileStyle}>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="label" id="tile-name-${t.id}" onclick="editCustomTileName('${t.id}')" style="cursor:pointer;" title="Click to rename">${t.name || 'Untitled'}</div>
+                <button onclick="cycleCustomTileColor('${t.id}')" title="Change color" style="background:rgba(255,255,255,.1);border:none;color:var(--muted);border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;flex-shrink:0;">🎨</button>
+              </div>
               <div class="value" id="tile-amount-${t.id}" onclick="editCustomTileAmount('${t.id}')" style="cursor:pointer;" title="Click to edit">${fmtPeso(t.amount)}</div>
-              <div class="foot"><button class="del-btn" onclick="removeCustomTile('${t.id}')">Remove</button></div>
+              <div class="foot" id="tile-subtitle-${t.id}" onclick="editCustomTileSubtitle('${t.id}')" style="cursor:pointer;color:#5fbf7a;" title="Click to edit">${t.subtitle || 'Click to add a note'}</div>
+              <div style="margin-top:6px;"><button class="del-btn" onclick="removeCustomTile('${t.id}')">Remove</button></div>
             </div>
-          `).join('')
+          `;
+          }).join('')
         : '<div style="color:var(--muted);font-size:13px;grid-column:1/-1;">No custom tiles yet — click "+ Add tile" above.</div>';
     }
 
