@@ -326,7 +326,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .wallet-tx-amount.expense{color:#e0453f;}
 
   .org-tree{display:flex;flex-direction:column;align-items:center;}
-  .org-node{display:inline-flex;align-items:center;gap:8px;background:#1a4fc4;color:#fff;border-radius:20px;padding:9px 18px;font-weight:700;font-size:13px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);}
+  .org-node{display:inline-flex;align-items:center;gap:8px;background:#1a4fc4;color:#fff;border-radius:20px;padding:9px 18px;font-weight:700;font-size:13px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);position:relative;z-index:1;}
   .org-node.org-red{background:#e0453f;}
   .org-node.org-blue{background:#1c6fe0;}
   .org-node.org-dark{background:#1e293b;}
@@ -334,23 +334,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .org-node button{background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:50%;width:19px;height:19px;font-size:10.5px;cursor:pointer;line-height:1;flex-shrink:0;}
   .org-node button:hover{background:rgba(255,255,255,.4);}
   .org-children{display:flex;gap:48px;padding-top:36px;position:relative;}
-  .org-children::before{content:'';position:absolute;top:0;left:50%;width:2px;height:36px;background:#4a5a7a;}
   .org-child-wrap{position:relative;display:flex;flex-direction:column;align-items:center;padding-bottom:8px;}
-  .org-child-wrap::before{content:'';position:absolute;top:-36px;left:50%;width:2px;height:36px;background:#4a5a7a;}
-  /* Horizontal segment between siblings: each child draws the line from its own center to the
-     next child's center, so the line always matches up exactly with each vertical stub above —
-     first child only extends right, last child only extends left, avoiding any overshoot. */
-  .org-tree.vertical .org-children.multi > .org-child-wrap::after{content:'';position:absolute;top:-36px;left:-24px;right:-24px;height:2px;background:#4a5a7a;}
-  .org-tree.vertical .org-children.multi > .org-child-wrap:first-child::after{left:50%;}
-  .org-tree.vertical .org-children.multi > .org-child-wrap:last-child::after{right:50%;}
 
   /* Horizontal layout: parent on the left, children stacked vertically to the right */
   .org-tree.horizontal .org-child-wrap{flex-direction:row;align-items:center;}
-  .org-tree.horizontal .org-children{flex-direction:column;gap:22px;padding-top:0;padding-left:44px;position:relative;}
-  .org-tree.horizontal .org-children::before{top:50%;left:0;width:44px;height:2px;transform:translateY(-50%);}
-  .org-tree.horizontal .org-children.multi{border-left:2px solid #4a5a7a;padding-left:42px;}
-  .org-tree.horizontal .org-children.multi::before{left:-2px;width:46px;}
-  .org-tree.horizontal .org-child-wrap > .org-child-wrap::before{top:50%;left:-44px;width:44px;height:2px;transform:translateY(-50%);}
+  .org-tree.horizontal .org-children{flex-direction:column;gap:22px;padding-top:0;padding-left:44px;}
   .org-tree.horizontal .org-node{margin-right:0;}
 
   /* List layout: simple indented list, no pills or connector lines */
@@ -1224,8 +1212,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <button class="btn secondary small" onclick="zoomOrgChart(0.1)" title="Zoom in">+</button>
         <button class="btn secondary small" onclick="resetOrgZoom()">Reset</button>
       </div>
-      <div style="overflow:auto;margin-top:10px;" id="orgChartWrapper">
-        <div id="orgChartRoot" style="padding-bottom:10px;transform-origin:top left;"></div>
+      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper">
+        <svg id="orgConnectorSvg" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+        <div id="orgChartRoot" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
       </div>
       <input type="color" id="orgColorPicker" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value)">
     </div>
@@ -1983,6 +1972,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!root || !label) return;
     root.style.transform = `scale(${orgZoom})`;
     label.textContent = `${Math.round(orgZoom * 100)}%`;
+    requestAnimationFrame(drawOrgConnectors);
   }
 
   // Native zoom gestures: Mac trackpad pinch (reported as wheel+ctrlKey by the browser) and
@@ -2033,6 +2023,48 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       btn.classList.toggle('active', btn.dataset.layout === orgLayout);
     });
     applyOrgZoom();
+    // Wait a frame so the browser has actually laid out the new nodes before measuring them
+    requestAnimationFrame(() => requestAnimationFrame(drawOrgConnectors));
+  }
+
+  function drawOrgConnectors(){
+    const svg = document.getElementById('orgConnectorSvg');
+    const wrapper = document.getElementById('orgChartWrapper');
+    if(!svg || !wrapper || orgLayout === 'list'){ if(svg) svg.innerHTML = ''; return; }
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const contentW = wrapper.scrollWidth, contentH = wrapper.scrollHeight;
+    svg.setAttribute('width', contentW);
+    svg.setAttribute('height', contentH);
+    svg.style.width = contentW + 'px';
+    svg.style.height = contentH + 'px';
+
+    const pairs = []; // { parentId, childId }
+    (function collect(node){
+      (node.children||[]).forEach(c => { pairs.push({ parentId: node.id, childId: c.id }); collect(c); });
+    })(dashboardData.teamOrgChart);
+
+    const pointFor = (rect, side) => {
+      const x = rect.left - wrapperRect.left + wrapper.scrollLeft;
+      const y = rect.top - wrapperRect.top + wrapper.scrollTop;
+      if(orgLayout === 'horizontal'){
+        return side === 'from' ? { x: x + rect.width, y: y + rect.height/2 } : { x: x, y: y + rect.height/2 };
+      }
+      return side === 'from' ? { x: x + rect.width/2, y: y + rect.height } : { x: x + rect.width/2, y: y };
+    };
+
+    const paths = pairs.map(({parentId, childId}) => {
+      const pEl = document.getElementById(`org-node-${parentId}`);
+      const cEl = document.getElementById(`org-node-${childId}`);
+      if(!pEl || !cEl) return '';
+      const from = pointFor(pEl.getBoundingClientRect(), 'from');
+      const to = pointFor(cEl.getBoundingClientRect(), 'to');
+      const mid = orgLayout === 'horizontal' ? (from.x + to.x) / 2 : (from.y + to.y) / 2;
+      const d = orgLayout === 'horizontal'
+        ? `M ${from.x} ${from.y} L ${mid} ${from.y} L ${mid} ${to.y} L ${to.x} ${to.y}`
+        : `M ${from.x} ${from.y} L ${from.x} ${mid} L ${to.x} ${mid} L ${to.x} ${to.y}`;
+      return `<path d="${d}" fill="none" stroke="#4a5a7a" stroke-width="2"/>`;
+    }).join('');
+    svg.innerHTML = paths;
   }
 
   function renderOrgNode(node, isRoot){
@@ -2043,7 +2075,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}')" title="Remove">✕</button>`;
     const displayName = (node.name && node.name.trim()) ? node.name : '(unnamed — click ✕ to remove)';
     const nodeHtml = `
-      <div class="org-node ${colorClass}" ${colorStyle}${!(node.name && node.name.trim()) ? ' style="border:2px dashed #e0453f;"' : ''}>
+      <div class="org-node ${colorClass}" id="org-node-${node.id}" ${colorStyle}${!(node.name && node.name.trim()) ? ' style="border:2px dashed #e0453f;"' : ''}>
         <span class="org-name" onclick="orgNameClicked('${node.id}')" ondblclick="renameOrgNode('${node.id}')" title="Click to show add/remove, double-click to rename, or single-click to paint if a color is picked">${displayName}</span>
         ${isSelected ? `<button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>${removeBtn}` : ''}
       </div>`;
@@ -2051,7 +2083,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       return `<div class="org-child-wrap">${nodeHtml}</div>`;
     }
     const childrenHtml = node.children.map(c => `<div class="org-child-wrap">${renderOrgNode(c, false)}</div>`).join('');
-    return `<div class="org-child-wrap">${nodeHtml}<div class="org-children${node.children.length>1?' multi':''}">${childrenHtml}</div></div>`;
+    return `<div class="org-child-wrap">${nodeHtml}<div class="org-children">${childrenHtml}</div></div>`;
   }
 
   function findOrgNode(node, id, parent){
