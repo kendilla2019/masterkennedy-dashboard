@@ -4031,11 +4031,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const goldTotal = inv.goldHoldings.reduce((a,g)=>a+g.value,0);
     const otherInvTotal = inv.otherInvestments.reduce((a,o)=>a+o.value,0);
     const capitalShareTotal = inv.capitalShares.reduce((a,c)=>a+c.amount,0);
+    const customTilesTotal = inv.customTiles.reduce((a,t)=>a+t.amount,0);
     const vehicleNet = inv.vehicle.currentValue - inv.vehicle.maintenance;
     const depreciation = inv.vehicle.purchasePrice - inv.vehicle.currentValue;
     const otherLiabilitiesTotal = inv.liabilities.reduce((a,l)=>a+l.amount,0);
 
-    const totalAssets = propValueTotal + inv.nexstackEquity + goldTotal + otherInvTotal + capitalShareTotal + vehicleNet + inv.emergencyFund;
+    const totalAssets = propValueTotal + inv.nexstackEquity + goldTotal + otherInvTotal + capitalShareTotal + customTilesTotal + vehicleNet + inv.emergencyFund;
     const totalLiabilities = propLoanTotal + otherLiabilitiesTotal;
     const netWorth = totalAssets - totalLiabilities;
 
@@ -4043,7 +4044,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('netWorthAssets').textContent = fmtPeso(totalAssets);
     document.getElementById('netWorthLiabilities').textContent = fmtPeso(totalLiabilities);
     document.getElementById('netWorthBreakdown').textContent =
-      `Assets: Properties ${fmtPeso(propValueTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Capital share ${fmtPeso(capitalShareTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
+      `Assets: Properties ${fmtPeso(propValueTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Capital share ${fmtPeso(capitalShareTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Custom tiles ${fmtPeso(customTilesTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
 
     document.getElementById('capitalShareTable').innerHTML = '<tr><th>Name</th><th>Amount</th><th></th></tr>' +
       inv.capitalShares.map(c => `<tr><td>${c.name}</td><td>${fmtPeso(c.amount)}</td><td><button class="del-btn" onclick="removeCapitalShare('${c.id}')">Remove</button></td></tr>`).join('');
