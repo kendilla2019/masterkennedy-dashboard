@@ -953,6 +953,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- BACCARAT WIN -->
   <div class="view" id="bw">
+    <div class="mb-subnav" id="bwSubnav">
+      <button class="mb-subtab active" data-bizview="overview" onclick="switchBizSubview('bw','overview')">Overview</button>
+      <button class="mb-subtab" data-bizview="sales" onclick="switchBizSubview('bw','sales')">Sales</button>
+      <button class="mb-subtab" data-bizview="marketing" onclick="switchBizSubview('bw','marketing')">Marketing</button>
+      <button class="mb-subtab" data-bizview="team" onclick="switchBizSubview('bw','team')">Team</button>
+      <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('bw','operating')">Operating</button>
+      <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('bw','expenses')">Expenses</button>
+      <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('bw','cashflow')">Cash Flow</button>
+    </div>
+
+    <div class="bw-subview active" id="bwSubview-overview">
     <div class="grid-3">
       <div class="stat"><div class="label">Students enrolled YTD</div><div class="value" id="bwStudentsStat">320</div><div class="foot">Baccarat Win enrollment</div></div>
       <div class="stat"><div class="label">Course completion rate</div><div class="value" id="bwCompletionStat">82%</div><div class="foot" id="bwCompletionFoot">262 of 320 finished</div></div>
@@ -976,40 +987,138 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </table>
       </div>
     </div>
+    </div>
 
-    <div class="card" style="--accent:#b8323a;overflow-x:auto;margin-top:16px;">
-      <h3><span class="dot"></span>Team org chart</h3>
-      <div class="sub" id="orgHintText_bw">Click a name to show its + / ✕ options, double-click to rename</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
-        <div id="orgLayoutTabs_bw" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="mb-subtab active" onclick="setOrgLayout('vertical','bw')" data-layout="vertical">Vertical</button>
-          <button class="mb-subtab" onclick="setOrgLayout('horizontal','bw')" data-layout="horizontal">Horizontal</button>
-          <button class="mb-subtab" onclick="setOrgLayout('list','bw')" data-layout="list">List</button>
+    <div class="bw-subview" id="bwSubview-sales" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Sales log</h3>
+        <div class="sub">Simple revenue entries — log each sale or payment as it comes in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizSalesTotal_bw">₱0.00</div>
         </div>
-        <div style="position:relative;margin-left:auto;">
-          <button class="mb-subtab" id="orgPaintBtn_bw" onclick="pickOrgPaintColor('bw')">Pick a color</button>
-          <div id="orgPalettePopover_bw" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
-            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_bw"></div>
-            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_bw').click();document.getElementById('orgPalettePopover_bw').style.display='none';">Custom…</button>
+        <div id="bizSalesList_bw" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizSalesDate_bw"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizSalesAmount_bw" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Note</label><input type="text" id="bizSalesNote_bw" placeholder="e.g. Client deposit"></div>
+          <button class="btn small" onclick="addBizSalesEntry('bw')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bw-subview" id="bwSubview-marketing" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Marketing log</h3>
+        <div class="sub">Track posts, campaigns, or outreach as they go out</div>
+        <div id="bizMarketingList_bw" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizMarketingDate_bw"></div>
+          <div class="field"><label>Title</label><input type="text" id="bizMarketingTitle_bw" placeholder="e.g. Enrollment promo reel"></div>
+          <div class="field"><label>Notes</label><input type="text" id="bizMarketingNotes_bw" placeholder="Optional"></div>
+          <button class="btn small" onclick="addBizMarketingEntry('bw')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bw-subview" id="bwSubview-team" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Weekly checklist</h3>
+        <div class="sub">Manual checkboxes for the team's recurring tasks</div>
+        <div id="bizTeamTaskList_bw" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizTeamNewTask_bw" placeholder="e.g. Reply to all DMs"></div>
+          <button class="btn small" onclick="addBizChecklistTask('bwTeam','bizTeamNewTask_bw','bizTeamTaskList_bw')">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#b8323a;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Team org chart</h3>
+        <div class="sub" id="orgHintText_bw">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_bw" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','bw')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','bw')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','bw')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_bw" onclick="pickOrgPaintColor('bw')">Pick a color</button>
+            <div id="orgPalettePopover_bw" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_bw"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_bw').click();document.getElementById('orgPalettePopover_bw').style.display='none';">Custom…</button>
+            </div>
           </div>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'bw')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_bw">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'bw')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('bw')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_bw">
+          <svg id="orgConnectorSvg_bw" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_bw" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_bw" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'bw')">
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
-        <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'bw')" title="Zoom out">−</button>
-        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_bw">100%</span>
-        <button class="btn secondary small" onclick="zoomOrgChart(0.1,'bw')" title="Zoom in">+</button>
-        <button class="btn secondary small" onclick="resetOrgZoom('bw')">Reset</button>
+    </div>
+
+    <div class="bw-subview" id="bwSubview-operating" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Operating checklist</h3>
+        <div class="sub">Recurring operational tasks — manual for now</div>
+        <div id="bizOperatingTaskList_bw" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizOperatingNewTask_bw" placeholder="e.g. Check compliance"></div>
+          <button class="btn small" onclick="addBizChecklistTask('bwOperating','bizOperatingNewTask_bw','bizOperatingTaskList_bw')">+ Add</button>
+        </div>
       </div>
-      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_bw">
-        <svg id="orgConnectorSvg_bw" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
-        <div id="orgChartRoot_bw" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+    </div>
+
+    <div class="bw-subview" id="bwSubview-expenses" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Expenses</h3>
+        <div class="sub">Log operating costs as they come in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizExpensesTotal_bw">₱0.00</div>
+        </div>
+        <div id="bizExpensesList_bw" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizExpensesDate_bw"></div>
+          <div class="field"><label>Category</label><input type="text" id="bizExpensesCategory_bw" placeholder="e.g. Ads, tools, supplies"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizExpensesAmount_bw" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addBizExpensesEntry('bw')">+ Log</button>
+        </div>
       </div>
-      <input type="color" id="orgColorPicker_bw" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'bw')">
+    </div>
+
+    <div class="bw-subview" id="bwSubview-cashflow" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Cash flow summary</h3>
+        <div class="sub">Auto-rolled up from this period's revenue and logged expenses — no separate entry needed</div>
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="stat"><div class="label">Revenue</div><div class="value" id="bizCfRevenue_bw">₱0.00</div><div class="foot">This period</div></div>
+          <div class="stat"><div class="label">Expenses logged</div><div class="value" id="bizCfExpenses_bw">₱0.00</div><div class="foot">From the Expenses tab</div></div>
+          <div class="stat"><div class="label">Net cash flow</div><div class="value" id="bizCfNet_bw">₱0.00</div><div class="foot">Revenue minus expenses</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- NEXSTACK -->
   <div class="view" id="ns">
+    <div class="mb-subnav" id="nsSubnav">
+      <button class="mb-subtab active" data-bizview="overview" onclick="switchBizSubview('ns','overview')">Overview</button>
+      <button class="mb-subtab" data-bizview="sales" onclick="switchBizSubview('ns','sales')">Sales</button>
+      <button class="mb-subtab" data-bizview="marketing" onclick="switchBizSubview('ns','marketing')">Marketing</button>
+      <button class="mb-subtab" data-bizview="team" onclick="switchBizSubview('ns','team')">Team</button>
+      <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('ns','operating')">Operating</button>
+      <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('ns','expenses')">Expenses</button>
+      <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('ns','cashflow')">Cash Flow</button>
+    </div>
+
+    <div class="ns-subview active" id="nsSubview-overview">
     <div class="grid-3">
       <div class="stat"><div class="label">Students enrolled YTD</div><div class="value" id="nsStudentsStat">210</div><div class="foot">Nexstack enrollment</div></div>
       <div class="stat"><div class="label">Completion rate</div><div class="value" id="nsCompletionStat">76%</div><div class="foot" id="nsCompletionFoot">160 of 210 finished</div></div>
@@ -1032,40 +1141,138 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
       </div>
     </div>
+    </div>
 
-    <div class="card" style="--accent:#1c9fe0;overflow-x:auto;margin-top:16px;">
-      <h3><span class="dot"></span>Team org chart</h3>
-      <div class="sub" id="orgHintText_ns">Click a name to show its + / ✕ options, double-click to rename</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
-        <div id="orgLayoutTabs_ns" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="mb-subtab active" onclick="setOrgLayout('vertical','ns')" data-layout="vertical">Vertical</button>
-          <button class="mb-subtab" onclick="setOrgLayout('horizontal','ns')" data-layout="horizontal">Horizontal</button>
-          <button class="mb-subtab" onclick="setOrgLayout('list','ns')" data-layout="list">List</button>
+    <div class="ns-subview" id="nsSubview-sales" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Sales log</h3>
+        <div class="sub">Simple revenue entries — log each sale or payment as it comes in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizSalesTotal_ns">₱0.00</div>
         </div>
-        <div style="position:relative;margin-left:auto;">
-          <button class="mb-subtab" id="orgPaintBtn_ns" onclick="pickOrgPaintColor('ns')">Pick a color</button>
-          <div id="orgPalettePopover_ns" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
-            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_ns"></div>
-            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_ns').click();document.getElementById('orgPalettePopover_ns').style.display='none';">Custom…</button>
+        <div id="bizSalesList_ns" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizSalesDate_ns"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizSalesAmount_ns" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Note</label><input type="text" id="bizSalesNote_ns" placeholder="e.g. Client deposit"></div>
+          <button class="btn small" onclick="addBizSalesEntry('ns')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ns-subview" id="nsSubview-marketing" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Marketing log</h3>
+        <div class="sub">Track posts, campaigns, or outreach as they go out</div>
+        <div id="bizMarketingList_ns" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizMarketingDate_ns"></div>
+          <div class="field"><label>Title</label><input type="text" id="bizMarketingTitle_ns" placeholder="e.g. Enrollment promo reel"></div>
+          <div class="field"><label>Notes</label><input type="text" id="bizMarketingNotes_ns" placeholder="Optional"></div>
+          <button class="btn small" onclick="addBizMarketingEntry('ns')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ns-subview" id="nsSubview-team" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Weekly checklist</h3>
+        <div class="sub">Manual checkboxes for the team's recurring tasks</div>
+        <div id="bizTeamTaskList_ns" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizTeamNewTask_ns" placeholder="e.g. Reply to all DMs"></div>
+          <button class="btn small" onclick="addBizChecklistTask('nsTeam','bizTeamNewTask_ns','bizTeamTaskList_ns')">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#1c9fe0;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Team org chart</h3>
+        <div class="sub" id="orgHintText_ns">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_ns" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','ns')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','ns')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','ns')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_ns" onclick="pickOrgPaintColor('ns')">Pick a color</button>
+            <div id="orgPalettePopover_ns" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_ns"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_ns').click();document.getElementById('orgPalettePopover_ns').style.display='none';">Custom…</button>
+            </div>
           </div>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'ns')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_ns">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'ns')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('ns')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_ns">
+          <svg id="orgConnectorSvg_ns" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_ns" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_ns" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'ns')">
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
-        <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'ns')" title="Zoom out">−</button>
-        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_ns">100%</span>
-        <button class="btn secondary small" onclick="zoomOrgChart(0.1,'ns')" title="Zoom in">+</button>
-        <button class="btn secondary small" onclick="resetOrgZoom('ns')">Reset</button>
+    </div>
+
+    <div class="ns-subview" id="nsSubview-operating" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Operating checklist</h3>
+        <div class="sub">Recurring operational tasks — manual for now</div>
+        <div id="bizOperatingTaskList_ns" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizOperatingNewTask_ns" placeholder="e.g. Check compliance"></div>
+          <button class="btn small" onclick="addBizChecklistTask('nsOperating','bizOperatingNewTask_ns','bizOperatingTaskList_ns')">+ Add</button>
+        </div>
       </div>
-      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_ns">
-        <svg id="orgConnectorSvg_ns" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
-        <div id="orgChartRoot_ns" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+    </div>
+
+    <div class="ns-subview" id="nsSubview-expenses" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Expenses</h3>
+        <div class="sub">Log operating costs as they come in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizExpensesTotal_ns">₱0.00</div>
+        </div>
+        <div id="bizExpensesList_ns" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizExpensesDate_ns"></div>
+          <div class="field"><label>Category</label><input type="text" id="bizExpensesCategory_ns" placeholder="e.g. Ads, tools, supplies"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizExpensesAmount_ns" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addBizExpensesEntry('ns')">+ Log</button>
+        </div>
       </div>
-      <input type="color" id="orgColorPicker_ns" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'ns')">
+    </div>
+
+    <div class="ns-subview" id="nsSubview-cashflow" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Cash flow summary</h3>
+        <div class="sub">Auto-rolled up from this period's revenue and logged expenses — no separate entry needed</div>
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="stat"><div class="label">Revenue</div><div class="value" id="bizCfRevenue_ns">₱0.00</div><div class="foot">This period</div></div>
+          <div class="stat"><div class="label">Expenses logged</div><div class="value" id="bizCfExpenses_ns">₱0.00</div><div class="foot">From the Expenses tab</div></div>
+          <div class="stat"><div class="label">Net cash flow</div><div class="value" id="bizCfNet_ns">₱0.00</div><div class="foot">Revenue minus expenses</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- PROKORA -->
   <div class="view" id="pk">
+    <div class="mb-subnav" id="pkSubnav">
+      <button class="mb-subtab active" data-bizview="overview" onclick="switchBizSubview('pk','overview')">Overview</button>
+      <button class="mb-subtab" data-bizview="sales" onclick="switchBizSubview('pk','sales')">Sales</button>
+      <button class="mb-subtab" data-bizview="marketing" onclick="switchBizSubview('pk','marketing')">Marketing</button>
+      <button class="mb-subtab" data-bizview="team" onclick="switchBizSubview('pk','team')">Team</button>
+      <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('pk','operating')">Operating</button>
+      <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('pk','expenses')">Expenses</button>
+      <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('pk','cashflow')">Cash Flow</button>
+    </div>
+
+    <div class="pk-subview active" id="pkSubview-overview">
     <div class="grid-3">
       <div class="stat"><div class="label">Income YTD</div><div class="value" id="pkRevenueStat">₱1.60M</div><div class="foot">Interest + project commission — your actual take</div></div>
       <div class="stat"><div class="label">Interest income</div><div class="value" id="pkDeliveredStat">₱0.00</div><div class="foot" id="pkDeliveredFoot">Monthly, from active loans</div></div>
@@ -1112,35 +1319,122 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th></tr>
       </table>
     </div>
+    </div>
 
-    <div class="card" style="--accent:#1a4fc4;overflow-x:auto;margin-top:16px;">
-      <h3><span class="dot"></span>Team org chart</h3>
-      <div class="sub" id="orgHintText_pk">Click a name to show its + / ✕ options, double-click to rename</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
-        <div id="orgLayoutTabs_pk" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="mb-subtab active" onclick="setOrgLayout('vertical','pk')" data-layout="vertical">Vertical</button>
-          <button class="mb-subtab" onclick="setOrgLayout('horizontal','pk')" data-layout="horizontal">Horizontal</button>
-          <button class="mb-subtab" onclick="setOrgLayout('list','pk')" data-layout="list">List</button>
+    <div class="pk-subview" id="pkSubview-sales" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Sales log</h3>
+        <div class="sub">Simple revenue entries — log each sale or payment as it comes in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizSalesTotal_pk">₱0.00</div>
         </div>
-        <div style="position:relative;margin-left:auto;">
-          <button class="mb-subtab" id="orgPaintBtn_pk" onclick="pickOrgPaintColor('pk')">Pick a color</button>
-          <div id="orgPalettePopover_pk" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
-            <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_pk"></div>
-            <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_pk').click();document.getElementById('orgPalettePopover_pk').style.display='none';">Custom…</button>
+        <div id="bizSalesList_pk" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizSalesDate_pk"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizSalesAmount_pk" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Note</label><input type="text" id="bizSalesNote_pk" placeholder="e.g. Client deposit"></div>
+          <button class="btn small" onclick="addBizSalesEntry('pk')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pk-subview" id="pkSubview-marketing" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Marketing log</h3>
+        <div class="sub">Track posts, campaigns, or outreach as they go out</div>
+        <div id="bizMarketingList_pk" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizMarketingDate_pk"></div>
+          <div class="field"><label>Title</label><input type="text" id="bizMarketingTitle_pk" placeholder="e.g. Enrollment promo reel"></div>
+          <div class="field"><label>Notes</label><input type="text" id="bizMarketingNotes_pk" placeholder="Optional"></div>
+          <button class="btn small" onclick="addBizMarketingEntry('pk')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pk-subview" id="pkSubview-team" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Weekly checklist</h3>
+        <div class="sub">Manual checkboxes for the team's recurring tasks</div>
+        <div id="bizTeamTaskList_pk" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizTeamNewTask_pk" placeholder="e.g. Reply to all DMs"></div>
+          <button class="btn small" onclick="addBizChecklistTask('pkTeam','bizTeamNewTask_pk','bizTeamTaskList_pk')">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#1a4fc4;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Team org chart</h3>
+        <div class="sub" id="orgHintText_pk">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_pk" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','pk')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','pk')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','pk')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_pk" onclick="pickOrgPaintColor('pk')">Pick a color</button>
+            <div id="orgPalettePopover_pk" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_pk"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_pk').click();document.getElementById('orgPalettePopover_pk').style.display='none';">Custom…</button>
+            </div>
           </div>
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'pk')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_pk">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'pk')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('pk')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_pk">
+          <svg id="orgConnectorSvg_pk" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_pk" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_pk" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'pk')">
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
-        <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'pk')" title="Zoom out">−</button>
-        <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_pk">100%</span>
-        <button class="btn secondary small" onclick="zoomOrgChart(0.1,'pk')" title="Zoom in">+</button>
-        <button class="btn secondary small" onclick="resetOrgZoom('pk')">Reset</button>
+    </div>
+
+    <div class="pk-subview" id="pkSubview-operating" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Operating checklist</h3>
+        <div class="sub">Recurring operational tasks — manual for now</div>
+        <div id="bizOperatingTaskList_pk" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizOperatingNewTask_pk" placeholder="e.g. Check compliance"></div>
+          <button class="btn small" onclick="addBizChecklistTask('pkOperating','bizOperatingNewTask_pk','bizOperatingTaskList_pk')">+ Add</button>
+        </div>
       </div>
-      <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_pk">
-        <svg id="orgConnectorSvg_pk" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
-        <div id="orgChartRoot_pk" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+    </div>
+
+    <div class="pk-subview" id="pkSubview-expenses" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Expenses</h3>
+        <div class="sub">Log operating costs as they come in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizExpensesTotal_pk">₱0.00</div>
+        </div>
+        <div id="bizExpensesList_pk" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizExpensesDate_pk"></div>
+          <div class="field"><label>Category</label><input type="text" id="bizExpensesCategory_pk" placeholder="e.g. Ads, tools, supplies"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizExpensesAmount_pk" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addBizExpensesEntry('pk')">+ Log</button>
+        </div>
       </div>
-      <input type="color" id="orgColorPicker_pk" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'pk')">
+    </div>
+
+    <div class="pk-subview" id="pkSubview-cashflow" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Cash flow summary</h3>
+        <div class="sub">Auto-rolled up from this period's revenue and logged expenses — no separate entry needed</div>
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="stat"><div class="label">Revenue</div><div class="value" id="bizCfRevenue_pk">₱0.00</div><div class="foot">This period</div></div>
+          <div class="stat"><div class="label">Expenses logged</div><div class="value" id="bizCfExpenses_pk">₱0.00</div><div class="foot">From the Expenses tab</div></div>
+          <div class="stat"><div class="label">Net cash flow</div><div class="value" id="bizCfNet_pk">₱0.00</div><div class="foot">Revenue minus expenses</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1821,7 +2115,219 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(view === 'cashflow') renderCashflowDashboard();
   }
 
+  // Generalized per-business subview engine for Prokora, Baccarat Win, and Nexstack — a
+  // simpler counterpart to Master Baccarat's own Sales/Marketing/Team/Operating/Expenses/
+  // Cash Flow tabs. Scoped by business key ('pk','bw','ns') so switching a tab on one
+  // business's page never touches another business's tabs or data.
+  function switchBizSubview(biz, view){
+    const nav = document.getElementById(biz + 'Subnav');
+    if(nav) nav.querySelectorAll('.mb-subtab').forEach(t => t.classList.toggle('active', t.dataset.bizview === view));
+    document.querySelectorAll('.' + biz + '-subview').forEach(v => v.style.display = (v.id === `${biz}Subview-${view}`) ? '' : 'none');
+    if(view === 'sales') renderBizSales(biz);
+    if(view === 'marketing') renderBizMarketing(biz);
+    if(view === 'team') renderBizChecklist(biz + 'Team', 'bizTeamTaskList_' + biz);
+    if(view === 'operating') renderBizChecklist(biz + 'Operating', 'bizOperatingTaskList_' + biz);
+    if(view === 'expenses') renderBizExpenses(biz);
+    if(view === 'cashflow') renderBizCashflow(biz);
+  }
+
+  // ---- Generic weekly checklist (used for both each business's Team and Operating tabs) ----
+  function renderBizChecklist(dataKey, listDomId){
+    const el = document.getElementById(listDomId);
+    if(!el) return;
+    const t = dashboardData[dataKey];
+    el.innerHTML = t.tasks.length
+      ? t.tasks.map(task => `
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;cursor:pointer;">
+            <input type="checkbox" ${task.done?'checked':''} onchange="toggleBizChecklistTask('${dataKey}','${task.id}','${listDomId}')" style="width:16px;height:16px;flex-shrink:0;">
+            <span style="flex:1;font-size:13.5px;${task.done?'text-decoration:line-through;color:var(--muted);':''}">${task.label}</span>
+            <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${task.lastUpdated ? new Date(task.lastUpdated).toLocaleDateString() : 'Not started'}</span>
+            <button class="del-btn" onclick="event.preventDefault();removeBizChecklistTask('${dataKey}','${task.id}','${listDomId}')">Remove</button>
+          </label>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No tasks yet — add one below.</div>';
+  }
+
+  async function addBizChecklistTask(dataKey, inputDomId, listDomId){
+    const input = document.getElementById(inputDomId);
+    const label = input.value.trim();
+    if(!label){ alert('Please enter a task.'); return; }
+    const t = dashboardData[dataKey];
+    t.tasks.push({ id:'task'+Date.now(), label, done:false, lastUpdated:null });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    input.value = '';
+    renderBizChecklist(dataKey, listDomId);
+    await saveSetting(dataKey, t);
+  }
+
+  async function toggleBizChecklistTask(dataKey, id, listDomId){
+    const t = dashboardData[dataKey];
+    const task = t.tasks.find(x => x.id === id);
+    if(!task) return;
+    task.done = !task.done;
+    task.lastUpdated = Date.now();
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderBizChecklist(dataKey, listDomId);
+    await saveSetting(dataKey, t);
+  }
+
+  async function removeBizChecklistTask(dataKey, id, listDomId){
+    const t = dashboardData[dataKey];
+    t.tasks = t.tasks.filter(x => x.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderBizChecklist(dataKey, listDomId);
+    await saveSetting(dataKey, t);
+  }
+
+  // ---- Sales log (date + amount + note) ----
+  function renderBizSales(biz){
+    const el = document.getElementById('bizSalesList_' + biz);
+    if(!el) return;
+    const s = dashboardData[biz + 'Sales'];
+    const total = s.entries.reduce((a,e)=>a+(e.amount||0),0);
+    const totalEl = document.getElementById('bizSalesTotal_' + biz);
+    if(totalEl) totalEl.textContent = fmtPeso(total);
+    el.innerHTML = s.entries.length
+      ? s.entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <div style="width:90px;flex-shrink:0;font-size:12px;color:var(--muted);">${e.date||''}</div>
+            <div style="flex:1;font-size:13.5px;">${e.notes||''}</div>
+            <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.amount||0)}</div>
+            <button class="del-btn" onclick="removeBizSalesEntry('${biz}','${e.id}')">Remove</button>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No entries yet — log your first sale below.</div>';
+  }
+
+  async function addBizSalesEntry(biz){
+    const dateEl = document.getElementById('bizSalesDate_'+biz);
+    const amtEl = document.getElementById('bizSalesAmount_'+biz);
+    const noteEl = document.getElementById('bizSalesNote_'+biz);
+    const amount = parseCurrency(amtEl.value);
+    if(!amount){ alert('Please enter an amount.'); return; }
+    const s = dashboardData[biz+'Sales'];
+    s.entries.push({ id:'sale'+Date.now(), date: dateEl.value || new Date().toISOString().slice(0,10), amount, notes: noteEl.value.trim() });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    dateEl.value=''; amtEl.value=''; noteEl.value='';
+    renderBizSales(biz);
+    await saveSetting(biz+'Sales', s);
+    playChime(920);
+  }
+
+  async function removeBizSalesEntry(biz, id){
+    const s = dashboardData[biz+'Sales'];
+    s.entries = s.entries.filter(e=>e.id!==id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderBizSales(biz);
+    await saveSetting(biz+'Sales', s);
+  }
+
+  // ---- Marketing log (date + title + notes, no amount) ----
+  function renderBizMarketing(biz){
+    const el = document.getElementById('bizMarketingList_' + biz);
+    if(!el) return;
+    const m = dashboardData[biz + 'Marketing'];
+    el.innerHTML = m.entries.length
+      ? m.entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <div style="width:90px;flex-shrink:0;font-size:12px;color:var(--muted);">${e.date||''}</div>
+            <div style="flex:1;">
+              <div style="font-size:13.5px;font-weight:600;">${e.title||''}</div>
+              ${e.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">${e.notes}</div>` : ''}
+            </div>
+            <button class="del-btn" onclick="removeBizMarketingEntry('${biz}','${e.id}')">Remove</button>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No entries yet — log your first post or campaign below.</div>';
+  }
+
+  async function addBizMarketingEntry(biz){
+    const dateEl = document.getElementById('bizMarketingDate_'+biz);
+    const titleEl = document.getElementById('bizMarketingTitle_'+biz);
+    const notesEl = document.getElementById('bizMarketingNotes_'+biz);
+    const title = titleEl.value.trim();
+    if(!title){ alert('Please enter a title.'); return; }
+    const m = dashboardData[biz+'Marketing'];
+    m.entries.push({ id:'mkt'+Date.now(), date: dateEl.value || new Date().toISOString().slice(0,10), title, notes: notesEl.value.trim() });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    dateEl.value=''; titleEl.value=''; notesEl.value='';
+    renderBizMarketing(biz);
+    await saveSetting(biz+'Marketing', m);
+    playChime(920);
+  }
+
+  async function removeBizMarketingEntry(biz, id){
+    const m = dashboardData[biz+'Marketing'];
+    m.entries = m.entries.filter(e=>e.id!==id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderBizMarketing(biz);
+    await saveSetting(biz+'Marketing', m);
+  }
+
+  // ---- Expenses log (date + category + amount) ----
+  function renderBizExpenses(biz){
+    const el = document.getElementById('bizExpensesList_' + biz);
+    if(!el) return;
+    const ex = dashboardData[biz + 'Expenses'];
+    const total = ex.entries.reduce((a,e)=>a+(e.amount||0),0);
+    const totalEl = document.getElementById('bizExpensesTotal_' + biz);
+    if(totalEl) totalEl.textContent = fmtPeso(total);
+    el.innerHTML = ex.entries.length
+      ? ex.entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e => `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+            <div style="width:90px;flex-shrink:0;font-size:12px;color:var(--muted);">${e.date||''}</div>
+            <div style="flex:1;font-size:13.5px;">${e.category||''}</div>
+            <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.amount||0)}</div>
+            <button class="del-btn" onclick="removeBizExpensesEntry('${biz}','${e.id}')">Remove</button>
+          </div>
+        `).join('')
+      : '<div style="color:var(--muted);font-size:13px;">No expenses logged yet.</div>';
+  }
+
+  async function addBizExpensesEntry(biz){
+    const dateEl = document.getElementById('bizExpensesDate_'+biz);
+    const catEl = document.getElementById('bizExpensesCategory_'+biz);
+    const amtEl = document.getElementById('bizExpensesAmount_'+biz);
+    const amount = parseCurrency(amtEl.value);
+    if(!amount){ alert('Please enter an amount.'); return; }
+    const ex = dashboardData[biz+'Expenses'];
+    ex.entries.push({ id:'exp'+Date.now(), date: dateEl.value || new Date().toISOString().slice(0,10), category: catEl.value.trim(), amount });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    dateEl.value=''; catEl.value=''; amtEl.value='';
+    renderBizExpenses(biz);
+    await saveSetting(biz+'Expenses', ex);
+    playChime(920);
+  }
+
+  async function removeBizExpensesEntry(biz, id){
+    const ex = dashboardData[biz+'Expenses'];
+    ex.entries = ex.entries.filter(e=>e.id!==id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderBizExpenses(biz);
+    await saveSetting(biz+'Expenses', ex);
+  }
+
+  // ---- Cash flow: auto-rolled up from this period's revenue minus logged expenses, no separate entry ----
+  function getBizRevenue(biz){
+    const snap = getCurrentSnapshot();
+    if(biz === 'bw') return snap.bw.revenue;
+    if(biz === 'ns') return snap.ns.revenue;
+    if(biz === 'pk') return pkRevenue(snap);
+    return 0;
+  }
+
+  function renderBizCashflow(biz){
+    const revEl = document.getElementById('bizCfRevenue_' + biz);
+    if(!revEl) return;
+    const revenue = getBizRevenue(biz);
+    const expenses = (dashboardData[biz+'Expenses'].entries||[]).reduce((a,e)=>a+(e.amount||0),0);
+    revEl.textContent = fmtPeso(revenue);
+    document.getElementById('bizCfExpenses_' + biz).textContent = fmtPeso(expenses);
+    document.getElementById('bizCfNet_' + biz).textContent = fmtPeso(revenue - expenses);
+  }
+
   function toggleSidebar(){
+
     document.getElementById('sidebar').classList.toggle('collapsed');
     document.getElementById('dashboard').classList.toggle('sidebar-collapsed');
   }
@@ -2620,6 +3126,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     items: [] // [{ id, month:'2026-09', category, amount }]
   };
 
+  // Simple per-business trackers for Prokora, Baccarat Win, and Nexstack — lighter versions
+  // of Master Baccarat's Sales/Marketing/Team/Operating/Expenses tabs (org charts are tracked
+  // separately via defaultMbOrgChart's siblings above).
+  function defaultBizSales(){ return { entries: [] }; }       // [{ id, date, amount, notes }]
+  function defaultBizMarketing(){ return { entries: [] }; }   // [{ id, date, title, notes }]
+  function defaultBizExpenses(){ return { entries: [] }; }    // [{ id, date, category, amount }]
+  function defaultBizChecklist(){ return { tasks: [] }; }     // [{ id, label, done, lastUpdated }]
+
   const defaultInvestment = {
     properties: {
       condo: { value:0, loanBalance:0 },
@@ -2748,7 +3262,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mbOrgChart: JSON.parse(JSON.stringify(defaultMbOrgChart)),
     nsOrgChart: JSON.parse(JSON.stringify(defaultNsOrgChart)),
     bwOrgChart: JSON.parse(JSON.stringify(defaultBwOrgChart)),
-    pkOrgChart: JSON.parse(JSON.stringify(defaultPkOrgChart))
+    pkOrgChart: JSON.parse(JSON.stringify(defaultPkOrgChart)),
+    pkSales: defaultBizSales(), pkMarketing: defaultBizMarketing(), pkExpenses: defaultBizExpenses(), pkTeam: defaultBizChecklist(), pkOperating: defaultBizChecklist(),
+    bwSales: defaultBizSales(), bwMarketing: defaultBizMarketing(), bwExpenses: defaultBizExpenses(), bwTeam: defaultBizChecklist(), bwOperating: defaultBizChecklist(),
+    nsSales: defaultBizSales(), nsMarketing: defaultBizMarketing(), nsExpenses: defaultBizExpenses(), nsTeam: defaultBizChecklist(), nsOperating: defaultBizChecklist()
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -2859,6 +3376,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.pkOrgChart){
       parsed.pkOrgChart = JSON.parse(JSON.stringify(defaultPkOrgChart));
     }
+    ['pk','bw','ns'].forEach(biz => {
+      if(!parsed[biz+'Sales']) parsed[biz+'Sales'] = defaultBizSales();
+      if(!parsed[biz+'Marketing']) parsed[biz+'Marketing'] = defaultBizMarketing();
+      if(!parsed[biz+'Expenses']) parsed[biz+'Expenses'] = defaultBizExpenses();
+      if(!parsed[biz+'Team']) parsed[biz+'Team'] = defaultBizChecklist();
+      if(!parsed[biz+'Operating']) parsed[biz+'Operating'] = defaultBizChecklist();
+    });
     parsed.dataVersion = 14;
     return parsed;
   }
@@ -2994,7 +3518,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbOrgChart: settings.mbOrgChart || JSON.parse(JSON.stringify(defaultMbOrgChart)),
         nsOrgChart: settings.nsOrgChart || JSON.parse(JSON.stringify(defaultNsOrgChart)),
         bwOrgChart: settings.bwOrgChart || JSON.parse(JSON.stringify(defaultBwOrgChart)),
-        pkOrgChart: settings.pkOrgChart || JSON.parse(JSON.stringify(defaultPkOrgChart))
+        pkOrgChart: settings.pkOrgChart || JSON.parse(JSON.stringify(defaultPkOrgChart)),
+        pkSales: settings.pkSales || defaultBizSales(), pkMarketing: settings.pkMarketing || defaultBizMarketing(), pkExpenses: settings.pkExpenses || defaultBizExpenses(), pkTeam: settings.pkTeam || defaultBizChecklist(), pkOperating: settings.pkOperating || defaultBizChecklist(),
+        bwSales: settings.bwSales || defaultBizSales(), bwMarketing: settings.bwMarketing || defaultBizMarketing(), bwExpenses: settings.bwExpenses || defaultBizExpenses(), bwTeam: settings.bwTeam || defaultBizChecklist(), bwOperating: settings.bwOperating || defaultBizChecklist(),
+        nsSales: settings.nsSales || defaultBizSales(), nsMarketing: settings.nsMarketing || defaultBizMarketing(), nsExpenses: settings.nsExpenses || defaultBizExpenses(), nsTeam: settings.nsTeam || defaultBizChecklist(), nsOperating: settings.nsOperating || defaultBizChecklist()
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
