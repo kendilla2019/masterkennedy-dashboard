@@ -961,6 +961,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="btn small" onclick="addBizChecklistTask('mbPlanA','planANewTask_mb','planATaskList_mb')">+ Add</button>
         </div>
       </div>
+
+
+      <div class="card" style="--accent:#e0453f;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_mbPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_mbPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','mbPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','mbPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','mbPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_mbPlanA" onclick="pickOrgPaintColor('mbPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_mbPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_mbPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_mbPlanA').click();document.getElementById('orgPalettePopover_mbPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'mbPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_mbPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'mbPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('mbPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_mbPlanA">
+          <svg id="orgConnectorSvg_mbPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_mbPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_mbPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'mbPlanA')">
+      </div>
     </div>
   </div>
 
@@ -1129,6 +1160,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="btn small" onclick="addBizChecklistTask('bwPlanA','planANewTask_bw','planATaskList_bw')">+ Add</button>
         </div>
       </div>
+
+
+      <div class="card" style="--accent:#b8323a;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_bwPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_bwPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','bwPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','bwPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','bwPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_bwPlanA" onclick="pickOrgPaintColor('bwPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_bwPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_bwPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_bwPlanA').click();document.getElementById('orgPalettePopover_bwPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'bwPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_bwPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'bwPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('bwPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_bwPlanA">
+          <svg id="orgConnectorSvg_bwPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_bwPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_bwPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'bwPlanA')">
+      </div>
     </div>
   </div>
 
@@ -1295,6 +1357,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="field"><label>New task</label><input type="text" id="planANewTask_ns" placeholder="e.g. Review this month's targets"></div>
           <button class="btn small" onclick="addBizChecklistTask('nsPlanA','planANewTask_ns','planATaskList_ns')">+ Add</button>
         </div>
+      </div>
+
+
+      <div class="card" style="--accent:#1c9fe0;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_nsPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_nsPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','nsPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','nsPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','nsPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_nsPlanA" onclick="pickOrgPaintColor('nsPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_nsPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_nsPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_nsPlanA').click();document.getElementById('orgPalettePopover_nsPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'nsPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_nsPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'nsPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('nsPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_nsPlanA">
+          <svg id="orgConnectorSvg_nsPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_nsPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_nsPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'nsPlanA')">
       </div>
     </div>
   </div>
@@ -1486,6 +1579,37 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="field"><label>New task</label><input type="text" id="planANewTask_pk" placeholder="e.g. Review this month's targets"></div>
           <button class="btn small" onclick="addBizChecklistTask('pkPlanA','planANewTask_pk','planATaskList_pk')">+ Add</button>
         </div>
+      </div>
+
+
+      <div class="card" style="--accent:#1a4fc4;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_pkPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_pkPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','pkPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','pkPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','pkPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_pkPlanA" onclick="pickOrgPaintColor('pkPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_pkPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_pkPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_pkPlanA').click();document.getElementById('orgPalettePopover_pkPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'pkPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_pkPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'pkPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('pkPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_pkPlanA">
+          <svg id="orgConnectorSvg_pkPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_pkPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_pkPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'pkPlanA')">
       </div>
     </div>
   </div>
@@ -2684,7 +2808,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Org chart engine — supports multiple independent instances keyed by 'main' (the global
   // Team page) plus one per business ('mb','ns','bw','pk'), each with its own data, layout,
   // zoom, and DOM ids so they don't interfere with each other.
-  const orgChartKeys = ['main','mb','ns','bw','pk'];
+  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA'];
   function orgDataKeyFor(key){ return key === 'main' ? 'teamOrgChart' : key + 'OrgChart'; }
   function orgTreeFor(key){ return dashboardData[orgDataKeyFor(key)]; }
   function orgDomId(base, key){ return key === 'main' ? base : `${base}_${key}`; }
@@ -3292,6 +3416,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ]
   };
 
+  // Plan A mindmaps — same org-chart widget as each business's Team tab, but a fresh blank
+  // starting point since Plan A tracks ideas/plans rather than reporting lines.
+  const defaultMbPlanAOrgChart = { id: 'mbpa_root', name: 'MASTER BACCARAT — PLAN A', color: '#e0453f', children: [] };
+  const defaultPkPlanAOrgChart = { id: 'pkpa_root', name: 'PROKORA — PLAN A', color: '#1a4fc4', children: [] };
+  const defaultBwPlanAOrgChart = { id: 'bwpa_root', name: 'BACCARAT WIN — PLAN A', color: '#b8323a', children: [] };
+  const defaultNsPlanAOrgChart = { id: 'nspa_root', name: 'NEXSTACK — PLAN A', color: '#1c9fe0', children: [] };
+  const defaultPlanAOrgChartByBiz = { mb: defaultMbPlanAOrgChart, pk: defaultPkPlanAOrgChart, bw: defaultBwPlanAOrgChart, ns: defaultNsPlanAOrgChart };
+
   const defaultData = {
     dataVersion: 14,
     lastUpdated: null,
@@ -3320,7 +3452,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     pkSales: defaultBizSales(), pkMarketing: defaultBizMarketing(), pkExpenses: defaultBizExpenses(), pkTeam: defaultBizChecklist(), pkOperating: defaultBizChecklist(),
     bwSales: defaultBizSales(), bwMarketing: defaultBizMarketing(), bwExpenses: defaultBizExpenses(), bwTeam: defaultBizChecklist(), bwOperating: defaultBizChecklist(),
     nsSales: defaultBizSales(), nsMarketing: defaultBizMarketing(), nsExpenses: defaultBizExpenses(), nsTeam: defaultBizChecklist(), nsOperating: defaultBizChecklist(),
-    mbPlanA: defaultBizChecklist(), pkPlanA: defaultBizChecklist(), bwPlanA: defaultBizChecklist(), nsPlanA: defaultBizChecklist()
+    mbPlanA: defaultBizChecklist(), pkPlanA: defaultBizChecklist(), bwPlanA: defaultBizChecklist(), nsPlanA: defaultBizChecklist(),
+    mbPlanAOrgChart: JSON.parse(JSON.stringify(defaultMbPlanAOrgChart)),
+    pkPlanAOrgChart: JSON.parse(JSON.stringify(defaultPkPlanAOrgChart)),
+    bwPlanAOrgChart: JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
+    nsPlanAOrgChart: JSON.parse(JSON.stringify(defaultNsPlanAOrgChart))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -3440,6 +3576,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     });
     ['mb','pk','bw','ns'].forEach(biz => {
       if(!parsed[biz+'PlanA']) parsed[biz+'PlanA'] = defaultBizChecklist();
+      if(!parsed[biz+'PlanAOrgChart']) parsed[biz+'PlanAOrgChart'] = JSON.parse(JSON.stringify(defaultPlanAOrgChartByBiz[biz]));
     });
     parsed.dataVersion = 14;
     return parsed;
@@ -3580,7 +3717,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         pkSales: settings.pkSales || defaultBizSales(), pkMarketing: settings.pkMarketing || defaultBizMarketing(), pkExpenses: settings.pkExpenses || defaultBizExpenses(), pkTeam: settings.pkTeam || defaultBizChecklist(), pkOperating: settings.pkOperating || defaultBizChecklist(),
         bwSales: settings.bwSales || defaultBizSales(), bwMarketing: settings.bwMarketing || defaultBizMarketing(), bwExpenses: settings.bwExpenses || defaultBizExpenses(), bwTeam: settings.bwTeam || defaultBizChecklist(), bwOperating: settings.bwOperating || defaultBizChecklist(),
         nsSales: settings.nsSales || defaultBizSales(), nsMarketing: settings.nsMarketing || defaultBizMarketing(), nsExpenses: settings.nsExpenses || defaultBizExpenses(), nsTeam: settings.nsTeam || defaultBizChecklist(), nsOperating: settings.nsOperating || defaultBizChecklist(),
-        mbPlanA: settings.mbPlanA || defaultBizChecklist(), pkPlanA: settings.pkPlanA || defaultBizChecklist(), bwPlanA: settings.bwPlanA || defaultBizChecklist(), nsPlanA: settings.nsPlanA || defaultBizChecklist()
+        mbPlanA: settings.mbPlanA || defaultBizChecklist(), pkPlanA: settings.pkPlanA || defaultBizChecklist(), bwPlanA: settings.bwPlanA || defaultBizChecklist(), nsPlanA: settings.nsPlanA || defaultBizChecklist(),
+        mbPlanAOrgChart: settings.mbPlanAOrgChart || JSON.parse(JSON.stringify(defaultMbPlanAOrgChart)),
+        pkPlanAOrgChart: settings.pkPlanAOrgChart || JSON.parse(JSON.stringify(defaultPkPlanAOrgChart)),
+        bwPlanAOrgChart: settings.bwPlanAOrgChart || JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
+        nsPlanAOrgChart: settings.nsPlanAOrgChart || JSON.parse(JSON.stringify(defaultNsPlanAOrgChart))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
