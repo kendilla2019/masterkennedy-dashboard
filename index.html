@@ -1265,7 +1265,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
 
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
-      <h3><span class="dot"></span>Properties</h3>
+      <h3><span class="dot"></span>Other Properties</h3>
       <div class="sub">Value, loan, equity, income, expenses, and net cash flow — per property</div>
       <table style="margin-top:12px;" id="propertyTable">
         <tr><th>Property</th><th>Value</th><th>Loan</th><th>Equity</th><th>Income</th><th>Expenses</th><th>Net cash flow</th></tr>
@@ -1327,27 +1327,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       </div>
       <table id="capitalShareTable" style="margin-top:14px;"><tr><th>Name</th><th>Amount</th><th></th></tr></table>
       <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="capitalShareTotal">Total: ₱0.00</div>
-    </div>
-
-    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
-      <h3><span class="dot"></span>Other investments</h3>
-      <div class="sub">Anything not covered above — stocks, crypto, another property, a business stake, etc.</div>
-      <div class="edit-grid" style="grid-template-columns:1.3fr 1fr 1fr auto;align-items:end;margin-top:12px;">
-        <div class="field"><label>Name</label><input type="text" id="otherInv_name" placeholder="e.g. Stocks, Crypto, Another business"></div>
-        <div class="field"><label>Category</label>
-          <select id="otherInv_category">
-            <option value="Stocks">Stocks</option>
-            <option value="Crypto">Crypto</option>
-            <option value="Business stake">Business stake</option>
-            <option value="Property">Property</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="field"><label>Current value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="otherInv_value" onblur="formatCurrencyField(this)"></div>
-        <button class="btn small" onclick="addOtherInvestment()">+ Add</button>
-      </div>
-      <table id="otherInvestmentTable" style="margin-top:14px;"><tr><th>Name</th><th>Category</th><th>Value</th><th></th></tr></table>
-      <div style="text-align:right;margin-top:10px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;" id="otherInvestmentTotal">Total: ₱0.00</div>
     </div>
 
     <div class="card" style="--accent:#2f6fed;">
@@ -4100,10 +4079,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       : '<div style="color:var(--muted);font-size:13px;">No transactions logged yet.</div>';
 
     document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.nexstackEquity);
-
-    document.getElementById('otherInvestmentTable').innerHTML = '<tr><th>Name</th><th>Category</th><th>Value</th><th></th></tr>' +
-      inv.otherInvestments.map(o => `<tr><td>${o.name}</td><td>${o.category}</td><td>${fmtPeso(o.value)}</td><td><button class="del-btn" onclick="removeOtherInvestment('${o.id}')">Remove</button></td></tr>`).join('');
-    document.getElementById('otherInvestmentTotal').textContent = `Total: ${fmtPeso(otherInvTotal)}`;
 
     document.getElementById('goldTable').innerHTML = '<tr><th>Description</th><th>Value</th><th></th></tr>' +
       inv.goldHoldings.map(g => `<tr><td>${g.name}</td><td>${fmtPeso(g.value)}</td><td><button class="del-btn" onclick="removeGoldHolding('${g.id}')">Remove</button></td></tr>`).join('');
