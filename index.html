@@ -1253,7 +1253,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div><h3 style="margin:0;"><span class="dot"></span>Custom tiles</h3><div class="sub" style="margin:4px 0 0;">Add your own — click a name or amount to edit either one</div></div>
+        <div><h3 style="margin:0;"><span class="dot"></span>Investment</h3><div class="sub" style="margin:4px 0 0;">Add your own — click a name or amount to edit either one</div></div>
         <button class="btn small" onclick="addCustomTile()">+ Add tile</button>
       </div>
       <div class="grid-3" style="margin-top:14px;margin-bottom:0;" id="customTilesGrid"></div>
@@ -4044,7 +4044,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('netWorthAssets').textContent = fmtPeso(totalAssets);
     document.getElementById('netWorthLiabilities').textContent = fmtPeso(totalLiabilities);
     document.getElementById('netWorthBreakdown').textContent =
-      `Assets: Properties ${fmtPeso(propValueTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Capital share ${fmtPeso(capitalShareTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Custom tiles ${fmtPeso(customTilesTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
+      `Assets: Properties ${fmtPeso(propValueTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Gold ${fmtPeso(goldTotal)} + Capital share ${fmtPeso(capitalShareTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Investment ${fmtPeso(customTilesTotal)} + Vehicle ${fmtPeso(vehicleNet)} + Emergency fund ${fmtPeso(inv.emergencyFund)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
 
     document.getElementById('capitalShareTable').innerHTML = '<tr><th>Name</th><th>Amount</th><th></th></tr>' +
       inv.capitalShares.map(c => `<tr><td>${c.name}</td><td>${fmtPeso(c.amount)}</td><td><button class="del-btn" onclick="removeCapitalShare('${c.id}')">Remove</button></td></tr>`).join('');
