@@ -2041,9 +2041,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const colorStyle = isHex ? `style="background:${node.color};"` : '';
     const isSelected = orgSelectedNodeId === node.id;
     const removeBtn = isRoot ? '' : `<button onclick="removeOrgNode('${node.id}')" title="Remove">✕</button>`;
+    const displayName = (node.name && node.name.trim()) ? node.name : '(unnamed — click ✕ to remove)';
     const nodeHtml = `
-      <div class="org-node ${colorClass}" ${colorStyle}>
-        <span class="org-name" onclick="orgNameClicked('${node.id}')" ondblclick="renameOrgNode('${node.id}')" title="Click to show add/remove, double-click to rename, or single-click to paint if a color is picked">${node.name}</span>
+      <div class="org-node ${colorClass}" ${colorStyle}${!(node.name && node.name.trim()) ? ' style="border:2px dashed #e0453f;"' : ''}>
+        <span class="org-name" onclick="orgNameClicked('${node.id}')" ondblclick="renameOrgNode('${node.id}')" title="Click to show add/remove, double-click to rename, or single-click to paint if a color is picked">${displayName}</span>
         ${isSelected ? `<button onclick="addOrgChild('${node.id}')" title="Add person under this">+</button>${removeBtn}` : ''}
       </div>`;
     if(!node.children || !node.children.length){
