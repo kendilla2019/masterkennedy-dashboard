@@ -1299,12 +1299,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
 
     <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
-      <h3><span class="dot"></span>Nexstack equity</h3>
-      <div class="sub">Fixed business stake</div>
-      <div class="stat" style="margin-top:12px;"><div class="label">Nexstack (equity stake)</div><div class="value" id="invNexstackEquity">₱0.00</div></div>
-    </div>
-
-    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
       <h3><span class="dot"></span>Capital share</h3>
       <div class="sub">Your ownership stake or capital put into ventures, partnerships, or investments</div>
       <div class="edit-grid" style="grid-template-columns:1.3fr 1fr auto;align-items:end;margin-top:12px;">
@@ -1333,10 +1327,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="field"><label>Land loan balance (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_landLoan" onblur="formatCurrencyField(this)"></div>
         </div>
 
-        <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Other numbers</h4>
-        <div class="edit-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));">
-          <div class="field"><label>Nexstack equity (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="inv_nexstackEquity" onblur="formatCurrencyField(this)"></div>
-        </div>
         <button class="btn small" style="margin-top:6px;" onclick="saveInvestmentData()">Save</button>
         <span id="invSaveConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
 
@@ -3983,7 +3973,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const customTilesTotal = inv.customTiles.reduce((a,t)=>a+t.amount,0);
     const otherLiabilitiesTotal = inv.liabilities.reduce((a,l)=>a+l.amount,0);
 
-    const totalAssets = propValueTotal + inv.nexstackEquity + otherInvTotal + capitalShareTotal + customTilesTotal;
+    const totalAssets = propValueTotal + otherInvTotal + capitalShareTotal + customTilesTotal;
     const totalLiabilities = propLoanTotal + otherLiabilitiesTotal;
     const netWorth = totalAssets - totalLiabilities;
 
@@ -3991,7 +3981,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     document.getElementById('netWorthAssets').textContent = fmtPeso(totalAssets);
     document.getElementById('netWorthLiabilities').textContent = fmtPeso(totalLiabilities);
     document.getElementById('netWorthBreakdown').textContent =
-      `Assets: Properties ${fmtPeso(propValueTotal)} + Nexstack ${fmtPeso(inv.nexstackEquity)} + Capital share ${fmtPeso(capitalShareTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Investment ${fmtPeso(customTilesTotal)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
+      `Assets: Properties ${fmtPeso(propValueTotal)} + Capital share ${fmtPeso(capitalShareTotal)} + Other investments ${fmtPeso(otherInvTotal)} + Investment ${fmtPeso(customTilesTotal)}. Liabilities: Property loans ${fmtPeso(propLoanTotal)} + Other ${fmtPeso(otherLiabilitiesTotal)}.`;
 
     document.getElementById('capitalShareTable').innerHTML = '<tr><th>Name</th><th>Amount</th><th></th></tr>' +
       inv.capitalShares.map(c => `<tr><td>${c.name}</td><td>${fmtPeso(c.amount)}</td><td><button class="del-btn" onclick="removeCapitalShare('${c.id}')">Remove</button></td></tr>`).join('');
@@ -4039,8 +4029,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         `).join('')
       : '<div style="color:var(--muted);font-size:13px;">No transactions logged yet.</div>';
 
-    document.getElementById('invNexstackEquity').textContent = fmtPeso(inv.nexstackEquity);
-
     document.getElementById('liabilityTable').innerHTML = '<tr><th>Name</th><th>Amount</th><th></th></tr>' +
       inv.liabilities.map(l => `<tr><td>${l.name}</td><td>${fmtPeso(l.amount)}</td><td><button class="del-btn" onclick="removeLiability('${l.id}')">Remove</button></td></tr>`).join('');
     document.getElementById('liabilityTotal').textContent = `Total: ${fmtPeso(otherLiabilitiesTotal)}`;
@@ -4060,7 +4048,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       document.getElementById('inv_astoriaLoan').value = fmtPeso(inv.properties.astoria.loanBalance).slice(1);
       document.getElementById('inv_landValue').value = fmtPeso(inv.properties.land.value).slice(1);
       document.getElementById('inv_landLoan').value = fmtPeso(inv.properties.land.loanBalance).slice(1);
-      document.getElementById('inv_nexstackEquity').value = fmtPeso(inv.nexstackEquity).slice(1);
       form.style.display = 'block';
       document.getElementById('invEditToggleBtn').textContent = 'Hide';
     }
@@ -4074,7 +4061,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     inv.properties.astoria.loanBalance = clampNonNeg(parseCurrency(document.getElementById('inv_astoriaLoan').value));
     inv.properties.land.value = clampNonNeg(parseCurrency(document.getElementById('inv_landValue').value));
     inv.properties.land.loanBalance = clampNonNeg(parseCurrency(document.getElementById('inv_landLoan').value));
-    inv.nexstackEquity = clampNonNeg(parseCurrency(document.getElementById('inv_nexstackEquity').value));
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     await saveSetting('investment', inv);
     renderInvestments();
