@@ -340,9 +340,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   /* Horizontal segment between siblings: each child draws the line from its own center to the
      next child's center, so the line always matches up exactly with each vertical stub above —
      first child only extends right, last child only extends left, avoiding any overshoot. */
-  .org-children.multi > .org-child-wrap::after{content:'';position:absolute;top:-36px;left:-24px;right:-24px;height:2px;background:#4a5a7a;}
-  .org-children.multi > .org-child-wrap:first-child::after{left:50%;}
-  .org-children.multi > .org-child-wrap:last-child::after{right:50%;}
+  .org-tree.vertical .org-children.multi > .org-child-wrap::after{content:'';position:absolute;top:-36px;left:-24px;right:-24px;height:2px;background:#4a5a7a;}
+  .org-tree.vertical .org-children.multi > .org-child-wrap:first-child::after{left:50%;}
+  .org-tree.vertical .org-children.multi > .org-child-wrap:last-child::after{right:50%;}
 
   /* Horizontal layout: parent on the left, children stacked vertically to the right */
   .org-tree.horizontal .org-child-wrap{flex-direction:row;align-items:center;}
