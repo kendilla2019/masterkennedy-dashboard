@@ -1199,7 +1199,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="mb-subtab" onclick="setOrgLayout('list')" data-layout="list">List</button>
         </div>
         <div style="position:relative;margin-left:auto;">
-          <button class="mb-subtab" id="orgPaintBtn" onclick="pickOrgPaintColor()">🎨 Pick a color</button>
+          <button class="mb-subtab" id="orgPaintBtn" onclick="pickOrgPaintColor()">Pick a color</button>
           <div id="orgPalettePopover" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
             <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid"></div>
             <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker').click();document.getElementById('orgPalettePopover').style.display='none';">Custom…</button>
@@ -2180,7 +2180,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function stopOrgPaintMode(){
     orgPaintColor = null;
     const btn = document.getElementById('orgPaintBtn');
-    btn.textContent = '🎨 Pick a color';
+    btn.textContent = 'Pick a color';
     btn.onclick = pickOrgPaintColor;
     document.getElementById('orgHintText').textContent = 'Click a name to show its + / ✕ options, double-click to rename';
   }
@@ -2253,7 +2253,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                ondrop="walletDrop(event,'${acc.id}')"
                onclick="openWalletDetail('${acc.id}')"
                title="Click for transaction history · drag to reorder">
-            <button class="wc-remove" onclick="event.stopPropagation();cycleWalletColor('${acc.id}')" title="Change color" style="right:40px;">🎨</button>
+            <button class="wc-remove" onclick="event.stopPropagation();cycleWalletColor('${acc.id}')" title="Change color" style="right:40px;">●</button>
             <button class="wc-remove" onclick="event.stopPropagation();removeWalletAccount('${acc.id}')" title="Remove">✕</button>
             <div class="wc-name">${acc.name}</div>
             <div>
@@ -3951,7 +3951,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div class="stat" ${tileStyle}>
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div class="label" id="tile-name-${t.id}" onclick="editCustomTileName('${t.id}')" style="cursor:pointer;" title="Click to rename">${t.name || 'Untitled'}</div>
-                <button onclick="cycleCustomTileColor('${t.id}')" title="Change color" style="background:rgba(255,255,255,.1);border:none;color:var(--muted);border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;flex-shrink:0;">🎨</button>
+                <button onclick="cycleCustomTileColor('${t.id}')" title="Change color" style="background:rgba(255,255,255,.1);border:none;color:var(--muted);border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;flex-shrink:0;">●</button>
               </div>
               <div class="value" id="tile-amount-${t.id}" onclick="editCustomTileAmount('${t.id}')" style="cursor:pointer;" title="Click to edit">${fmtPeso(t.amount)}</div>
               <div class="foot" id="tile-subtitle-${t.id}" onclick="editCustomTileSubtitle('${t.id}')" style="cursor:pointer;color:#5fbf7a;" title="Click to edit">${t.subtitle || 'Click to add a note'}</div>
