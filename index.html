@@ -653,6 +653,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="mb-subtab" data-mbview="operating" onclick="switchMbSubview('operating')">Operating</button>
       <button class="mb-subtab" data-mbview="expenses" onclick="switchMbSubview('expenses')">Expenses</button>
       <button class="mb-subtab" data-mbview="cashflow" onclick="switchMbSubview('cashflow')">Cash Flow</button>
+      <button class="mb-subtab" data-mbview="plana" onclick="switchMbSubview('plana')">Plan A</button>
     </div>
 
     <div class="mb-subview active" id="mbSubview-overview">
@@ -949,6 +950,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <canvas id="chartMbCashflow"></canvas>
       </div>
     </div>
+
+    <div class="mb-subview" id="mbSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#e0453f;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_mb" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_mb" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('mbPlanA','planANewTask_mb','planATaskList_mb')">+ Add</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- BACCARAT WIN -->
@@ -961,6 +974,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('bw','operating')">Operating</button>
       <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('bw','expenses')">Expenses</button>
       <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('bw','cashflow')">Cash Flow</button>
+      <button class="mb-subtab" data-bizview="plana" onclick="switchBizSubview('bw','plana')">Plan A</button>
     </div>
 
     <div class="bw-subview active" id="bwSubview-overview">
@@ -1104,6 +1118,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
       </div>
     </div>
+
+    <div class="bw-subview" id="bwSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#b8323a;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_bw" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_bw" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('bwPlanA','planANewTask_bw','planATaskList_bw')">+ Add</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- NEXSTACK -->
@@ -1116,6 +1142,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('ns','operating')">Operating</button>
       <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('ns','expenses')">Expenses</button>
       <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('ns','cashflow')">Cash Flow</button>
+      <button class="mb-subtab" data-bizview="plana" onclick="switchBizSubview('ns','plana')">Plan A</button>
     </div>
 
     <div class="ns-subview active" id="nsSubview-overview">
@@ -1258,6 +1285,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         </div>
       </div>
     </div>
+
+    <div class="ns-subview" id="nsSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#1c9fe0;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_ns" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_ns" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('nsPlanA','planANewTask_ns','planATaskList_ns')">+ Add</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- PROKORA -->
@@ -1270,6 +1309,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('pk','operating')">Operating</button>
       <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('pk','expenses')">Expenses</button>
       <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('pk','cashflow')">Cash Flow</button>
+      <button class="mb-subtab" data-bizview="plana" onclick="switchBizSubview('pk','plana')">Plan A</button>
     </div>
 
     <div class="pk-subview active" id="pkSubview-overview">
@@ -1433,6 +1473,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <div class="stat"><div class="label">Revenue</div><div class="value" id="bizCfRevenue_pk">₱0.00</div><div class="foot">This period</div></div>
           <div class="stat"><div class="label">Expenses logged</div><div class="value" id="bizCfExpenses_pk">₱0.00</div><div class="foot">From the Expenses tab</div></div>
           <div class="stat"><div class="label">Net cash flow</div><div class="value" id="bizCfNet_pk">₱0.00</div><div class="foot">Revenue minus expenses</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pk-subview" id="pkSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#1a4fc4;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_pk" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_pk" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('pkPlanA','planANewTask_pk','planATaskList_pk')">+ Add</button>
         </div>
       </div>
     </div>
@@ -2113,6 +2165,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(view === 'operating') renderOperatingDashboard();
     if(view === 'expenses') renderExpensesDashboard();
     if(view === 'cashflow') renderCashflowDashboard();
+    if(view === 'plana') renderBizChecklist('mbPlanA', 'planATaskList_mb');
   }
 
   // Generalized per-business subview engine for Prokora, Baccarat Win, and Nexstack — a
@@ -2129,6 +2182,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(view === 'operating') renderBizChecklist(biz + 'Operating', 'bizOperatingTaskList_' + biz);
     if(view === 'expenses') renderBizExpenses(biz);
     if(view === 'cashflow') renderBizCashflow(biz);
+    if(view === 'plana') renderBizChecklist(biz + 'PlanA', 'planATaskList_' + biz);
   }
 
   // ---- Generic weekly checklist (used for both each business's Team and Operating tabs) ----
@@ -3265,7 +3319,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     pkOrgChart: JSON.parse(JSON.stringify(defaultPkOrgChart)),
     pkSales: defaultBizSales(), pkMarketing: defaultBizMarketing(), pkExpenses: defaultBizExpenses(), pkTeam: defaultBizChecklist(), pkOperating: defaultBizChecklist(),
     bwSales: defaultBizSales(), bwMarketing: defaultBizMarketing(), bwExpenses: defaultBizExpenses(), bwTeam: defaultBizChecklist(), bwOperating: defaultBizChecklist(),
-    nsSales: defaultBizSales(), nsMarketing: defaultBizMarketing(), nsExpenses: defaultBizExpenses(), nsTeam: defaultBizChecklist(), nsOperating: defaultBizChecklist()
+    nsSales: defaultBizSales(), nsMarketing: defaultBizMarketing(), nsExpenses: defaultBizExpenses(), nsTeam: defaultBizChecklist(), nsOperating: defaultBizChecklist(),
+    mbPlanA: defaultBizChecklist(), pkPlanA: defaultBizChecklist(), bwPlanA: defaultBizChecklist(), nsPlanA: defaultBizChecklist()
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -3382,6 +3437,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(!parsed[biz+'Expenses']) parsed[biz+'Expenses'] = defaultBizExpenses();
       if(!parsed[biz+'Team']) parsed[biz+'Team'] = defaultBizChecklist();
       if(!parsed[biz+'Operating']) parsed[biz+'Operating'] = defaultBizChecklist();
+    });
+    ['mb','pk','bw','ns'].forEach(biz => {
+      if(!parsed[biz+'PlanA']) parsed[biz+'PlanA'] = defaultBizChecklist();
     });
     parsed.dataVersion = 14;
     return parsed;
@@ -3521,7 +3579,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         pkOrgChart: settings.pkOrgChart || JSON.parse(JSON.stringify(defaultPkOrgChart)),
         pkSales: settings.pkSales || defaultBizSales(), pkMarketing: settings.pkMarketing || defaultBizMarketing(), pkExpenses: settings.pkExpenses || defaultBizExpenses(), pkTeam: settings.pkTeam || defaultBizChecklist(), pkOperating: settings.pkOperating || defaultBizChecklist(),
         bwSales: settings.bwSales || defaultBizSales(), bwMarketing: settings.bwMarketing || defaultBizMarketing(), bwExpenses: settings.bwExpenses || defaultBizExpenses(), bwTeam: settings.bwTeam || defaultBizChecklist(), bwOperating: settings.bwOperating || defaultBizChecklist(),
-        nsSales: settings.nsSales || defaultBizSales(), nsMarketing: settings.nsMarketing || defaultBizMarketing(), nsExpenses: settings.nsExpenses || defaultBizExpenses(), nsTeam: settings.nsTeam || defaultBizChecklist(), nsOperating: settings.nsOperating || defaultBizChecklist()
+        nsSales: settings.nsSales || defaultBizSales(), nsMarketing: settings.nsMarketing || defaultBizMarketing(), nsExpenses: settings.nsExpenses || defaultBizExpenses(), nsTeam: settings.nsTeam || defaultBizChecklist(), nsOperating: settings.nsOperating || defaultBizChecklist(),
+        mbPlanA: settings.mbPlanA || defaultBizChecklist(), pkPlanA: settings.pkPlanA || defaultBizChecklist(), bwPlanA: settings.bwPlanA || defaultBizChecklist(), nsPlanA: settings.nsPlanA || defaultBizChecklist()
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
