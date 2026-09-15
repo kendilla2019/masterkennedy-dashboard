@@ -447,10 +447,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <span class="sidebar-brand-text"><span class="name">MasterKennedy</span><span class="subtitle">Business Dashboard</span></span>
     </div>
     <nav class="sidebar-nav" id="tabBar">
-      <button class="tab active" data-view="mainDashboard" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Dashboard</span></button>
+      <button class="tab active" data-view="mainDashboard" data-roles="admin,mb,bw,ns,pk,mbn" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Dashboard</span></button>
       <button class="tab" data-view="finance" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▦</span><span class="nav-label">Finance</span></button>
-      <button class="tab" data-view="calendar" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
-      <button class="tab" data-view="team" data-roles="admin,mb,bw,ns,pk" style="--accent:#2f6fed"><span class="nav-icon">◈</span><span class="nav-label">Team</span></button>
+      <button class="tab" data-view="calendar" data-roles="admin,mb,bw,ns,pk,mbn" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
+      <button class="tab" data-view="team" data-roles="admin,mb,bw,ns,pk,mbn" style="--accent:#2f6fed"><span class="nav-icon">◈</span><span class="nav-label">Team</span></button>
       <button class="tab" data-view="investments" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">◆</span><span class="nav-label">Investments</span></button>
       <button class="tab" data-view="myprofile" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">☺</span><span class="nav-label">My Profile</span></button>
       <button class="tab" data-view="wallet" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">▤</span><span class="nav-label">Wallet</span></button>
@@ -458,6 +458,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="mb" data-roles="admin,mb" style="--accent:#e0453f"><span class="nav-icon">●</span><span class="nav-label">Master Baccarat</span></button>
       <button class="tab" data-view="pk" data-roles="admin,pk" style="--accent:#1a4fc4"><span class="nav-icon">●</span><span class="nav-label">Prokora</span></button>
+      <button class="tab" data-view="mbn" data-roles="admin,mbn" style="--accent:#8b5cf6"><span class="nav-icon">●</span><span class="nav-label">MBN</span></button>
       <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a"><span class="nav-icon">●</span><span class="nav-label">Baccarat Win</span></button>
       <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0"><span class="nav-icon">●</span><span class="nav-label">Nexstack</span></button>
       <div class="sidebar-divider"></div>
@@ -1614,6 +1615,242 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
   </div>
 
+  <!-- MBN -->
+  <div class="view" id="mbn">
+    <div class="mb-subnav" id="mbnSubnav">
+      <button class="mb-subtab active" data-bizview="overview" onclick="switchBizSubview('mbn','overview')">Overview</button>
+      <button class="mb-subtab" data-bizview="sales" onclick="switchBizSubview('mbn','sales')">Sales</button>
+      <button class="mb-subtab" data-bizview="marketing" onclick="switchBizSubview('mbn','marketing')">Marketing</button>
+      <button class="mb-subtab" data-bizview="team" onclick="switchBizSubview('mbn','team')">Team</button>
+      <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('mbn','operating')">Operating</button>
+      <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('mbn','expenses')">Expenses</button>
+      <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('mbn','cashflow')">Cash Flow</button>
+      <button class="mb-subtab" data-bizview="plana" onclick="switchBizSubview('mbn','plana')">Plan A</button>
+    </div>
+
+    <div class="mbn-subview active" id="mbnSubview-overview">
+    <div class="grid-3">
+      <div class="stat"><div class="label">Total income</div><div class="value" id="mbnRevenueStat">₱0.00</div><div class="foot">Interest + project commission — your actual take</div></div>
+      <div class="stat"><div class="label">Interest income</div><div class="value" id="mbnInterestIncomeStat">₱0.00</div><div class="foot" id="mbnInterestIncomeFoot">Monthly, from active loans</div></div>
+      <div class="stat"><div class="label">Avg project value</div><div class="value" id="mbnAvgStat">₱0.00</div><div class="foot">Contract value, delivered + active work</div></div>
+    </div>
+    <div class="card" style="--accent:#8b5cf6;">
+      <h3><span class="dot"></span>MBN income breakdown</h3>
+      <div class="sub">Interest from loans + commission on project value — this is what MBN actually earns</div>
+      <div class="grid-3" style="margin-top:14px;margin-bottom:16px;">
+        <div class="stat" data-tip="The total amount owed back to MBN across all loans — principal plus all interest accrued so far"><div class="label">Total receivable</div><div class="value" id="mbnPayablesStat">₱0.00</div><div class="foot">Principal + accrued interest, all loans</div></div>
+        <div class="stat" data-tip="This month's interest earnings — the sum of each active loan's principal × its monthly rate"><div class="label">Interest income (monthly)</div><div class="value" id="mbnInterestStat">₱0.00</div><div class="foot" id="mbnInterestFoot">From active loans</div></div>
+        <div class="stat" data-tip="Your commission rate applied to the total project pipeline value"><div class="label">Commission income</div><div class="value" id="mbnCommissionStat">₱0.00</div><div class="foot" id="mbnCommissionFoot">This period</div></div>
+      </div>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Outstanding loans</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end;">
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="mbnLoan_principal" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Date given</label><input type="date" id="mbnLoan_date"></div>
+        <div class="field"><label>Interest (%/month)</label><input type="text" inputmode="decimal" id="mbnLoan_rate" value="5"></div>
+        <button class="btn small" onclick="addMbnLoan()">+ Add loan</button>
+      </div>
+      <table id="mbnLoanTable" style="margin-top:14px;"><tr>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('date')" title="Click to sort">Date given <span id="mbnSortIcon_date"></span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('amount')" title="Click to sort">Principal <span id="mbnSortIcon_amount"></span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('rate')" title="Click to sort">Rate <span id="mbnSortIcon_rate"></span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('months')" title="Click to sort">Months elapsed <span id="mbnSortIcon_months"></span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('interestAmount')" title="Click to sort">Interest accrued <span id="mbnSortIcon_interestAmount"></span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('payable')" title="Click to sort">Total payable <span id="mbnSortIcon_payable"></span></th>
+        <th></th>
+      </tr></table>
+
+      <h4 style="margin:22px 0 10px;font-size:13.5px;color:var(--ink);">Commission rate</h4>
+      <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;">
+        <div class="field"><label>% of project value MBN earns as commission</label><input type="text" inputmode="decimal" id="mbnCommissionRate" value="3"></div>
+        <button class="btn small" onclick="saveMbnCommissionRate()">Save rate</button>
+      </div>
+      <span id="mbnCommissionRateConfirm" class="save-confirm-text" style="margin-left:10px;font-size:12px;opacity:0;transition:opacity .3s ease;">Saved ✓</span>
+    </div>
+
+    <div class="card" style="--accent:#8b5cf6;margin-top:16px;">
+      <h3><span class="dot"></span>Project pipeline</h3>
+      <div class="sub">Active and recently delivered engagements — contract value, not MBN's take</div>
+      <div class="edit-grid" style="grid-template-columns:1fr 1.2fr 1fr 1fr auto;align-items:end;">
+        <div class="field"><label>Client</label><input type="text" id="mbnProject_client" placeholder="e.g. Acme Corp"></div>
+        <div class="field"><label>Scope</label><input type="text" id="mbnProject_scope" placeholder="e.g. Network setup"></div>
+        <div class="field"><label>Value (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="mbnProject_value" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Status</label>
+          <select id="mbnProject_status">
+            <option value="dev">In development</option>
+            <option value="live" selected>In progress</option>
+            <option value="done">Delivered</option>
+            <option value="pause">On hold</option>
+          </select>
+        </div>
+        <button class="btn small" onclick="addMbnProject()">+ Add project</button>
+      </div>
+      <table id="mbnProjectTable" style="margin-top:14px;">
+        <tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th><th></th></tr>
+      </table>
+    </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-sales" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Sales log</h3>
+        <div class="sub">Simple revenue entries — log each sale or payment as it comes in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizSalesTotal_mbn">₱0.00</div>
+        </div>
+        <div id="bizSalesList_mbn" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizSalesDate_mbn"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizSalesAmount_mbn" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Note</label><input type="text" id="bizSalesNote_mbn" placeholder="e.g. Client deposit"></div>
+          <button class="btn small" onclick="addBizSalesEntry('mbn')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-marketing" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Marketing log</h3>
+        <div class="sub">Track posts, campaigns, or outreach as they go out</div>
+        <div id="bizMarketingList_mbn" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizMarketingDate_mbn"></div>
+          <div class="field"><label>Title</label><input type="text" id="bizMarketingTitle_mbn" placeholder="e.g. Enrollment promo reel"></div>
+          <div class="field"><label>Notes</label><input type="text" id="bizMarketingNotes_mbn" placeholder="Optional"></div>
+          <button class="btn small" onclick="addBizMarketingEntry('mbn')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-team" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Weekly checklist</h3>
+        <div class="sub">Manual checkboxes for the team's recurring tasks</div>
+        <div id="bizTeamTaskList_mbn" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizTeamNewTask_mbn" placeholder="e.g. Reply to all DMs"></div>
+          <button class="btn small" onclick="addBizChecklistTask('mbnTeam','bizTeamNewTask_mbn','bizTeamTaskList_mbn')">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#8b5cf6;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Team org chart</h3>
+        <div class="sub" id="orgHintText_mbn">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_mbn" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','mbn')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','mbn')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','mbn')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_mbn" onclick="pickOrgPaintColor('mbn')">Pick a color</button>
+            <div id="orgPalettePopover_mbn" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_mbn"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_mbn').click();document.getElementById('orgPalettePopover_mbn').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'mbn')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_mbn">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'mbn')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('mbn')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_mbn">
+          <svg id="orgConnectorSvg_mbn" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_mbn" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_mbn" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'mbn')">
+      </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-operating" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Operating checklist</h3>
+        <div class="sub">Recurring operational tasks — manual for now</div>
+        <div id="bizOperatingTaskList_mbn" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizOperatingNewTask_mbn" placeholder="e.g. Check compliance"></div>
+          <button class="btn small" onclick="addBizChecklistTask('mbnOperating','bizOperatingNewTask_mbn','bizOperatingTaskList_mbn')">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-expenses" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Expenses</h3>
+        <div class="sub">Log operating costs as they come in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizExpensesTotal_mbn">₱0.00</div>
+        </div>
+        <div id="bizExpensesList_mbn" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizExpensesDate_mbn"></div>
+          <div class="field"><label>Category</label><input type="text" id="bizExpensesCategory_mbn" placeholder="e.g. Ads, tools, supplies"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizExpensesAmount_mbn" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addBizExpensesEntry('mbn')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-cashflow" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Cash flow summary</h3>
+        <div class="sub">Auto-rolled up from this period's revenue and logged expenses — no separate entry needed</div>
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="stat"><div class="label">Revenue</div><div class="value" id="bizCfRevenue_mbn">₱0.00</div><div class="foot">This period</div></div>
+          <div class="stat"><div class="label">Expenses logged</div><div class="value" id="bizCfExpenses_mbn">₱0.00</div><div class="foot">From the Expenses tab</div></div>
+          <div class="stat"><div class="label">Net cash flow</div><div class="value" id="bizCfNet_mbn">₱0.00</div><div class="foot">Revenue minus expenses</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mbn-subview" id="mbnSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#8b5cf6;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_mbn" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_mbn" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('mbnPlanA','planANewTask_mbn','planATaskList_mbn')">+ Add</button>
+        </div>
+      </div>
+
+
+      <div class="card" style="--accent:#8b5cf6;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_mbnPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_mbnPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','mbnPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','mbnPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','mbnPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_mbnPlanA" onclick="pickOrgPaintColor('mbnPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_mbnPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_mbnPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_mbnPlanA').click();document.getElementById('orgPalettePopover_mbnPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'mbnPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_mbnPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'mbnPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('mbnPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_mbnPlanA">
+          <svg id="orgConnectorSvg_mbnPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_mbnPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_mbnPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'mbnPlanA')">
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT DATA (admin only) -->
   <div class="view" id="editdata">
     <div class="card" style="--accent:#2f6fed">
@@ -2491,6 +2728,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(biz === 'bw') return snap.bw.revenue;
     if(biz === 'ns') return snap.ns.revenue;
     if(biz === 'pk') return pkRevenue(snap);
+    if(biz === 'mbn') return mbnRevenue();
     return 0;
   }
 
@@ -2808,7 +3046,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Org chart engine — supports multiple independent instances keyed by 'main' (the global
   // Team page) plus one per business ('mb','ns','bw','pk'), each with its own data, layout,
   // zoom, and DOM ids so they don't interfere with each other.
-  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA'];
+  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA','mbn','mbnPlanA'];
   function orgDataKeyFor(key){ return key === 'main' ? 'teamOrgChart' : key + 'OrgChart'; }
   function orgTreeFor(key){ return dashboardData[orgDataKeyFor(key)]; }
   function orgDomId(base, key){ return key === 'main' ? base : `${base}_${key}`; }
@@ -3336,6 +3574,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     commissionRate: 3 // % commission Prokora earns on project value (the project pipeline tracks contract value, not Prokora's actual take)
   };
 
+  // MBN — a new business set up the same way as Prokora (loan interest + commission on a
+  // self-tracked project pipeline), but self-contained rather than tied to the period-history
+  // system, so its pipeline is entered directly on its own Overview tab.
+  const defaultMbnFinance = {
+    loans: [],        // [{ id, principal, dateGiven, rate }]
+    commissionRate: 3,
+    projects: []      // [{ id, client, scope, value, status }]
+  };
+
   const defaultMyProfile = {
     goalInLife: '',
     goalSavedAt: null
@@ -3416,13 +3663,18 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ]
   };
 
+  // Fresh business, blank org chart to start — Kennedy builds it out himself.
+  const defaultMbnOrgChart = { id: 'mbnc_root', name: 'MBN', color: '#8b5cf6', children: [] };
+
   // Plan A mindmaps — same org-chart widget as each business's Team tab, but a fresh blank
   // starting point since Plan A tracks ideas/plans rather than reporting lines.
   const defaultMbPlanAOrgChart = { id: 'mbpa_root', name: 'MASTER BACCARAT — PLAN A', color: '#e0453f', children: [] };
   const defaultPkPlanAOrgChart = { id: 'pkpa_root', name: 'PROKORA — PLAN A', color: '#1a4fc4', children: [] };
   const defaultBwPlanAOrgChart = { id: 'bwpa_root', name: 'BACCARAT WIN — PLAN A', color: '#b8323a', children: [] };
   const defaultNsPlanAOrgChart = { id: 'nspa_root', name: 'NEXSTACK — PLAN A', color: '#1c9fe0', children: [] };
-  const defaultPlanAOrgChartByBiz = { mb: defaultMbPlanAOrgChart, pk: defaultPkPlanAOrgChart, bw: defaultBwPlanAOrgChart, ns: defaultNsPlanAOrgChart };
+  const defaultMbnPlanAOrgChart = { id: 'mbnpa_root', name: 'MBN — PLAN A', color: '#8b5cf6', children: [] };
+  const defaultPlanAOrgChartByBiz = { mb: defaultMbPlanAOrgChart, pk: defaultPkPlanAOrgChart, bw: defaultBwPlanAOrgChart, ns: defaultNsPlanAOrgChart, mbn: defaultMbnPlanAOrgChart };
+
 
   const defaultData = {
     dataVersion: 14,
@@ -3441,6 +3693,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mbExpenses: JSON.parse(JSON.stringify(defaultMbExpenses)),
     investment: JSON.parse(JSON.stringify(defaultInvestment)),
     pkFinance: JSON.parse(JSON.stringify(defaultPkFinance)),
+    mbnFinance: JSON.parse(JSON.stringify(defaultMbnFinance)),
     myProfile: JSON.parse(JSON.stringify(defaultMyProfile)),
     wallet: JSON.parse(JSON.stringify(defaultWallet)),
     personalExpenses: JSON.parse(JSON.stringify(defaultPersonalExpenses)),
@@ -3449,14 +3702,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     nsOrgChart: JSON.parse(JSON.stringify(defaultNsOrgChart)),
     bwOrgChart: JSON.parse(JSON.stringify(defaultBwOrgChart)),
     pkOrgChart: JSON.parse(JSON.stringify(defaultPkOrgChart)),
+    mbnOrgChart: JSON.parse(JSON.stringify(defaultMbnOrgChart)),
     pkSales: defaultBizSales(), pkMarketing: defaultBizMarketing(), pkExpenses: defaultBizExpenses(), pkTeam: defaultBizChecklist(), pkOperating: defaultBizChecklist(),
     bwSales: defaultBizSales(), bwMarketing: defaultBizMarketing(), bwExpenses: defaultBizExpenses(), bwTeam: defaultBizChecklist(), bwOperating: defaultBizChecklist(),
     nsSales: defaultBizSales(), nsMarketing: defaultBizMarketing(), nsExpenses: defaultBizExpenses(), nsTeam: defaultBizChecklist(), nsOperating: defaultBizChecklist(),
-    mbPlanA: defaultBizChecklist(), pkPlanA: defaultBizChecklist(), bwPlanA: defaultBizChecklist(), nsPlanA: defaultBizChecklist(),
+    mbnSales: defaultBizSales(), mbnMarketing: defaultBizMarketing(), mbnExpenses: defaultBizExpenses(), mbnTeam: defaultBizChecklist(), mbnOperating: defaultBizChecklist(),
+    mbPlanA: defaultBizChecklist(), pkPlanA: defaultBizChecklist(), bwPlanA: defaultBizChecklist(), nsPlanA: defaultBizChecklist(), mbnPlanA: defaultBizChecklist(),
     mbPlanAOrgChart: JSON.parse(JSON.stringify(defaultMbPlanAOrgChart)),
     pkPlanAOrgChart: JSON.parse(JSON.stringify(defaultPkPlanAOrgChart)),
     bwPlanAOrgChart: JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
-    nsPlanAOrgChart: JSON.parse(JSON.stringify(defaultNsPlanAOrgChart))
+    nsPlanAOrgChart: JSON.parse(JSON.stringify(defaultNsPlanAOrgChart)),
+    mbnPlanAOrgChart: JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart))
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -3543,6 +3799,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.pkFinance){
       parsed.pkFinance = JSON.parse(JSON.stringify(defaultPkFinance));
     }
+    if(!parsed.mbnFinance){
+      parsed.mbnFinance = JSON.parse(JSON.stringify(defaultMbnFinance));
+    }
     if(!parsed.myProfile){
       parsed.myProfile = JSON.parse(JSON.stringify(defaultMyProfile));
     }
@@ -3567,14 +3826,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.pkOrgChart){
       parsed.pkOrgChart = JSON.parse(JSON.stringify(defaultPkOrgChart));
     }
-    ['pk','bw','ns'].forEach(biz => {
+    if(!parsed.mbnOrgChart){
+      parsed.mbnOrgChart = JSON.parse(JSON.stringify(defaultMbnOrgChart));
+    }
+    ['pk','bw','ns','mbn'].forEach(biz => {
       if(!parsed[biz+'Sales']) parsed[biz+'Sales'] = defaultBizSales();
       if(!parsed[biz+'Marketing']) parsed[biz+'Marketing'] = defaultBizMarketing();
       if(!parsed[biz+'Expenses']) parsed[biz+'Expenses'] = defaultBizExpenses();
       if(!parsed[biz+'Team']) parsed[biz+'Team'] = defaultBizChecklist();
       if(!parsed[biz+'Operating']) parsed[biz+'Operating'] = defaultBizChecklist();
     });
-    ['mb','pk','bw','ns'].forEach(biz => {
+    ['mb','pk','bw','ns','mbn'].forEach(biz => {
       if(!parsed[biz+'PlanA']) parsed[biz+'PlanA'] = defaultBizChecklist();
       if(!parsed[biz+'PlanAOrgChart']) parsed[biz+'PlanAOrgChart'] = JSON.parse(JSON.stringify(defaultPlanAOrgChartByBiz[biz]));
     });
@@ -3706,6 +3968,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbExpenses: settings.mbExpenses || JSON.parse(JSON.stringify(defaultMbExpenses)),
         investment: migrateInvestmentShape(settings.investment) || JSON.parse(JSON.stringify(defaultInvestment)),
         pkFinance: settings.pkFinance || JSON.parse(JSON.stringify(defaultPkFinance)),
+        mbnFinance: settings.mbnFinance || JSON.parse(JSON.stringify(defaultMbnFinance)),
         myProfile: settings.myProfile || JSON.parse(JSON.stringify(defaultMyProfile)),
         wallet: settings.wallet || JSON.parse(JSON.stringify(defaultWallet)),
         personalExpenses: settings.personalExpenses || JSON.parse(JSON.stringify(defaultPersonalExpenses)),
@@ -3714,14 +3977,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         nsOrgChart: settings.nsOrgChart || JSON.parse(JSON.stringify(defaultNsOrgChart)),
         bwOrgChart: settings.bwOrgChart || JSON.parse(JSON.stringify(defaultBwOrgChart)),
         pkOrgChart: settings.pkOrgChart || JSON.parse(JSON.stringify(defaultPkOrgChart)),
+        mbnOrgChart: settings.mbnOrgChart || JSON.parse(JSON.stringify(defaultMbnOrgChart)),
         pkSales: settings.pkSales || defaultBizSales(), pkMarketing: settings.pkMarketing || defaultBizMarketing(), pkExpenses: settings.pkExpenses || defaultBizExpenses(), pkTeam: settings.pkTeam || defaultBizChecklist(), pkOperating: settings.pkOperating || defaultBizChecklist(),
         bwSales: settings.bwSales || defaultBizSales(), bwMarketing: settings.bwMarketing || defaultBizMarketing(), bwExpenses: settings.bwExpenses || defaultBizExpenses(), bwTeam: settings.bwTeam || defaultBizChecklist(), bwOperating: settings.bwOperating || defaultBizChecklist(),
         nsSales: settings.nsSales || defaultBizSales(), nsMarketing: settings.nsMarketing || defaultBizMarketing(), nsExpenses: settings.nsExpenses || defaultBizExpenses(), nsTeam: settings.nsTeam || defaultBizChecklist(), nsOperating: settings.nsOperating || defaultBizChecklist(),
-        mbPlanA: settings.mbPlanA || defaultBizChecklist(), pkPlanA: settings.pkPlanA || defaultBizChecklist(), bwPlanA: settings.bwPlanA || defaultBizChecklist(), nsPlanA: settings.nsPlanA || defaultBizChecklist(),
+        mbnSales: settings.mbnSales || defaultBizSales(), mbnMarketing: settings.mbnMarketing || defaultBizMarketing(), mbnExpenses: settings.mbnExpenses || defaultBizExpenses(), mbnTeam: settings.mbnTeam || defaultBizChecklist(), mbnOperating: settings.mbnOperating || defaultBizChecklist(),
+        mbPlanA: settings.mbPlanA || defaultBizChecklist(), pkPlanA: settings.pkPlanA || defaultBizChecklist(), bwPlanA: settings.bwPlanA || defaultBizChecklist(), nsPlanA: settings.nsPlanA || defaultBizChecklist(), mbnPlanA: settings.mbnPlanA || defaultBizChecklist(),
         mbPlanAOrgChart: settings.mbPlanAOrgChart || JSON.parse(JSON.stringify(defaultMbPlanAOrgChart)),
         pkPlanAOrgChart: settings.pkPlanAOrgChart || JSON.parse(JSON.stringify(defaultPkPlanAOrgChart)),
         bwPlanAOrgChart: settings.bwPlanAOrgChart || JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
-        nsPlanAOrgChart: settings.nsPlanAOrgChart || JSON.parse(JSON.stringify(defaultNsPlanAOrgChart))
+        nsPlanAOrgChart: settings.nsPlanAOrgChart || JSON.parse(JSON.stringify(defaultNsPlanAOrgChart)),
+        mbnPlanAOrgChart: settings.mbnPlanAOrgChart || JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart))
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -4136,6 +4402,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ if(document.getElementById('editdata')) populateEditForm(); }catch(e){ renderErrors.push(['edit form', e]); }
     try{ renderCalendar(); }catch(e){ renderErrors.push(['calendar', e]); }
     orgChartKeys.forEach(k => { try{ renderOrgChart(k); }catch(e){ renderErrors.push(['org chart '+k, e]); } });
+    try{ renderMbnOverview(); }catch(e){ renderErrors.push(['mbn overview', e]); }
     try{
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
@@ -5177,6 +5444,170 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const el = document.getElementById('pkCommissionRateConfirm');
     el.style.opacity = '1';
     setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  // ---- MBN: same loan-interest + pipeline-commission model as Prokora, but self-contained —
+  // the project pipeline is entered right here instead of through the period-history Edit Data
+  // system, so MBN doesn't depend on that page at all. Reuses pkMonthsElapsed for date math
+  // since that calculation isn't actually business-specific.
+  function mbnLoanInterestAmount(loan){
+    return loan.principal * (loan.rate/100) * pkMonthsElapsed(loan.dateGiven);
+  }
+  function mbnLoanTotalPayable(loan){
+    return loan.principal + mbnLoanInterestAmount(loan);
+  }
+  function mbnInterestIncomeTotal(){
+    return (dashboardData.mbnFinance.loans || []).reduce((a,l) => a + (l.principal * l.rate / 100), 0);
+  }
+  function mbnTotalPayablesAll(){
+    return (dashboardData.mbnFinance.loans || []).reduce((a,l) => a + mbnLoanTotalPayable(l), 0);
+  }
+  function mbnProjectValueTotal(){
+    return (dashboardData.mbnFinance.projects || []).reduce((a,p) => a + (p.value||0), 0);
+  }
+  function mbnCommissionTotal(){
+    return mbnProjectValueTotal() * (dashboardData.mbnFinance.commissionRate / 100);
+  }
+  function mbnRevenue(){
+    return mbnInterestIncomeTotal() + mbnCommissionTotal();
+  }
+
+  function renderMbnOverview(){
+    const revEl = document.getElementById('mbnRevenueStat');
+    if(!revEl) return; // not in DOM for this role
+    const interest = mbnInterestIncomeTotal();
+    const commission = mbnCommissionTotal();
+    const payablesAll = mbnTotalPayablesAll();
+    const projectValue = mbnProjectValueTotal();
+    const projects = dashboardData.mbnFinance.projects;
+
+    revEl.textContent = fmtPeso(mbnRevenue());
+    document.getElementById('mbnInterestIncomeStat').textContent = fmtPeso(interest);
+    document.getElementById('mbnInterestIncomeFoot').textContent = `${dashboardData.mbnFinance.loans.length} active loan${dashboardData.mbnFinance.loans.length===1?'':'s'}`;
+    document.getElementById('mbnAvgStat').textContent = fmtPeso(projects.length ? projectValue / projects.length : 0);
+
+    document.getElementById('mbnPayablesStat').textContent = fmtPeso(payablesAll);
+    document.getElementById('mbnInterestStat').textContent = fmtPeso(interest);
+    document.getElementById('mbnInterestFoot').textContent = `${dashboardData.mbnFinance.loans.length} active loan${dashboardData.mbnFinance.loans.length===1?'':'s'}`;
+    document.getElementById('mbnCommissionStat').textContent = fmtPeso(commission);
+    document.getElementById('mbnCommissionFoot').textContent = `${dashboardData.mbnFinance.commissionRate}% commission on ${fmtPeso(projectValue)} project value`;
+
+    const sortedLoans = [...dashboardData.mbnFinance.loans].sort((a,b) => {
+      const dir = mbnLoanSortState.dir === 'asc' ? 1 : -1;
+      const valFor = (l, col) => {
+        if(col === 'date') return l.dateGiven;
+        if(col === 'amount') return l.principal;
+        if(col === 'rate') return l.rate;
+        if(col === 'months') return pkMonthsElapsed(l.dateGiven);
+        if(col === 'interestAmount') return mbnLoanInterestAmount(l);
+        if(col === 'payable') return mbnLoanTotalPayable(l);
+        return 0;
+      };
+      const av = valFor(a, mbnLoanSortState.col), bv = valFor(b, mbnLoanSortState.col);
+      if(av < bv) return -1*dir;
+      if(av > bv) return 1*dir;
+      return 0;
+    });
+    ['date','amount','rate','months','interestAmount','payable'].forEach(col => {
+      const iconEl = document.getElementById(`mbnSortIcon_${col}`);
+      if(iconEl) iconEl.textContent = mbnLoanSortState.col === col ? (mbnLoanSortState.dir === 'asc' ? '▲' : '▼') : '';
+    });
+    const headerRow = `<tr>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('date')" title="Click to sort">Date given <span id="mbnSortIcon_date">${mbnLoanSortState.col==='date'?(mbnLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('amount')" title="Click to sort">Principal <span id="mbnSortIcon_amount">${mbnLoanSortState.col==='amount'?(mbnLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('rate')" title="Click to sort">Rate <span id="mbnSortIcon_rate">${mbnLoanSortState.col==='rate'?(mbnLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('months')" title="Click to sort">Months elapsed <span id="mbnSortIcon_months">${mbnLoanSortState.col==='months'?(mbnLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('interestAmount')" title="Click to sort">Interest accrued <span id="mbnSortIcon_interestAmount">${mbnLoanSortState.col==='interestAmount'?(mbnLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th style="cursor:pointer;" onclick="sortMbnLoans('payable')" title="Click to sort">Total payable <span id="mbnSortIcon_payable">${mbnLoanSortState.col==='payable'?(mbnLoanSortState.dir==='asc'?'▲':'▼'):''}</span></th>
+        <th></th>
+      </tr>`;
+    document.getElementById('mbnLoanTable').innerHTML = headerRow +
+      (sortedLoans.length
+        ? sortedLoans.map(l => `<tr>
+            <td>${l.dateGiven}</td>
+            <td>${fmtPeso(l.principal)}</td>
+            <td>${l.rate}%</td>
+            <td>${pkMonthsElapsed(l.dateGiven)}</td>
+            <td>${fmtPeso(mbnLoanInterestAmount(l))}</td><td>${fmtPeso(mbnLoanTotalPayable(l))}</td>
+            <td><button class="del-btn" onclick="removeMbnLoan('${l.id}')">Remove</button></td>
+          </tr>`).join('')
+          + `<tr style="font-weight:700;"><td colspan="5">Total</td><td>${fmtPeso(payablesAll)}</td><td></td></tr>`
+        : '<tr><td colspan="7" style="color:var(--muted);text-align:center;padding:16px;">No loans logged yet.</td></tr>');
+
+    const rateInput = document.getElementById('mbnCommissionRate');
+    if(rateInput && document.activeElement !== rateInput) rateInput.value = dashboardData.mbnFinance.commissionRate;
+
+    const projTable = document.getElementById('mbnProjectTable');
+    projTable.innerHTML = '<tr><th>Client</th><th>Scope</th><th>Value</th><th>Status</th><th></th></tr>' +
+      (projects.length
+        ? projects.map(p => `<tr><td>${p.client}</td><td>${p.scope||''}</td><td class="num-cell">${fmtPeso(p.value)}</td><td><span class="pill ${p.status}">${statusLabel[p.status]||p.status}</span></td><td><button class="del-btn" onclick="removeMbnProject('${p.id}')">Remove</button></td></tr>`).join('')
+        : '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px;">No projects yet — add one below.</td></tr>');
+  }
+
+  let mbnLoanSortState = { col:'interestAmount', dir:'desc' };
+
+  function sortMbnLoans(col){
+    if(mbnLoanSortState.col === col){
+      mbnLoanSortState.dir = mbnLoanSortState.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      mbnLoanSortState = { col, dir:'asc' };
+    }
+    renderMbnOverview();
+  }
+
+  async function addMbnLoan(){
+    const principal = clampNonNeg(parseCurrency(document.getElementById('mbnLoan_principal').value));
+    const dateGiven = document.getElementById('mbnLoan_date').value;
+    const rate = clampNonNeg(parseFloat(document.getElementById('mbnLoan_rate').value) || 0);
+    if(principal <= 0 || !dateGiven){ alert('Please enter a valid principal amount and date.'); return; }
+    dashboardData.mbnFinance.loans.push({ id:'loan'+Date.now(), principal, dateGiven, rate });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('mbnLoan_principal').value = '';
+    document.getElementById('mbnLoan_date').value = '';
+    renderMbnOverview();
+    await saveSetting('mbnFinance', dashboardData.mbnFinance);
+    playChime(920);
+  }
+
+  async function removeMbnLoan(id){
+    dashboardData.mbnFinance.loans = dashboardData.mbnFinance.loans.filter(l => l.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderMbnOverview();
+    await saveSetting('mbnFinance', dashboardData.mbnFinance);
+  }
+
+  async function saveMbnCommissionRate(){
+    dashboardData.mbnFinance.commissionRate = clampNonNeg(parseFloat(document.getElementById('mbnCommissionRate').value) || 0);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderMbnOverview();
+    await saveSetting('mbnFinance', dashboardData.mbnFinance);
+    playChime(920);
+    const el = document.getElementById('mbnCommissionRateConfirm');
+    el.style.opacity = '1';
+    setTimeout(()=>{ el.style.opacity = '0'; }, 2200);
+  }
+
+  async function addMbnProject(){
+    const client = document.getElementById('mbnProject_client').value.trim();
+    const scope = document.getElementById('mbnProject_scope').value.trim();
+    const value = clampNonNeg(parseCurrency(document.getElementById('mbnProject_value').value));
+    const status = document.getElementById('mbnProject_status').value;
+    if(!client || value <= 0){ alert('Please enter a client name and value.'); return; }
+    dashboardData.mbnFinance.projects.push({ id:'proj'+Date.now(), client, scope, value, status });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('mbnProject_client').value = '';
+    document.getElementById('mbnProject_scope').value = '';
+    document.getElementById('mbnProject_value').value = '';
+    renderMbnOverview();
+    await saveSetting('mbnFinance', dashboardData.mbnFinance);
+    playChime(920);
+  }
+
+  async function removeMbnProject(id){
+    dashboardData.mbnFinance.projects = dashboardData.mbnFinance.projects.filter(p => p.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderMbnOverview();
+    await saveSetting('mbnFinance', dashboardData.mbnFinance);
   }
 
   async function addLiability(){
