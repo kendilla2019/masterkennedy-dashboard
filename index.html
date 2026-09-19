@@ -3716,8 +3716,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
-  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora', general:'General / PCEC' };
-  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4', general:'#2f6fed' };
+  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora', mbn:'MBN', general:'General / PCEC' };
+  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4', mbn:'#8b5cf6', general:'#2f6fed' };
   let calViewDate = new Date(); // which month the calendar is currently showing
 
   // Shared database: every account (admin, masterbaccarat, baccaratwin, nexstack, prokora)
@@ -4079,7 +4079,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function dbSaveGoalsCash(exec){
     if(!sb) return false;
     try{
-      const rows = ['mb','bw','ns','pk'].map(biz=>({ business:biz, goal:exec.goals[biz]||0, cash:exec.cash[biz]||0, threshold:exec.thresholds[biz]||0 }));
+      const rows = ['mb','bw','ns','pk','mbn'].map(biz=>({ business:biz, goal:exec.goals[biz]||0, cash:exec.cash[biz]||0, threshold:exec.thresholds[biz]||0 }));
       const { error } = await withTimeout(sb.from('goals_cash').upsert(rows), 5000);
       if(error) throw error;
       setSyncStatus(true);
@@ -4511,6 +4511,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function bizRevenue(snap, biz){
     if(biz === 'mb') return mbEffectiveRevenue(snap);
     if(biz === 'pk') return pkRevenue(snap);
+    if(biz === 'mbn') return mbnRevenue();
     return snap[biz].revenue || 0;
   }
 
@@ -4529,9 +4530,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const bwIncome = snap.bw.revenue;
     const nsIncome = snap.ns.revenue;
     const pkIncome = pkRevenue(snap);
-    const byBiz = { mb: mbIncome, bw: bwIncome, ns: nsIncome, pk: pkIncome };
-    const bizKeys = ['mb','pk','ns','bw']; // matches the ranking order requested: Master Baccarat, Prokora, Nexstack, Baccarat Win
-    const total = mbIncome + bwIncome + nsIncome + pkIncome;
+    const mbnIncome = mbnRevenue();
+    const byBiz = { mb: mbIncome, bw: bwIncome, ns: nsIncome, pk: pkIncome, mbn: mbnIncome };
+    const bizKeys = ['mb','pk','ns','bw','mbn']; // matches the ranking order requested: Master Baccarat, Prokora, Nexstack, Baccarat Win, MBN
+    const total = mbIncome + bwIncome + nsIncome + pkIncome + mbnIncome;
     const goal = dashboardData.monthlyIncome.goal || 0;
     const goalPct = goal > 0 ? Math.min(100, Math.round(total/goal*100)) : 0;
 
@@ -5634,7 +5636,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function renderExecutive(snap){
     renderIncomeOverview(snap);
     const exec = dashboardData.exec;
-    const bizKeys = ['mb','bw','ns','pk'];
+    const bizKeys = ['mb','bw','ns','pk','mbn'];
 
     // Goal tracker
     const goalPcts = [];
@@ -5703,7 +5705,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   async function saveGoalsAndCash(){
-    ['mb','bw','ns','pk'].forEach(biz=>{
+    ['mb','bw','ns','pk','mbn'].forEach(biz=>{
       dashboardData.exec.goals[biz] = clampNonNeg(parseCurrency(document.getElementById(`goal_${biz}`).value));
       dashboardData.exec.cash[biz] = clampNonNeg(parseCurrency(document.getElementById(`cash_${biz}`).value));
       dashboardData.exec.thresholds[biz] = clampNonNeg(parseCurrency(document.getElementById(`threshold_${biz}`).value));
@@ -5777,7 +5779,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const alerts = []; // { level: 'red'|'yellow'|'green', text }
 
     // Rule 1: cash below threshold per business
-    ['mb','bw','ns','pk'].forEach(biz=>{
+    ['mb','bw','ns','pk','mbn'].forEach(biz=>{
       const threshold = exec.thresholds[biz] || 0;
       const cash = exec.cash[biz] || 0;
       if(threshold > 0 && cash < threshold){
@@ -5795,7 +5797,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(totalSpan > 0 && today >= startD){
       elapsedPct = Math.min(100, Math.max(0, ((today - startD) / totalSpan) * 100));
       remainingPct = 100 - elapsedPct;
-      ['mb','bw','ns','pk'].forEach(biz=>{
+      ['mb','bw','ns','pk','mbn'].forEach(biz=>{
         const target = exec.goals[biz] || 0;
         if(target <= 0) return;
         const actual = bizRevenue(snap, biz);
@@ -5809,7 +5811,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       // the single "Monthly income goal" figure, not any one business's own goal)
       const overallGoal = dashboardData.monthlyIncome.goal || 0;
       if(overallGoal > 0){
-        const combinedRevenue = mbEffectiveRevenue(snap) + snap.bw.revenue + snap.ns.revenue + pkRevenue(snap);
+        const combinedRevenue = mbEffectiveRevenue(snap) + snap.bw.revenue + snap.ns.revenue + pkRevenue(snap) + mbnRevenue();
         const overallGoalPct = (combinedRevenue / overallGoal) * 100;
         if(overallGoalPct < 50){
           alerts.push({ level: overallGoalPct < 30 ? 'red' : 'yellow', text:`Monthly income goal is at ${Math.round(overallGoalPct)}% (${fmtPeso(combinedRevenue)} of ${fmtPeso(overallGoal)}).` });
