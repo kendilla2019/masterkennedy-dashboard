@@ -613,12 +613,35 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <option value="bw">Baccarat Win</option>
             <option value="ns">Nexstack</option>
             <option value="pk">Prokora</option>
+            <option value="mbn">MBN</option>
           </select>
         </div>
         <button class="btn small" onclick="addExpense()">+ Add</button>
       </div>
       <table id="expenseTable"><tr><th>Date</th><th>Category</th><th>Business</th><th>Amount</th><th></th></tr></table>
       <button class="btn secondary small" style="margin-top:10px;" onclick="exportExpensesCSV()">Export as CSV</button>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
+      <h3><span class="dot"></span>Pending expenses</h3>
+      <div class="sub">Planned purchases you haven't paid for yet — tag every business it's for. Doesn't count against Cash Flow until marked Paid.</div>
+      <div style="margin-top:10px;">
+        <div style="font-size:12px;color:var(--muted);">Pending total</div>
+        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:22px;font-weight:800;margin-top:2px;" id="pendingExpenseTotal">₱0.00</div>
+      </div>
+      <div id="pendingExpenseList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.4fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Reason</label><input type="text" id="pendExp_reason" placeholder="e.g. Camera for content"></div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="pendExp_amount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addPendingExpense()">+ Add</button>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="mb"> Master Baccarat</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="bw"> Baccarat Win</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="ns"> Nexstack</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="pk"> Prokora</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="mbn"> MBN</label>
+      </div>
     </div>
 
     <div class="card" style="--accent:#2f6fed;">
@@ -633,6 +656,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <option value="bw">Baccarat Win</option>
             <option value="ns">Nexstack</option>
             <option value="pk">Prokora</option>
+            <option value="mbn">MBN</option>
           </select>
         </div>
         <button class="btn small" onclick="addAsset()">+ Add</button>
@@ -3588,6 +3612,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     goalSavedAt: null
   };
 
+  // Planned purchases not yet paid for — separate from any one business's own Expenses log
+  // since one entry can be tagged to several businesses at once.
+  const defaultPendingExpenses = {
+    entries: [] // [{ id, reason, amount, businesses: ['mb','ns'], status: 'pending'|'paid', dateAdded }]
+  };
+
   const defaultWallet = {
     accounts: [] // [{ id, name, balance, color }]
   };
@@ -3696,6 +3726,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mbnFinance: JSON.parse(JSON.stringify(defaultMbnFinance)),
     myProfile: JSON.parse(JSON.stringify(defaultMyProfile)),
     wallet: JSON.parse(JSON.stringify(defaultWallet)),
+    pendingExpenses: JSON.parse(JSON.stringify(defaultPendingExpenses)),
     personalExpenses: JSON.parse(JSON.stringify(defaultPersonalExpenses)),
     teamOrgChart: JSON.parse(JSON.stringify(defaultTeamOrgChart)),
     mbOrgChart: JSON.parse(JSON.stringify(defaultMbOrgChart)),
@@ -3807,6 +3838,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     }
     if(!parsed.wallet){
       parsed.wallet = JSON.parse(JSON.stringify(defaultWallet));
+    }
+    if(!parsed.pendingExpenses){
+      parsed.pendingExpenses = JSON.parse(JSON.stringify(defaultPendingExpenses));
     }
     if(!parsed.personalExpenses){
       parsed.personalExpenses = JSON.parse(JSON.stringify(defaultPersonalExpenses));
@@ -3971,6 +4005,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         mbnFinance: settings.mbnFinance || JSON.parse(JSON.stringify(defaultMbnFinance)),
         myProfile: settings.myProfile || JSON.parse(JSON.stringify(defaultMyProfile)),
         wallet: settings.wallet || JSON.parse(JSON.stringify(defaultWallet)),
+        pendingExpenses: settings.pendingExpenses || JSON.parse(JSON.stringify(defaultPendingExpenses)),
         personalExpenses: settings.personalExpenses || JSON.parse(JSON.stringify(defaultPersonalExpenses)),
         teamOrgChart: settings.teamOrgChart || JSON.parse(JSON.stringify(defaultTeamOrgChart)),
         mbOrgChart: settings.mbOrgChart || JSON.parse(JSON.stringify(defaultMbOrgChart)),
@@ -4403,6 +4438,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ renderCalendar(); }catch(e){ renderErrors.push(['calendar', e]); }
     orgChartKeys.forEach(k => { try{ renderOrgChart(k); }catch(e){ renderErrors.push(['org chart '+k, e]); } });
     try{ renderMbnOverview(); }catch(e){ renderErrors.push(['mbn overview', e]); }
+    try{ renderPendingExpenses(); }catch(e){ renderErrors.push(['pending expenses', e]); }
     try{
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
@@ -5771,6 +5807,66 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     renderAll();
     await dbDeleteAsset(id);
+  }
+
+  /* ---------------- Pending expenses: planned purchases not yet paid, tagged to one or more
+     businesses at once. Kept separate from the per-business Expenses tabs and the Expenses
+     card above (both of which need exactly one business), stored via the generic app_settings
+     key-value store like the other cross-cutting trackers on this dashboard. ---------------- */
+  function renderPendingExpenses(){
+    const listEl = document.getElementById('pendingExpenseList');
+    if(!listEl) return;
+    const entries = dashboardData.pendingExpenses.entries;
+    const pendingTotal = entries.filter(e=>e.status==='pending').reduce((a,e)=>a+e.amount,0);
+    document.getElementById('pendingExpenseTotal').textContent = fmtPeso(pendingTotal);
+
+    listEl.innerHTML = entries.length
+      ? entries.slice().sort((a,b)=>b.dateAdded-a.dateAdded).map(e=>{
+          const bizPills = (e.businesses||[]).map(b=>`<span style="display:inline-block;padding:2px 8px;border-radius:20px;background:${bizColors[b]||'#666'}26;color:${bizColors[b]||'#999'};font-size:11px;font-weight:600;margin-right:4px;">${bizNames[b]||b}</span>`).join('');
+          return `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:160px;">
+                <div style="font-size:13.5px;font-weight:600;">${e.reason}</div>
+                <div style="margin-top:4px;">${bizPills}</div>
+              </div>
+              <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.amount)}</div>
+              <button class="pill ${e.status==='paid'?'done':'pause'}" style="cursor:pointer;border:none;font:inherit;" onclick="togglePendingExpenseStatus('${e.id}')">${e.status==='paid'?'Paid':'Pending'}</button>
+              <button class="del-btn" onclick="removePendingExpense('${e.id}')">Remove</button>
+            </div>`;
+        }).join('')
+      : '<div style="color:var(--muted);font-size:13px;">Nothing pending — add a planned purchase below.</div>';
+  }
+
+  async function addPendingExpense(){
+    const reason = document.getElementById('pendExp_reason').value.trim();
+    const amount = clampNonNeg(parseCurrency(document.getElementById('pendExp_amount').value));
+    const businesses = Array.from(document.querySelectorAll('.pendExpBizCheck:checked')).map(el=>el.value);
+    if(!reason || amount <= 0){ alert('Please enter a reason and a valid amount.'); return; }
+    if(!businesses.length){ alert('Please tag at least one business.'); return; }
+    dashboardData.pendingExpenses.entries.push({ id:'pend'+Date.now(), reason, amount, businesses, status:'pending', dateAdded: Date.now() });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('pendExp_reason').value = '';
+    document.getElementById('pendExp_amount').value = '';
+    document.querySelectorAll('.pendExpBizCheck').forEach(c=>c.checked=false);
+    renderPendingExpenses();
+    await saveSetting('pendingExpenses', dashboardData.pendingExpenses);
+    playChime(920);
+  }
+
+  async function togglePendingExpenseStatus(id){
+    const entry = dashboardData.pendingExpenses.entries.find(e=>e.id===id);
+    if(!entry) return;
+    entry.status = entry.status === 'paid' ? 'pending' : 'paid';
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderPendingExpenses();
+    await saveSetting('pendingExpenses', dashboardData.pendingExpenses);
+  }
+
+  async function removePendingExpense(id){
+    dashboardData.pendingExpenses.entries = dashboardData.pendingExpenses.entries.filter(e=>e.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderPendingExpenses();
+    await saveSetting('pendingExpenses', dashboardData.pendingExpenses);
   }
 
   /* ---------------- Alert Dashboard (admin only) ---------------- */
