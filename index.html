@@ -622,28 +622,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="btn secondary small" style="margin-top:10px;" onclick="exportExpensesCSV()">Export as CSV</button>
     </div>
 
-    <div class="card" style="--accent:#2f6fed;margin-bottom:16px;">
-      <h3><span class="dot"></span>Pending expenses</h3>
-      <div class="sub">Planned purchases you haven't paid for yet — tag every business it's for. Doesn't count against Cash Flow until marked Paid.</div>
-      <div style="margin-top:10px;">
-        <div style="font-size:12px;color:var(--muted);">Pending total</div>
-        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:22px;font-weight:800;margin-top:2px;" id="pendingExpenseTotal">₱0.00</div>
-      </div>
-      <div id="pendingExpenseList" style="margin-top:14px;"></div>
-      <div class="edit-grid" style="grid-template-columns:1.4fr 1fr auto;align-items:end;margin-top:14px;">
-        <div class="field"><label>Reason</label><input type="text" id="pendExp_reason" placeholder="e.g. Camera for content"></div>
-        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="pendExp_amount" onblur="formatCurrencyField(this)"></div>
-        <button class="btn small" onclick="addPendingExpense()">+ Add</button>
-      </div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="mb"> Master Baccarat</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="bw"> Baccarat Win</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="ns"> Nexstack</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="pk"> Prokora</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="mbn"> MBN</label>
-      </div>
-    </div>
-
     <div class="card" style="--accent:#2f6fed;">
       <h3><span class="dot"></span>Assets</h3>
       <div class="sub">Equipment, property, or anything of value the business owns</div>
@@ -2313,6 +2291,34 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <span style="font-size:12.5px;color:var(--muted);" id="pexpItemCount">0 items</span>
       </div>
       <div id="pexpList" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card" style="--accent:#2f6fed;margin-top:16px;">
+      <h3><span class="dot"></span>Pending business expenses</h3>
+      <div class="sub">Planned purchases for your businesses you haven't paid for yet — tag every business it's for. Doesn't count against Cash Flow until marked Paid.</div>
+      <div style="margin-top:10px;">
+        <div style="font-size:12px;color:var(--muted);">Pending total</div>
+        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:22px;font-weight:800;margin-top:2px;" id="pendingExpenseTotal">₱0.00</div>
+      </div>
+      <div id="pendingExpenseList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.3fr 1fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Reason</label><input type="text" id="pendExp_reason" placeholder="e.g. Camera for content"></div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="pendExp_amount" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Date needed</label>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <input type="date" id="pendExp_date" style="flex:1;min-width:0;">
+            <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;" onclick="fillTodayField('pendExp_date')">Today</button>
+          </div>
+        </div>
+        <button class="btn small" onclick="addPendingExpense()">+ Add</button>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="mb"> Master Baccarat</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="bw"> Baccarat Win</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="ns"> Nexstack</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="pk"> Prokora</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;"><input type="checkbox" class="pendExpBizCheck" value="mbn"> MBN</label>
+      </div>
     </div>
   </div>
 
@@ -5827,6 +5833,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
             <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;flex-wrap:wrap;">
               <div style="flex:1;min-width:160px;">
                 <div style="font-size:13.5px;font-weight:600;">${e.reason}</div>
+                <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">${e.dateNeeded ? 'Needed by '+e.dateNeeded : 'No target date'} · Added ${new Date(e.dateAdded).toLocaleDateString()}</div>
                 <div style="margin-top:4px;">${bizPills}</div>
               </div>
               <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(e.amount)}</div>
@@ -5840,13 +5847,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function addPendingExpense(){
     const reason = document.getElementById('pendExp_reason').value.trim();
     const amount = clampNonNeg(parseCurrency(document.getElementById('pendExp_amount').value));
+    const dateNeeded = document.getElementById('pendExp_date').value;
     const businesses = Array.from(document.querySelectorAll('.pendExpBizCheck:checked')).map(el=>el.value);
     if(!reason || amount <= 0){ alert('Please enter a reason and a valid amount.'); return; }
     if(!businesses.length){ alert('Please tag at least one business.'); return; }
-    dashboardData.pendingExpenses.entries.push({ id:'pend'+Date.now(), reason, amount, businesses, status:'pending', dateAdded: Date.now() });
+    dashboardData.pendingExpenses.entries.push({ id:'pend'+Date.now(), reason, amount, businesses, status:'pending', dateNeeded, dateAdded: Date.now() });
     try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
     document.getElementById('pendExp_reason').value = '';
     document.getElementById('pendExp_amount').value = '';
+    document.getElementById('pendExp_date').value = '';
     document.querySelectorAll('.pendExpBizCheck').forEach(c=>c.checked=false);
     renderPendingExpenses();
     await saveSetting('pendingExpenses', dashboardData.pendingExpenses);
