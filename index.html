@@ -461,6 +461,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="tab" data-view="mbn" data-roles="admin,mbn" style="--accent:#8b5cf6"><span class="nav-icon">●</span><span class="nav-label">MBN</span></button>
       <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a"><span class="nav-icon">●</span><span class="nav-label">Baccarat Win</span></button>
       <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0"><span class="nav-icon">●</span><span class="nav-label">Nexstack</span></button>
+      <button class="tab" data-view="family" data-roles="admin" style="--accent:#f59e0b"><span class="nav-icon">●</span><span class="nav-label">Family</span></button>
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="editdata" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Edit Data</span></button>
       <button class="tab" data-view="users" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">⚇</span><span class="nav-label">Users</span></button>
@@ -1853,6 +1854,147 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
   </div>
 
+  <!-- FAMILY -->
+  <div class="view" id="family">
+    <div class="mb-subnav" id="famSubnav">
+      <button class="mb-subtab active" data-bizview="overview" onclick="switchBizSubview('fam','overview')">Overview</button>
+      <button class="mb-subtab" data-bizview="team" onclick="switchBizSubview('fam','team')">Mindmap</button>
+      <button class="mb-subtab" data-bizview="plana" onclick="switchBizSubview('fam','plana')">Plan A</button>
+    </div>
+
+    <div class="fam-subview" id="famSubview-overview">
+    <div class="grid-4">
+      <div class="stat"><div class="label">Family members</div><div class="value" id="famMembersStat">0</div><div class="foot">Listed below</div></div>
+      <div class="stat"><div class="label">Spent this month</div><div class="value" id="famMonthStat">₱0.00</div><div class="foot">Family expenses logged</div></div>
+      <div class="stat"><div class="label">Upcoming events</div><div class="value" id="famEventsStat">0</div><div class="foot">From today onward</div></div>
+      <div class="stat"><div class="label">Goals done</div><div class="value" id="famGoalsStat">0/0</div><div class="foot">Family goals</div></div>
+    </div>
+    <div class="card" style="--accent:#f59e0b;margin-top:16px;">
+      <h3><span class="dot"></span>Family members</h3>
+      <div id="famMembersList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.4fr 1fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Name</label><input type="text" id="famMemberName" placeholder="e.g. Mama"></div>
+        <div class="field"><label>Relationship</label><input type="text" id="famMemberRel" placeholder="e.g. Mother"></div>
+        <div class="field"><label>Birthday</label><input type="date" id="famMemberBday"></div>
+        <button class="btn small" onclick="addFamilyItem('members')">+ Add</button>
+      </div>
+    </div>
+    <div class="card" style="--accent:#f59e0b;margin-top:16px;">
+      <h3><span class="dot"></span>Family expenses</h3>
+      <div class="sub">Groceries, bills, school, etc.</div>
+      <div id="famExpensesList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1fr 1.6fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Date</label><input type="date" id="famExpDate"></div>
+        <div class="field"><label>Description</label><input type="text" id="famExpDesc" placeholder="e.g. Groceries"></div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="famExpAmount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addFamilyItem('expenses')">+ Log</button>
+      </div>
+    </div>
+    <div class="card" style="--accent:#f59e0b;margin-top:16px;">
+      <h3><span class="dot"></span>Events &amp; important dates</h3>
+      <div id="famEventsList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.6fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Event</label><input type="text" id="famEventTitle" placeholder="e.g. Family trip"></div>
+        <div class="field"><label>Date</label><input type="date" id="famEventDate"></div>
+        <button class="btn small" onclick="addFamilyItem('events')">+ Add</button>
+      </div>
+    </div>
+    <div class="card" style="--accent:#f59e0b;margin-top:16px;">
+      <h3><span class="dot"></span>Family goals</h3>
+      <div id="famGoalsList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>New goal</label><input type="text" id="famGoalText" placeholder="e.g. Build family house"></div>
+        <button class="btn small" onclick="addFamilyItem('goals')">+ Add</button>
+      </div>
+    </div>
+    </div>
+
+    <div class="fam-subview" id="famSubview-team" style="display:none;">
+      <div class="card" style="--accent:#f59e0b;">
+        <h3><span class="dot"></span>Family checklist</h3>
+        <div class="sub">Manual checkboxes for the family's recurring tasks</div>
+        <div id="bizTeamTaskList_fam" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizTeamNewTask_fam" placeholder="e.g. Family dinner every Sunday"></div>
+          <button class="btn small" onclick="addBizChecklistTask('famTeam','bizTeamNewTask_fam','bizTeamTaskList_fam')">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#f59e0b;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Family mindmap</h3>
+        <div class="sub" id="orgHintText_fam">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_fam" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','fam')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','fam')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','fam')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_fam" onclick="pickOrgPaintColor('fam')">Pick a color</button>
+            <div id="orgPalettePopover_fam" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_fam"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_fam').click();document.getElementById('orgPalettePopover_fam').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'fam')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_fam">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'fam')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('fam')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_fam">
+          <svg id="orgConnectorSvg_fam" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_fam" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_fam" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'fam')">
+      </div>
+    </div>
+
+    <div class="fam-subview" id="famSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#f59e0b;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_fam" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_fam" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('famPlanA','planANewTask_fam','planATaskList_fam')">+ Add</button>
+        </div>
+      </div>
+
+
+      <div class="card" style="--accent:#f59e0b;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_famPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_famPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','famPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','famPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','famPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_famPlanA" onclick="pickOrgPaintColor('famPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_famPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_famPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_famPlanA').click();document.getElementById('orgPalettePopover_famPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'famPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_famPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'famPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('famPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_famPlanA">
+          <svg id="orgConnectorSvg_famPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_famPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_famPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'famPlanA')">
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT DATA (admin only) -->
   <div class="view" id="editdata">
     <div class="card" style="--accent:#2f6fed">
@@ -3076,7 +3218,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Org chart engine — supports multiple independent instances keyed by 'main' (the global
   // Team page) plus one per business ('mb','ns','bw','pk'), each with its own data, layout,
   // zoom, and DOM ids so they don't interfere with each other.
-  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA','mbn','mbnPlanA'];
+  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA','mbn','mbnPlanA','fam','famPlanA'];
   function orgDataKeyFor(key){ return key === 'main' ? 'teamOrgChart' : key + 'OrgChart'; }
   function orgTreeFor(key){ return dashboardData[orgDataKeyFor(key)]; }
   function orgDomId(base, key){ return key === 'main' ? base : `${base}_${key}`; }
@@ -3419,6 +3561,66 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     playChime(920);
   }
 
+
+  // ---- Family dashboard ----
+  function esc_fam(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderFamily(){
+    const f = dashboardData.family; if(!f || !document.getElementById('famMembersList')) return;
+    const today = new Date().toISOString().slice(0,10), month = today.slice(0,7);
+    const row = (inner, id, kind) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">${inner}<button class="del-btn" onclick="removeFamilyItem('${kind}','${id}')">Remove</button></div>`;
+    const empty = t => `<div class="sub">${t}</div>`;
+    document.getElementById('famMembersList').innerHTML = f.members.length ? f.members.map(m => row(`<span style="flex:1;font-size:13.5px;"><b>${esc_fam(m.name)}</b> <span style="color:var(--muted);">${esc_fam(m.rel)}</span></span><span style="font-size:11.5px;color:var(--muted);">${m.bday?('🎂 '+m.bday):''}</span>`, m.id, 'members')).join('') : empty('No members yet');
+    const exps = f.expenses.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    document.getElementById('famExpensesList').innerHTML = exps.length ? exps.map(e => row(`<span style="font-size:11.5px;color:var(--muted);min-width:78px;">${e.date||''}</span><span style="flex:1;font-size:13.5px;">${esc_fam(e.desc)}</span><b style="font-size:13.5px;">${fmtPeso(e.amount)}</b>`, e.id, 'expenses')).join('') : empty('No expenses logged');
+    const evs = f.events.slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+    document.getElementById('famEventsList').innerHTML = evs.length ? evs.map(e => row(`<span style="font-size:11.5px;color:var(--muted);min-width:78px;">${e.date||''}</span><span style="flex:1;font-size:13.5px;">${esc_fam(e.title)}</span>`, e.id, 'events')).join('') : empty('No events yet');
+    document.getElementById('famGoalsList').innerHTML = f.goals.length ? f.goals.map(g => `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;"><input type="checkbox" ${g.done?'checked':''} onchange="toggleFamilyGoal('${g.id}')" style="width:16px;height:16px;"><span style="flex:1;font-size:13.5px;${g.done?'text-decoration:line-through;color:var(--muted);':''}">${esc_fam(g.text)}</span><button class="del-btn" onclick="removeFamilyItem('goals','${g.id}')">Remove</button></div>`).join('') : empty('No goals yet');
+    const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    set('famMembersStat', f.members.length);
+    set('famMonthStat', fmtPeso(f.expenses.filter(e=>(e.date||'').slice(0,7)===month).reduce((a,e)=>a+(e.amount||0),0)));
+    set('famEventsStat', f.events.filter(e=>e.date && e.date>=today).length);
+    set('famGoalsStat', f.goals.filter(g=>g.done).length+'/'+f.goals.length);
+  }
+  async function persistFamily(){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderFamily();
+    await saveSetting('family', dashboardData.family);
+  }
+  async function addFamilyItem(kind){
+    const f = dashboardData.family, id = 'fm'+Date.now()+Math.floor(Math.random()*1000);
+    const val = i => (document.getElementById(i)||{}).value || '';
+    if(kind==='members'){
+      const name = val('famMemberName').trim(); if(!name){ alert('Please enter a name.'); return; }
+      f.members.push({id, name, rel: val('famMemberRel').trim(), bday: val('famMemberBday')});
+      ['famMemberName','famMemberRel','famMemberBday'].forEach(i=>document.getElementById(i).value='');
+    } else if(kind==='expenses'){
+      const desc = val('famExpDesc').trim(), amount = clampNonNeg(parseCurrency(val('famExpAmount')));
+      if(!desc || !amount){ alert('Please enter a description and amount.'); return; }
+      f.expenses.push({id, date: val('famExpDate') || new Date().toISOString().slice(0,10), desc, amount});
+      ['famExpDesc','famExpAmount','famExpDate'].forEach(i=>document.getElementById(i).value='');
+    } else if(kind==='events'){
+      const title = val('famEventTitle').trim(); if(!title){ alert('Please enter an event.'); return; }
+      f.events.push({id, title, date: val('famEventDate')});
+      ['famEventTitle','famEventDate'].forEach(i=>document.getElementById(i).value='');
+    } else if(kind==='goals'){
+      const text = val('famGoalText').trim(); if(!text){ alert('Please enter a goal.'); return; }
+      f.goals.push({id, text, done:false});
+      document.getElementById('famGoalText').value='';
+    } else return;
+    await persistFamily();
+    playChime(920);
+  }
+  async function removeFamilyItem(kind, id){
+    const f = dashboardData.family; if(!f[kind]) return;
+    f[kind] = f[kind].filter(x => x.id !== id);
+    await persistFamily();
+  }
+  async function toggleFamilyGoal(id){
+    const g = dashboardData.family.goals.find(x => x.id === id); if(!g) return;
+    g.done = !g.done;
+    await persistFamily();
+  }
+
   async function addWalletAccount(){
     const name = document.getElementById('wallet_name').value.trim();
     const balance = clampNonNeg(parseCurrency(document.getElementById('wallet_balance').value));
@@ -3709,6 +3911,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const defaultBwPlanAOrgChart = { id: 'bwpa_root', name: 'BACCARAT WIN — PLAN A', color: '#b8323a', children: [] };
   const defaultNsPlanAOrgChart = { id: 'nspa_root', name: 'NEXSTACK — PLAN A', color: '#1c9fe0', children: [] };
   const defaultMbnPlanAOrgChart = { id: 'mbnpa_root', name: 'MBN — PLAN A', color: '#8b5cf6', children: [] };
+  const defaultFamOrgChart = { id: 'famc_root', name: 'FAMILY', color: '#f59e0b', children: [] };
+  const defaultFamPlanAOrgChart = { id: 'fampa_root', name: 'FAMILY — PLAN A', color: '#f59e0b', children: [] };
+  const defaultFamily = { members: [], expenses: [], events: [], goals: [] };
   const defaultPlanAOrgChartByBiz = { mb: defaultMbPlanAOrgChart, pk: defaultPkPlanAOrgChart, bw: defaultBwPlanAOrgChart, ns: defaultNsPlanAOrgChart, mbn: defaultMbnPlanAOrgChart };
 
 
@@ -3749,7 +3954,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     pkPlanAOrgChart: JSON.parse(JSON.stringify(defaultPkPlanAOrgChart)),
     bwPlanAOrgChart: JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
     nsPlanAOrgChart: JSON.parse(JSON.stringify(defaultNsPlanAOrgChart)),
-    mbnPlanAOrgChart: JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart))
+    mbnPlanAOrgChart: JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart)),
+    family: JSON.parse(JSON.stringify(defaultFamily)),
+    famOrgChart: JSON.parse(JSON.stringify(defaultFamOrgChart)),
+    famPlanAOrgChart: JSON.parse(JSON.stringify(defaultFamPlanAOrgChart)),
+    famTeam: defaultBizChecklist(), famPlanA: defaultBizChecklist()
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
@@ -3880,6 +4089,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(!parsed[biz+'PlanA']) parsed[biz+'PlanA'] = defaultBizChecklist();
       if(!parsed[biz+'PlanAOrgChart']) parsed[biz+'PlanAOrgChart'] = JSON.parse(JSON.stringify(defaultPlanAOrgChartByBiz[biz]));
     });
+    if(!parsed.family) parsed.family = JSON.parse(JSON.stringify(defaultFamily));
+    if(!parsed.famOrgChart) parsed.famOrgChart = JSON.parse(JSON.stringify(defaultFamOrgChart));
+    if(!parsed.famPlanAOrgChart) parsed.famPlanAOrgChart = JSON.parse(JSON.stringify(defaultFamPlanAOrgChart));
+    if(!parsed.famTeam) parsed.famTeam = defaultBizChecklist();
+    if(!parsed.famPlanA) parsed.famPlanA = defaultBizChecklist();
     parsed.dataVersion = 14;
     return parsed;
   }
@@ -4028,7 +4242,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         pkPlanAOrgChart: settings.pkPlanAOrgChart || JSON.parse(JSON.stringify(defaultPkPlanAOrgChart)),
         bwPlanAOrgChart: settings.bwPlanAOrgChart || JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
         nsPlanAOrgChart: settings.nsPlanAOrgChart || JSON.parse(JSON.stringify(defaultNsPlanAOrgChart)),
-        mbnPlanAOrgChart: settings.mbnPlanAOrgChart || JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart))
+        mbnPlanAOrgChart: settings.mbnPlanAOrgChart || JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart)),
+        family: settings.family || JSON.parse(JSON.stringify(defaultFamily)),
+        famOrgChart: settings.famOrgChart || JSON.parse(JSON.stringify(defaultFamOrgChart)),
+        famPlanAOrgChart: settings.famPlanAOrgChart || JSON.parse(JSON.stringify(defaultFamPlanAOrgChart)),
+        famTeam: settings.famTeam || defaultBizChecklist(), famPlanA: settings.famPlanA || defaultBizChecklist()
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -4445,6 +4663,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     orgChartKeys.forEach(k => { try{ renderOrgChart(k); }catch(e){ renderErrors.push(['org chart '+k, e]); } });
     try{ renderMbnOverview(); }catch(e){ renderErrors.push(['mbn overview', e]); }
     try{ renderPendingExpenses(); }catch(e){ renderErrors.push(['pending expenses', e]); }
+    try{ renderFamily(); }catch(e){ renderErrors.push(['family', e]); }
     try{
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
