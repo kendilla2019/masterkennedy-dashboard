@@ -2812,6 +2812,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ---- Baccarat Win "Weekly Win": one entry per week, stored inside bwSales.weeklyWins ----
   function bwWins(){ const s = dashboardData && dashboardData.bwSales; if(!s) return []; if(!s.weeklyWins) s.weeklyWins = []; return s.weeklyWins; }
+  function bwIncomeNow(snap){ return (snap.bw.revenue||0) + bwWinsThisMonth(); }
   function bwWinsThisMonth(){
     const now = new Date();
     return bwWins().filter(w => { const m = isoWeekToMonday(w.week); const d = new Date(m + 'T00:00:00'); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); })
@@ -4556,7 +4557,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const mbCommission = mbTotal(snap);
     const mbTot = mbEffectiveRevenue(snap); // used for dashboard-level totals (combined, overview card)
     const pkRev = pkRevenue(snap);
-    const combined = mbTot + bw.revenue + ns.revenue + pkRev;
+    const bwInc = bwIncomeNow(snap);
+    const combined = mbTot + bwInc + ns.revenue + pkRev;
     const activeStudents = bw.students + ns.students;
     const pkDelivered = pk.projects.filter(p=>p.status==='done').length;
     const pkInProgress = pk.projects.filter(p=>p.status!=='done').length;
@@ -4568,7 +4570,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // Overview
     document.getElementById('ovBarSub').textContent = `Share of ${fmtPeso(combined)} combined YTD revenue`;
     document.getElementById('ovMbRevenue').textContent = fmtPeso(mbTot);
-    document.getElementById('ovBwRevenue').textContent = fmtPeso(bw.revenue);
+    document.getElementById('ovBwRevenue').textContent = fmtPeso(bwInc);
     document.getElementById('ovBwFoot').textContent = `${bw.students} students enrolled`;
     document.getElementById('ovNsRevenue').textContent = fmtPeso(ns.revenue);
     document.getElementById('ovNsFoot').textContent = `${ns.students} students enrolled`;
@@ -4817,13 +4819,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     charts.chartOverviewBar = new Chart(document.getElementById('chartOverviewBar'), {
       type:'bar',
-      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[mbTot,pkRev,ns.revenue,bw.revenue], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0','#b8323a'], borderRadius:6 }]},
+      data:{ labels:['Master Baccarat','Prokora','Nexstack','Baccarat Win'], datasets:[{ data:[mbTot,pkRev,ns.revenue,bwIncomeNow(snap)], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0','#b8323a'], borderRadius:6 }]},
       options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{ x:{grid:{color:grid}, title:{display:true,text:'₱'}, ticks:{ callback: v => Number(v).toLocaleString('en-US') }}, y:{grid:{display:false}} } }
     });
 
     charts.chartOverviewDonut = new Chart(document.getElementById('chartOverviewDonut'), {
       type:'doughnut',
-      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[mbTot,pkRev,ns.revenue+bw.revenue], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0'], borderWidth:0 }]},
+      data:{ labels:['Gaming (Master Baccarat)','IT services (Prokora)','Education (Nexstack + Baccarat Win)'], datasets:[{ data:[mbTot,pkRev,ns.revenue+bwIncomeNow(snap)], backgroundColor:['#e0453f','#1a4fc4','#1c9fe0'], borderWidth:0 }]},
       options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:10,padding:14,font:{size:11.5}}}} }
     });
 
@@ -4853,7 +4855,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   /* ---------------- Income Overview: single combined monthly goal, ranked business breakdown ---------------- */
   function renderIncomeOverview(snap){
     const mbIncome = mbEffectiveRevenue(snap);
-    const bwIncome = snap.bw.revenue;
+    const bwIncome = bwIncomeNow(snap);
     const nsIncome = snap.ns.revenue;
     const pkIncome = pkRevenue(snap);
     const mbnIncome = mbnRevenue();
@@ -6200,7 +6202,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       // the single "Monthly income goal" figure, not any one business's own goal)
       const overallGoal = dashboardData.monthlyIncome.goal || 0;
       if(overallGoal > 0){
-        const combinedRevenue = mbEffectiveRevenue(snap) + snap.bw.revenue + snap.ns.revenue + pkRevenue(snap) + mbnRevenue();
+        const combinedRevenue = mbEffectiveRevenue(snap) + bwIncomeNow(snap) + snap.ns.revenue + pkRevenue(snap) + mbnRevenue();
         const overallGoalPct = (combinedRevenue / overallGoal) * 100;
         if(overallGoalPct < 50){
           alerts.push({ level: overallGoalPct < 30 ? 'red' : 'yellow', text:`Monthly income goal is at ${Math.round(overallGoalPct)}% (${fmtPeso(combinedRevenue)} of ${fmtPeso(overallGoal)}).` });
