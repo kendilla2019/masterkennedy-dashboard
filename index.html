@@ -1054,6 +1054,29 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="btn small" onclick="addBizSalesEntry('bw')">+ Log</button>
         </div>
       </div>
+
+      <div class="card" style="--accent:#b8323a;margin-top:16px;">
+        <h3><span class="dot"></span>Weekly Win</h3>
+        <div class="sub">Log one amount per week instead of every daily sale</div>
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="stat"><div class="label">Total weekly wins</div><div class="value" id="bwWinTotal">₱0.00</div><div class="foot">All logged weeks</div></div>
+          <div class="stat"><div class="label">This month</div><div class="value" id="bwWinMonth">₱0.00</div><div class="foot">Counts toward the Dashboard</div></div>
+          <div class="stat"><div class="label">Weeks logged</div><div class="value" id="bwWinCount">0</div><div class="foot" id="bwWinAvg">Average ₱0.00 per week</div></div>
+        </div>
+        <div class="edit-grid" style="grid-template-columns:1.6fr 1fr 1.2fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Week</label>
+            <div style="display:flex;gap:6px;">
+              <input type="week" id="bwWin_week" style="flex:1;min-width:0;">
+              <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;" onclick="fillWeekField('bwWin_week',0)">This</button>
+              <button type="button" class="btn secondary small" style="padding:6px 8px;font-size:11px;" onclick="fillWeekField('bwWin_week',-1)">Last</button>
+            </div>
+          </div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bwWin_amount" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Note</label><input type="text" id="bwWin_note" placeholder="Optional"></div>
+          <button class="btn small" onclick="addBwWeeklyWin()">+ Log</button>
+        </div>
+        <div id="bwWinList" style="margin-top:14px;"></div>
+      </div>
     </div>
 
     <div class="bw-subview" id="bwSubview-marketing" style="display:none;">
@@ -2786,6 +2809,46 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       : '<div style="color:var(--muted);font-size:13px;">No entries yet — log your first sale below.</div>';
   }
 
+
+  // ---- Baccarat Win "Weekly Win": one entry per week, stored inside bwSales.weeklyWins ----
+  function bwWins(){ const s = dashboardData && dashboardData.bwSales; if(!s) return []; if(!s.weeklyWins) s.weeklyWins = []; return s.weeklyWins; }
+  function bwWinsThisMonth(){
+    const now = new Date();
+    return bwWins().filter(w => { const m = isoWeekToMonday(w.week); const d = new Date(m + 'T00:00:00'); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); })
+      .reduce((a,w)=>a+(w.amount||0),0);
+  }
+  function renderBwWeeklyWins(){
+    const el = document.getElementById('bwWinList'); if(!el) return;
+    const w = bwWins(), total = w.reduce((a,x)=>a+(x.amount||0),0);
+    const set = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+    set('bwWinTotal', fmtPeso(total)); set('bwWinMonth', fmtPeso(bwWinsThisMonth())); set('bwWinCount', w.length);
+    set('bwWinAvg', 'Average ' + fmtPeso(w.length ? total/w.length : 0) + ' per week');
+    el.innerHTML = w.length ? w.slice().sort((a,b)=>b.week.localeCompare(a.week)).map(x => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;">
+        <div style="width:90px;flex-shrink:0;font-size:12px;color:var(--muted);">${x.week}</div>
+        <div style="flex:1;font-size:13.5px;">${String(x.note||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>
+        <div style="font-weight:700;font-family:'IBM Plex Sans',sans-serif;">${fmtPeso(x.amount||0)}</div>
+        <button class="del-btn" onclick="removeBwWeeklyWin('${x.id}')">Remove</button>
+      </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No weekly wins yet. Log your first week above.</div>';
+  }
+  async function addBwWeeklyWin(){
+    const week = document.getElementById('bwWin_week').value;
+    const amount = clampNonNeg(parseCurrency(document.getElementById('bwWin_amount').value));
+    if(!week || amount <= 0){ alert('Please choose a week and enter an amount.'); return; }
+    bwWins().push({ id:'bww'+Date.now(), week, amount, note: document.getElementById('bwWin_note').value.trim() });
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    document.getElementById('bwWin_amount').value=''; document.getElementById('bwWin_note').value='';
+    renderAll();
+    await saveSetting('bwSales', dashboardData.bwSales);
+    playChime(920);
+  }
+  async function removeBwWeeklyWin(id){
+    dashboardData.bwSales.weeklyWins = bwWins().filter(x => x.id !== id);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderAll();
+    await saveSetting('bwSales', dashboardData.bwSales);
+  }
+
   async function addBizSalesEntry(biz){
     const dateEl = document.getElementById('bizSalesDate_'+biz);
     const amtEl = document.getElementById('bizSalesAmount_'+biz);
@@ -2897,7 +2960,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ---- Cash flow: auto-rolled up from this period's revenue minus logged expenses, no separate entry ----
   function getBizRevenue(biz){
     const snap = getCurrentSnapshot();
-    if(biz === 'bw') return snap.bw.revenue;
+    if(biz === 'bw') return (snap.bw.revenue||0) + bwWins().reduce((a,x)=>a+(x.amount||0),0);
     if(biz === 'ns') return snap.ns.revenue;
     if(biz === 'pk') return pkRevenue(snap);
     if(biz === 'mbn') return mbnRevenue();
@@ -4664,6 +4727,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ renderMbnOverview(); }catch(e){ renderErrors.push(['mbn overview', e]); }
     try{ renderPendingExpenses(); }catch(e){ renderErrors.push(['pending expenses', e]); }
     try{ renderFamily(); }catch(e){ renderErrors.push(['family', e]); }
+    try{ renderBwWeeklyWins(); }catch(e){ renderErrors.push(['bw weekly wins', e]); }
     try{
       if(currentUser && currentUser.role === 'admin'){
         renderExecutive(snap);
@@ -4773,6 +4837,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(biz === 'mb') return mbEffectiveRevenue(snap);
     if(biz === 'pk') return pkRevenue(snap);
     if(biz === 'mbn') return mbnRevenue();
+    if(biz === 'bw') return (snap.bw.revenue || 0) + bwWinsThisMonth();
     return snap[biz].revenue || 0;
   }
 
