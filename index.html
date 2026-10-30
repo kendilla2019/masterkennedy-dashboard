@@ -2110,13 +2110,27 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- FINANCE (placeholder — coming soon) -->
   <div class="view" id="finance">
-    <div class="card" style="--accent:#2f6fed">
-      <h3><span class="dot"></span>Finance</h3>
-      <div class="sub">Coming soon</div>
-      <p style="color:var(--muted);font-size:13.5px;line-height:1.6;">
-        This will show a per-business profit &amp; loss view (revenue minus expenses), filterable by month, quarter, or year,
-        pulled from the numbers you enter in Edit Data and Executive → Expenses. It's next in line to be built.
-      </p>
+    <div class="grid-4">
+      <div class="stat"><div class="label">Total lent out</div><div class="value" id="oweLentStat">₱0.00</div><div class="foot" id="oweCountFoot">0 borrowers</div></div>
+      <div class="stat"><div class="label">Collected so far</div><div class="value" id="owePaidStat">₱0.00</div><div class="foot">Payments received</div></div>
+      <div class="stat"><div class="label">Still owed to you</div><div class="value" id="oweLeftStat">₱0.00</div><div class="foot">Outstanding balance</div></div>
+      <div class="stat"><div class="label">To collect in November</div><div class="value" id="oweNovStat">₱0.00</div><div class="foot" id="oweNovFoot">Balance with a November collect date</div></div>
+    </div>
+    <div class="card" style="--accent:#2f6fed;margin-top:16px;">
+      <h3><span class="dot"></span>Money owed to me</h3>
+      <div class="sub">People who borrowed from you. Record each payment as it comes in, and use the reminder button to copy a collection message.</div>
+      <div id="oweList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.2fr 1fr 1fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Borrower</label><input type="text" id="oweName" placeholder="e.g. Karim"></div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="oweAmount" onblur="formatCurrencyField(this)"></div>
+        <div class="field"><label>Date lent</label><input type="date" id="oweLentDate"></div>
+        <div class="field"><label>Collect on</label><input type="date" id="oweCollectDate"></div>
+        <button class="btn small" onclick="addOwed()">+ Add</button>
+      </div>
+    </div>
+    <div class="card" style="--accent:#2f6fed;margin-top:16px;">
+      <h3><span class="dot"></span>Profit &amp; loss per business</h3>
+      <div class="sub">Coming next: revenue minus expenses per business, filterable by month, quarter, or year.</div>
     </div>
   </div>
 
@@ -3685,6 +3699,70 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     await persistFamily();
   }
 
+  // ---- Finance: money owed to me (loans receivable from individuals) ----
+  function esc_owe(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function oweEntries(){ if(!dashboardData.owedToMe) dashboardData.owedToMe = JSON.parse(JSON.stringify(defaultOwedToMe)); return dashboardData.owedToMe.entries; }
+  function oweBalance(e){ return Math.max(0, (e.amount||0) - (e.payments||[]).reduce((a,p)=>a+(p.amount||0),0)); }
+  function renderOwed(){
+    const el = document.getElementById('oweList'); if(!el) return;
+    const list = oweEntries();
+    const set = (id,v) => { const x=document.getElementById(id); if(x) x.textContent=v; };
+    const lent = list.reduce((a,e)=>a+(e.amount||0),0), left = list.reduce((a,e)=>a+oweBalance(e),0);
+    const nov = list.filter(e => (e.collectDate||'').slice(5,7)==='11').reduce((a,e)=>a+oweBalance(e),0);
+    set('oweLentStat', fmtPeso(lent)); set('owePaidStat', fmtPeso(lent-left)); set('oweLeftStat', fmtPeso(left)); set('oweNovStat', fmtPeso(nov));
+    set('oweCountFoot', list.length + (list.length===1?' borrower':' borrowers'));
+    el.innerHTML = list.length ? list.slice().sort((a,b)=>oweBalance(b)-oweBalance(a)).map(e => {
+      const bal = oweBalance(e), paid = (e.amount||0) - bal, pct = e.amount ? Math.round(paid/e.amount*100) : 0;
+      return `<div style="padding:12px;border-radius:10px;background:var(--panel-2);margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <b style="font-size:14.5px;flex:1;min-width:90px;">${esc_owe(e.name)}</b>
+          <span class="pill ${bal===0?'done':'live'}">${bal===0?'Paid':'Owes'}</span>
+          <span style="font-size:12px;color:var(--muted);">Collect: ${e.collectDate||'not set'}</span>
+          <b style="font-family:'IBM Plex Sans',sans-serif;font-size:16px;">${fmtPeso(bal)}</b>
+        </div>
+        <div style="height:6px;border-radius:4px;background:var(--line);margin:10px 0;overflow:hidden;"><div style="height:100%;width:${pct}%;background:#2f6fed;"></div></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);">
+          <span>Lent ${fmtPeso(e.amount||0)}${e.lentDate?' on '+e.lentDate:''} · paid ${fmtPeso(paid)}</span>
+          <span style="flex:1;"></span>
+          <input type="text" inputmode="decimal" class="currency-field" id="owePay_${e.id}" placeholder="Payment ₱" style="width:110px;" onblur="formatCurrencyField(this)">
+          <button class="btn small" onclick="payOwed('${e.id}')">Record payment</button>
+          <button class="btn secondary small" onclick="copyOweReminder('${e.id}')">Copy reminder</button>
+          <button class="del-btn" onclick="removeOwed('${e.id}')">Remove</button>
+        </div></div>`;
+    }).join('') : '<div class="sub">Nobody owes you yet.</div>';
+  }
+  async function persistOwed(){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderOwed();
+    await saveSetting('owedToMe', dashboardData.owedToMe);
+  }
+  async function addOwed(){
+    const name = document.getElementById('oweName').value.trim();
+    const amount = clampNonNeg(parseCurrency(document.getElementById('oweAmount').value));
+    if(!name || !amount){ alert('Please enter a name and an amount.'); return; }
+    oweEntries().push({ id:'ow'+Date.now(), name, amount, lentDate: document.getElementById('oweLentDate').value, collectDate: document.getElementById('oweCollectDate').value, payments:[] });
+    ['oweName','oweAmount','oweLentDate','oweCollectDate'].forEach(i=>document.getElementById(i).value='');
+    await persistOwed(); playChime(920);
+  }
+  async function payOwed(id){
+    const e = oweEntries().find(x=>x.id===id); if(!e) return;
+    const inp = document.getElementById('owePay_'+id);
+    const amt = clampNonNeg(parseCurrency(inp.value));
+    if(!amt){ alert('Enter the payment amount.'); return; }
+    e.payments = e.payments || [];
+    e.payments.push({ id:'op'+Date.now(), amount: Math.min(amt, oweBalance(e)), date: new Date().toISOString().slice(0,10) });
+    await persistOwed(); playChime(920);
+  }
+  async function removeOwed(id){
+    dashboardData.owedToMe.entries = oweEntries().filter(x=>x.id!==id);
+    await persistOwed();
+  }
+  function copyOweReminder(id){
+    const e = oweEntries().find(x=>x.id===id); if(!e) return;
+    const msg = `Hi ${e.name}, quick reminder about the ${fmtPeso(oweBalance(e))} balance we talked about. I'm collecting this November, so please let me know when you can send it. Thank you!`;
+    try{ navigator.clipboard.writeText(msg); alert('Reminder copied. Paste it in Messenger or SMS.'); }catch(err){ prompt('Copy this message:', msg); }
+  }
+
   async function addWalletAccount(){
     const name = document.getElementById('wallet_name').value.trim();
     const balance = clampNonNeg(parseCurrency(document.getElementById('wallet_balance').value));
@@ -3977,6 +4055,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const defaultMbnPlanAOrgChart = { id: 'mbnpa_root', name: 'MBN — PLAN A', color: '#8b5cf6', children: [] };
   const defaultFamOrgChart = { id: 'famc_root', name: 'FAMILY', color: '#f59e0b', children: [] };
   const defaultFamPlanAOrgChart = { id: 'fampa_root', name: 'FAMILY — PLAN A', color: '#f59e0b', children: [] };
+  const defaultOwedToMe = { entries: [
+    { id:'ow_karim', name:'Karim', amount:100000, lentDate:'', collectDate:'2026-11-01', payments:[] },
+    { id:'ow_albert', name:'Albert', amount:70000, lentDate:'', collectDate:'2026-11-01', payments:[] },
+    { id:'ow_joseph', name:'Joseph', amount:50000, lentDate:'', collectDate:'2026-11-01', payments:[] },
+    { id:'ow_john', name:'John', amount:20000, lentDate:'', collectDate:'2026-11-01', payments:[] }
+  ] };
   const defaultFamily = { members: [], expenses: [], events: [], goals: [] };
   const defaultPlanAOrgChartByBiz = { mb: defaultMbPlanAOrgChart, pk: defaultPkPlanAOrgChart, bw: defaultBwPlanAOrgChart, ns: defaultNsPlanAOrgChart, mbn: defaultMbnPlanAOrgChart };
 
@@ -4019,6 +4103,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     bwPlanAOrgChart: JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
     nsPlanAOrgChart: JSON.parse(JSON.stringify(defaultNsPlanAOrgChart)),
     mbnPlanAOrgChart: JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart)),
+    owedToMe: JSON.parse(JSON.stringify(defaultOwedToMe)),
     family: JSON.parse(JSON.stringify(defaultFamily)),
     famOrgChart: JSON.parse(JSON.stringify(defaultFamOrgChart)),
     famPlanAOrgChart: JSON.parse(JSON.stringify(defaultFamPlanAOrgChart)),
@@ -4153,6 +4238,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if(!parsed[biz+'PlanA']) parsed[biz+'PlanA'] = defaultBizChecklist();
       if(!parsed[biz+'PlanAOrgChart']) parsed[biz+'PlanAOrgChart'] = JSON.parse(JSON.stringify(defaultPlanAOrgChartByBiz[biz]));
     });
+    if(!parsed.owedToMe) parsed.owedToMe = JSON.parse(JSON.stringify(defaultOwedToMe));
     if(!parsed.family) parsed.family = JSON.parse(JSON.stringify(defaultFamily));
     if(!parsed.famOrgChart) parsed.famOrgChart = JSON.parse(JSON.stringify(defaultFamOrgChart));
     if(!parsed.famPlanAOrgChart) parsed.famPlanAOrgChart = JSON.parse(JSON.stringify(defaultFamPlanAOrgChart));
@@ -4307,6 +4393,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         bwPlanAOrgChart: settings.bwPlanAOrgChart || JSON.parse(JSON.stringify(defaultBwPlanAOrgChart)),
         nsPlanAOrgChart: settings.nsPlanAOrgChart || JSON.parse(JSON.stringify(defaultNsPlanAOrgChart)),
         mbnPlanAOrgChart: settings.mbnPlanAOrgChart || JSON.parse(JSON.stringify(defaultMbnPlanAOrgChart)),
+        owedToMe: settings.owedToMe || JSON.parse(JSON.stringify(defaultOwedToMe)),
         family: settings.family || JSON.parse(JSON.stringify(defaultFamily)),
         famOrgChart: settings.famOrgChart || JSON.parse(JSON.stringify(defaultFamOrgChart)),
         famPlanAOrgChart: settings.famPlanAOrgChart || JSON.parse(JSON.stringify(defaultFamPlanAOrgChart)),
@@ -4729,6 +4816,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ renderMbnOverview(); }catch(e){ renderErrors.push(['mbn overview', e]); }
     try{ renderPendingExpenses(); }catch(e){ renderErrors.push(['pending expenses', e]); }
     try{ renderFamily(); }catch(e){ renderErrors.push(['family', e]); }
+    try{ renderOwed(); }catch(e){ renderErrors.push(['owed to me', e]); }
     try{ renderBwWeeklyWins(); }catch(e){ renderErrors.push(['bw weekly wins', e]); }
     try{
       if(currentUser && currentUser.role === 'admin'){
