@@ -3098,16 +3098,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
   const GOAL_COLORS = ['#e0453f','#1c9fe0','#2f9e5b','#f59e0b','#8b5cf6','#1a4fc4','#d946a8','#14b8a6'];
   function defaultGoalBoxes(){
-    return [
-      { id:'gb1', title:'MASTER BACCARAT', target:'₱1M to ₱10M monthly commission', notes:'', progress:0, color:'#e0453f' },
-      { id:'gb2', title:'BUSINESS', target:'Nexstack · Prokora · MBN', notes:'', progress:0, color:'#1c9fe0' },
-      { id:'gb3', title:'HAPPY FAMILY', target:'', notes:'', progress:0, color:'#f59e0b' },
-      { id:'gb4', title:'HAPPY ME, HAPPY FAMILY', target:'', notes:'', progress:0, color:'#2f9e5b' }
+    const items = [
+      ['HAPPY FAMILY','','#f59e0b'],
+      ['MASTER BACCARAT','₱1M to ₱10M monthly commission','#e0453f'],
+      ['PROKORA','₱1B project','#1a4fc4'],
+      ['KENDRICK LEARNING','','#14b8a6'],
+      ['NEXSTACK','','#1c9fe0'],
+      ['INVESTMENT','','#2f9e5b'],
+      ['GYM / PICKLEBALL','','#8b5cf6'],
+      ['FAMILY AND FRIENDS','','#d946a8'],
+      ['LEARNING','','#f97316'],
+      ['EAGLES','','#64748b']
     ];
+    return items.map((x,i)=>({ id:'gb'+(i+1), title:x[0], target:x[1], notes:'', progress:0, color:x[2] }));
   }
+  let goalBoxesMigrated = false;
   function goalBoxes(){
     const mp = dashboardData.myProfile;
-    if(!Array.isArray(mp.goalBoxes)) mp.goalBoxes = defaultGoalBoxes();
+    if(!Array.isArray(mp.goalBoxes) || mp.goalBoxesV !== 2){
+      mp.goalBoxes = defaultGoalBoxes(); mp.goalBoxesV = 2; goalBoxesMigrated = true; // one-time reset to Kennedy's ranked list of 10
+    }
     return mp.goalBoxes;
   }
   function escGoal(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3144,6 +3154,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           <button class="del-btn" onclick="removeGoalBox('${b.id}')">Remove</button>
         </div>
       </div>`).join('') || '<div class="sub">No goals yet. Click + Add box.</div>';
+    if(goalBoxesMigrated){ goalBoxesMigrated = false; persistGoalBoxes(false); }
     const cnt = document.getElementById('goalBoxCount'); if(cnt) cnt.textContent = boxes.length + ' / ' + GOAL_BOX_MAX;
     const add = document.getElementById('goalAddBtn'); if(add) add.disabled = boxes.length >= GOAL_BOX_MAX;
   }
