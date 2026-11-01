@@ -2408,7 +2408,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <span style="font-size:12px;color:var(--muted);" id="goalBoxCount"></span>
         <button class="btn small" id="goalAddBtn" onclick="addGoalBox()">+ Add box</button>
       </div>
-      <div class="sub">One box per goal, in order of priority. Drag the ⠿ handle to re-rank, click ⋯ for color and remove. Up to 10 boxes.</div>
+      <div class="sub">One box per goal, in order of priority. Drag the ⠿ handle to re-rank, click ⋯ for color and remove. Up to 100 boxes.</div>
       <div id="goalWall" class="gw-grid"></div>
     </div>
     <div class="card" style="--accent:#2f6fed;">
@@ -3075,7 +3075,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
 
   // ---- My Goals Wall: editable priority boxes, stored in myProfile.goalBoxes (max 10) ----
-  const GOAL_BOX_MAX = 10;
+  const GOAL_BOX_MAX = 100;
   const goalOpen = new Set();
   let goalDragId = null;
   function toggleGoalOpen(id){ if(goalOpen.has(id)) goalOpen.delete(id); else goalOpen.add(id); const c=document.querySelector(`.gw-card[data-id="${id}"]`); if(c) c.classList.toggle('open', goalOpen.has(id)); }
