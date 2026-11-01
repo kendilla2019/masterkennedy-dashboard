@@ -429,6 +429,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   .gw-dot{width:18px;height:18px;border-radius:50%;cursor:pointer;padding:0;border:2px solid transparent;transition:transform .12s;}
   .gw-dot:hover{transform:scale(1.2);}
   .gw-dot.on{border-color:var(--ink);}
+  .gw-top{display:flex;align-items:center;gap:6px;position:relative;z-index:1;}
+  .gw-icon{background:color-mix(in srgb,var(--gc) 14%,transparent);color:var(--gc);border:0;border-radius:9px;width:30px;height:28px;font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s,background .15s;}
+  .gw-card:hover .gw-icon,.gw-card.open .gw-icon{opacity:1;}
+  .gw-icon:hover{background:color-mix(in srgb,var(--gc) 28%,transparent);}
+  .gw-handle{cursor:grab;}
+  .gw-handle:active{cursor:grabbing;}
+  .gw-card.dragging{opacity:.35;transform:scale(.97);}
+  .gw-card.drop{outline:2px dashed var(--gc);outline-offset:3px;}
+  .gw-card .gw-foot{display:none;opacity:1;}
+  .gw-card.open .gw-foot{display:flex;}
 </style>
 </head>
 <body>
@@ -2398,7 +2408,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <span style="font-size:12px;color:var(--muted);" id="goalBoxCount"></span>
         <button class="btn small" id="goalAddBtn" onclick="addGoalBox()">+ Add box</button>
       </div>
-      <div class="sub">One box per goal, in order of priority. Edit anything directly, then use the arrows to re-rank. Up to 10 boxes.</div>
+      <div class="sub">One box per goal, in order of priority. Drag the ⠿ handle to re-rank, click ⋯ for color and remove. Up to 10 boxes.</div>
       <div id="goalWall" class="gw-grid"></div>
     </div>
     <div class="card" style="--accent:#2f6fed;">
@@ -3066,6 +3076,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   // ---- My Goals Wall: editable priority boxes, stored in myProfile.goalBoxes (max 10) ----
   const GOAL_BOX_MAX = 10;
+  const goalOpen = new Set();
+  let goalDragId = null;
+  function toggleGoalOpen(id){ if(goalOpen.has(id)) goalOpen.delete(id); else goalOpen.add(id); const c=document.querySelector(`.gw-card[data-id="${id}"]`); if(c) c.classList.toggle('open', goalOpen.has(id)); }
+  function goalDragStart(ev,id){
+    goalDragId = id;
+    const card = ev.target.closest('.gw-card');
+    try{ ev.dataTransfer.effectAllowed='move'; ev.dataTransfer.setData('text/plain', id); if(card) ev.dataTransfer.setDragImage(card, 30, 20); }catch(e){}
+    if(card) setTimeout(()=>card.classList.add('dragging'),0);
+  }
+  function goalDragOver(ev){ if(!goalDragId) return; ev.preventDefault(); ev.currentTarget.classList.add('drop'); }
+  function goalDragEnd(){ goalDragId = null; document.querySelectorAll('.gw-card').forEach(c=>c.classList.remove('dragging','drop')); }
+  async function goalDrop(ev,targetId){
+    ev.preventDefault();
+    const from = goalDragId; goalDragEnd();
+    if(!from || from===targetId) return;
+    const a = goalBoxes(), i = a.findIndex(x=>x.id===from), j = a.findIndex(x=>x.id===targetId);
+    if(i<0 || j<0) return;
+    const [m] = a.splice(i,1); a.splice(j,0,m);
+    await persistGoalBoxes(true);
+  }
   const GOAL_COLORS = ['#e0453f','#1c9fe0','#2f9e5b','#f59e0b','#8b5cf6','#1a4fc4','#d946a8','#14b8a6'];
   function defaultGoalBoxes(){
     return [
@@ -3089,9 +3119,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     wall.className = 'gw-grid';
     const labels = ['Top priority','Priority 2','Priority 3','Priority 4'];
     wall.innerHTML = boxes.map((b,i) => `
-      <div class="gw-card${i===0?' hero':''}" style="--gc:${escGoal(b.color)}">
+      <div class="gw-card${i===0?' hero':''}${goalOpen.has(b.id)?' open':''}" style="--gc:${escGoal(b.color)}" data-id="${b.id}" ondragover="goalDragOver(event)" ondragleave="this.classList.remove('drop')" ondrop="goalDrop(event,'${b.id}')">
         <div class="gw-rank">${i+1}</div>
-        <span class="gw-badge">${i<4?labels[i]:'Priority '+(i+1)}</span>
+        <div class="gw-top">
+          <span class="gw-badge">${i<4?labels[i]:'Priority '+(i+1)}</span>
+          <span style="flex:1;"></span>
+          <span class="gw-icon gw-handle" draggable="true" title="Drag to re-rank" ondragstart="goalDragStart(event,'${b.id}')" ondragend="goalDragEnd()">⠿</span>
+          <button class="gw-icon" title="Color and options" onclick="toggleGoalOpen('${b.id}')">⋯</button>
+        </div>
         <input type="text" class="gw-title" value="${escGoal(b.title)}" placeholder="Goal title" onchange="updateGoalBox('${b.id}','title',this.value)">
         <input type="text" class="gw-target" value="${escGoal(b.target)}" placeholder="Target, e.g. ₱1M monthly" onchange="updateGoalBox('${b.id}','target',this.value)">
         <textarea class="gw-notes" rows="3" placeholder="Plan, notes, why it matters..." onchange="updateGoalBox('${b.id}','notes',this.value)">${escGoal(b.notes)}</textarea>
@@ -3106,8 +3141,6 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         <div class="gw-foot">
           ${GOAL_COLORS.map(c=>`<button class="gw-dot${c===b.color?' on':''}" title="Color" style="background:${c}" onclick="updateGoalBox('${b.id}','color','${c}',true)"></button>`).join('')}
           <span style="flex:1;"></span>
-          <button class="btn secondary small" ${i===0?'disabled':''} onclick="moveGoalBox('${b.id}',-1)" title="Rank higher">↑</button>
-          <button class="btn secondary small" ${i===boxes.length-1?'disabled':''} onclick="moveGoalBox('${b.id}',1)" title="Rank lower">↓</button>
           <button class="del-btn" onclick="removeGoalBox('${b.id}')">Remove</button>
         </div>
       </div>`).join('') || '<div class="sub">No goals yet. Click + Add box.</div>';
