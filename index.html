@@ -2364,6 +2364,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
   <!-- MY PROFILE (admin only, personal) -->
   <div class="view" id="myprofile">
+    <div class="card" style="--accent:#f5b83d;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h3 style="margin:0;flex:1;"><span class="dot"></span>My Goals Wall</h3>
+        <span style="font-size:12px;color:var(--muted);" id="goalBoxCount"></span>
+        <button class="btn small" id="goalAddBtn" onclick="addGoalBox()">+ Add box</button>
+      </div>
+      <div class="sub">One box per goal, in order of priority. Edit anything directly, then use the arrows to re-rank. Up to 10 boxes.</div>
+      <div id="goalWall" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px;"></div>
+    </div>
     <div class="card" style="--accent:#2f6fed;">
       <h3><span class="dot"></span>My Goal in Life</h3>
       <div class="sub">Your own space — write it, revisit it, revise it whenever you want</div>
@@ -3014,6 +3023,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
 
   function renderMyProfile(){
+    try{ renderGoalWall(); }catch(e){ console.error(e); }
     const el = document.getElementById('myProfileGoal');
     if(!el) return; // not in DOM for this role
     if(document.activeElement !== el) el.value = dashboardData.myProfile.goalInLife || '';
@@ -3023,6 +3033,79 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         ? `Last saved: ${new Date(dashboardData.myProfile.goalSavedAt).toLocaleString()}`
         : '';
     }
+  }
+
+
+  // ---- My Goals Wall: editable priority boxes, stored in myProfile.goalBoxes (max 10) ----
+  const GOAL_BOX_MAX = 10;
+  const GOAL_COLORS = ['#e0453f','#1c9fe0','#2f9e5b','#f59e0b','#8b5cf6','#1a4fc4','#d946a8','#14b8a6'];
+  function defaultGoalBoxes(){
+    return [
+      { id:'gb1', title:'MASTER BACCARAT', target:'₱1M to ₱10M monthly commission', notes:'', progress:0, color:'#e0453f' },
+      { id:'gb2', title:'BUSINESS', target:'Nexstack · Prokora · MBN', notes:'', progress:0, color:'#1c9fe0' },
+      { id:'gb3', title:'HAPPY FAMILY', target:'', notes:'', progress:0, color:'#f59e0b' },
+      { id:'gb4', title:'HAPPY ME, HAPPY FAMILY', target:'', notes:'', progress:0, color:'#2f9e5b' }
+    ];
+  }
+  function goalBoxes(){
+    const mp = dashboardData.myProfile;
+    if(!Array.isArray(mp.goalBoxes)) mp.goalBoxes = defaultGoalBoxes();
+    return mp.goalBoxes;
+  }
+  function escGoal(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function renderGoalWall(){
+    const wall = document.getElementById('goalWall'); if(!wall) return;
+    if(wall.contains(document.activeElement) && document.activeElement !== document.body && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return; // don't clobber typing
+    const boxes = goalBoxes();
+    const fieldStyle = 'width:100%;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);border-radius:8px;padding:8px 10px;font-family:inherit;';
+    wall.innerHTML = boxes.map((b,i) => `
+      <div style="border-radius:14px;border:1px solid var(--line);border-top:5px solid ${escGoal(b.color)};background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:28px;height:28px;border-radius:50%;background:${escGoal(b.color)};color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">${i+1}</span>
+          <input type="text" value="${escGoal(b.title)}" placeholder="Goal title" style="${fieldStyle}font-weight:800;font-size:14px;" onchange="updateGoalBox('${b.id}','title',this.value)">
+        </div>
+        <input type="text" value="${escGoal(b.target)}" placeholder="Target, e.g. ₱1M monthly" style="${fieldStyle}font-size:13px;" onchange="updateGoalBox('${b.id}','target',this.value)">
+        <textarea rows="3" placeholder="Notes, plan, why it matters..." style="${fieldStyle}font-size:12.5px;resize:vertical;" onchange="updateGoalBox('${b.id}','notes',this.value)">${escGoal(b.notes)}</textarea>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
+          <span>Progress</span>
+          <input type="range" min="0" max="100" value="${b.progress||0}" style="flex:1;accent-color:${escGoal(b.color)};" oninput="this.nextElementSibling.textContent=this.value+'%'" onchange="updateGoalBox('${b.id}','progress',parseInt(this.value))">
+          <b style="min-width:34px;text-align:right;">${b.progress||0}%</b>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          ${GOAL_COLORS.map(c=>`<button title="Color" onclick="updateGoalBox('${b.id}','color','${c}',true)" style="width:18px;height:18px;border-radius:50%;border:${c===b.color?'2px solid var(--ink)':'1px solid var(--line)'};background:${c};cursor:pointer;padding:0;"></button>`).join('')}
+          <span style="flex:1;"></span>
+          <button class="btn secondary small" ${i===0?'disabled':''} onclick="moveGoalBox('${b.id}',-1)" title="Move up in rank">↑</button>
+          <button class="btn secondary small" ${i===boxes.length-1?'disabled':''} onclick="moveGoalBox('${b.id}',1)" title="Move down in rank">↓</button>
+          <button class="del-btn" onclick="removeGoalBox('${b.id}')">Remove</button>
+        </div>
+      </div>`).join('') || '<div class="sub">No goals yet. Click + Add box.</div>';
+    const cnt = document.getElementById('goalBoxCount'); if(cnt) cnt.textContent = boxes.length + ' / ' + GOAL_BOX_MAX;
+    const add = document.getElementById('goalAddBtn'); if(add) add.disabled = boxes.length >= GOAL_BOX_MAX;
+  }
+  async function persistGoalBoxes(rerender){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    if(rerender !== false) renderGoalWall();
+    await saveSetting('myProfile', dashboardData.myProfile);
+  }
+  async function updateGoalBox(id, field, value, rerender){
+    const b = goalBoxes().find(x=>x.id===id); if(!b) return;
+    b[field] = value;
+    await persistGoalBoxes(!!rerender);
+  }
+  async function addGoalBox(){
+    const boxes = goalBoxes(); if(boxes.length >= GOAL_BOX_MAX) return;
+    boxes.push({ id:'gb'+Date.now(), title:'NEW GOAL', target:'', notes:'', progress:0, color: GOAL_COLORS[boxes.length % GOAL_COLORS.length] });
+    await persistGoalBoxes(true); playChime(920);
+  }
+  async function removeGoalBox(id){
+    dashboardData.myProfile.goalBoxes = goalBoxes().filter(x=>x.id!==id);
+    await persistGoalBoxes(true);
+  }
+  async function moveGoalBox(id, dir){
+    const a = goalBoxes(), i = a.findIndex(x=>x.id===id), j = i + dir;
+    if(i<0 || j<0 || j>=a.length) return;
+    [a[i], a[j]] = [a[j], a[i]];
+    await persistGoalBoxes(true);
   }
 
   async function saveMyProfileGoal(){
