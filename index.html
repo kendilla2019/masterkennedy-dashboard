@@ -561,6 +561,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     /* iPhone Safari zooms in on any input under 16px, which throws the whole layout off */
     input:not([type=checkbox]):not([type=radio]), select, textarea{font-size:16px !important;}
   }
+  .task-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;cursor:pointer;border:1px solid transparent;transition:border-color .12s,opacity .12s;}
+  .task-row.dragging{opacity:.35;}
+  .task-row.drop{border-color:#5b8cff;border-style:dashed;}
+  .task-handle{cursor:grab;color:var(--muted);font-size:16px;line-height:1;padding:2px 2px;flex-shrink:0;user-select:none;}
+  .task-handle:hover{color:var(--ink);}
+  .task-handle:active{cursor:grabbing;}
+  .task-rank{min-width:24px;height:24px;border-radius:50%;background:color-mix(in srgb,#5b8cff 22%,transparent);color:#5b8cff;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .task-row:first-child .task-rank{background:#5b8cff;color:#fff;}
 </style>
 </head>
 <body>
@@ -2931,7 +2939,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const t = dashboardData[dataKey];
     el.innerHTML = t.tasks.length
       ? t.tasks.map(task => `
-          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;cursor:pointer;">
+          <label class="task-row" data-id="${task.id}" ondragover="taskDragOver(event)" ondragleave="this.classList.remove('drop')" ondrop="taskDrop(event,'${dataKey}','${task.id}','${listDomId}')">
+            <span class="task-handle" draggable="true" title="Drag to set priority" ondragstart="taskDragStart(event,'${task.id}')" ondragend="taskDragEnd()" onclick="event.preventDefault()">⠿</span>
+            <span class="task-rank">${t.tasks.indexOf(task)+1}</span>
             <input type="checkbox" ${task.done?'checked':''} onchange="toggleBizChecklistTask('${dataKey}','${task.id}','${listDomId}')" style="width:16px;height:16px;flex-shrink:0;">
             <span style="flex:1;font-size:13.5px;${task.done?'text-decoration:line-through;color:var(--muted);':''}">${task.label}</span>
             <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${task.lastUpdated ? new Date(task.lastUpdated).toLocaleDateString() : 'Not started'}</span>
@@ -2939,6 +2949,30 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           </label>
         `).join('')
       : '<div style="color:var(--muted);font-size:13px;">No tasks yet — add one below.</div>';
+  }
+
+
+  // ---- Drag to reorder checklist tasks (order = priority) ----
+  let taskDragId = null;
+  function taskDragStart(ev,id){
+    taskDragId = id;
+    const row = ev.target.closest('.task-row');
+    try{ ev.dataTransfer.effectAllowed='move'; ev.dataTransfer.setData('text/plain', id); if(row) ev.dataTransfer.setDragImage(row, 20, 16); }catch(e){}
+    if(row) setTimeout(()=>row.classList.add('dragging'),0);
+  }
+  function taskDragOver(ev){ if(!taskDragId) return; ev.preventDefault(); ev.currentTarget.classList.add('drop'); }
+  function taskDragEnd(){ taskDragId = null; document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('dragging','drop')); }
+  async function taskDrop(ev, dataKey, targetId, listDomId){
+    ev.preventDefault();
+    const from = taskDragId; taskDragEnd();
+    if(!from || from===targetId) return;
+    const t = dashboardData[dataKey]; if(!t || !t.tasks) return;
+    const i = t.tasks.findIndex(x=>x.id===from), j = t.tasks.findIndex(x=>x.id===targetId);
+    if(i<0 || j<0) return;
+    const [m] = t.tasks.splice(i,1); t.tasks.splice(j,0,m);
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    if(listDomId==='teamTaskList') renderTeamDashboard(); else renderBizChecklist(dataKey, listDomId);
+    await saveSetting(dataKey, t);
   }
 
   async function addBizChecklistTask(dataKey, inputDomId, listDomId){
@@ -5626,7 +5660,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const t = dashboardData.mbTeam;
     document.getElementById('teamTaskList').innerHTML = t.tasks.length
       ? t.tasks.map(task => `
-          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;cursor:pointer;">
+          <label class="task-row" data-id="${task.id}" ondragover="taskDragOver(event)" ondragleave="this.classList.remove('drop')" ondrop="taskDrop(event,'mbTeam','${task.id}','teamTaskList')">
+            <span class="task-handle" draggable="true" title="Drag to set priority" ondragstart="taskDragStart(event,'${task.id}')" ondragend="taskDragEnd()" onclick="event.preventDefault()">⠿</span>
+            <span class="task-rank">${t.tasks.indexOf(task)+1}</span>
             <input type="checkbox" ${task.done?'checked':''} onchange="toggleTeamTask('${task.id}')" style="width:16px;height:16px;flex-shrink:0;">
             <span style="flex:1;font-size:13.5px;${task.done?'text-decoration:line-through;color:var(--muted);':''}">${task.label}</span>
             <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${task.lastUpdated ? new Date(task.lastUpdated).toLocaleDateString() : 'Not started'}</span>
