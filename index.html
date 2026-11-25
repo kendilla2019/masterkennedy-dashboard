@@ -633,6 +633,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       <button class="tab" data-view="mbn" data-roles="admin,mbn" style="--accent:#8b5cf6"><span class="nav-icon">●</span><span class="nav-label">MBN</span></button>
       <button class="tab" data-view="bw" data-roles="admin,bw" style="--accent:#b8323a"><span class="nav-icon">●</span><span class="nav-label">Baccarat Win</span></button>
       <button class="tab" data-view="ns" data-roles="admin,ns" style="--accent:#1c9fe0"><span class="nav-icon">●</span><span class="nav-label">Nexstack</span></button>
+      <button class="tab" data-view="eagles" data-roles="admin" style="--accent:#0d9488"><span class="nav-icon">●</span><span class="nav-label">Eagles</span></button>
       <button class="tab" data-view="family" data-roles="admin" style="--accent:#f59e0b"><span class="nav-icon">●</span><span class="nav-label">Family</span></button>
       <div class="sidebar-divider"></div>
       <button class="tab" data-view="editdata" data-roles="admin" style="--accent:#2f6fed"><span class="nav-icon">✎</span><span class="nav-label">Edit Data</span></button>
@@ -2190,6 +2191,222 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     </div>
   </div>
 
+  <!-- EAGLES -->
+  <div class="view" id="eagles">
+    <div class="mb-subnav" id="egSubnav">
+      <button class="mb-subtab active" data-bizview="overview" onclick="switchBizSubview('eg','overview')">Overview</button>
+      <button class="mb-subtab" data-bizview="sales" onclick="switchBizSubview('eg','sales')">Sales</button>
+      <button class="mb-subtab" data-bizview="marketing" onclick="switchBizSubview('eg','marketing')">Marketing</button>
+      <button class="mb-subtab" data-bizview="team" onclick="switchBizSubview('eg','team')">Team</button>
+      <button class="mb-subtab" data-bizview="operating" onclick="switchBizSubview('eg','operating')">Operating</button>
+      <button class="mb-subtab" data-bizview="expenses" onclick="switchBizSubview('eg','expenses')">Expenses</button>
+      <button class="mb-subtab" data-bizview="cashflow" onclick="switchBizSubview('eg','cashflow')">Cash Flow</button>
+      <button class="mb-subtab" data-bizview="plana" onclick="switchBizSubview('eg','plana')">Plan A</button>
+    </div>
+
+    <div class="eg-subview" id="egSubview-overview">
+    <div class="grid-4">
+      <div class="stat"><div class="label">Members</div><div class="value" id="egMembersStat">0</div><div class="foot">Listed below</div></div>
+      <div class="stat"><div class="label">Upcoming meetings</div><div class="value" id="egMeetingsStat">0</div><div class="foot" id="egNextFoot">None scheduled</div></div>
+      <div class="stat"><div class="label">Club funds</div><div class="value" id="egFundsStat">₱0.00</div><div class="foot">Money in minus money out</div></div>
+      <div class="stat"><div class="label">Open tasks</div><div class="value" id="egTasksStat">0</div><div class="foot">Secretary tasks not done</div></div>
+    </div>
+    <div class="card" style="--accent:#0d9488;margin-top:16px;">
+      <h3><span class="dot"></span>Meetings &amp; events</h3>
+      <div class="sub">GMMs, activities, deadlines. Add minutes or notes to any meeting.</div>
+      <div id="egMeetingsList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.4fr 1fr 1.2fr 1.4fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Title</label><input type="text" id="egMeetTitle" placeholder="e.g. General Membership Meeting"></div>
+        <div class="field"><label>Date</label><input type="date" id="egMeetDate"></div>
+        <div class="field"><label>Venue</label><input type="text" id="egMeetVenue" placeholder="e.g. Miguel's Place"></div>
+        <div class="field"><label>Notes / minutes</label><input type="text" id="egMeetNotes" placeholder="Optional"></div>
+        <button class="btn small" onclick="addEagles('meetings')">+ Add</button>
+      </div>
+    </div>
+    <div class="card" style="--accent:#0d9488;margin-top:16px;">
+      <h3><span class="dot"></span>Members &amp; officers</h3>
+      <div id="egMembersList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1.4fr 1.2fr 1.2fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Name</label><input type="text" id="egMemberName" placeholder="e.g. Bernard Garcia"></div>
+        <div class="field"><label>Position</label><input type="text" id="egMemberRole" placeholder="e.g. President"></div>
+        <div class="field"><label>Contact</label><input type="text" id="egMemberContact" placeholder="Optional"></div>
+        <button class="btn small" onclick="addEagles('members')">+ Add</button>
+      </div>
+    </div>
+    <div class="card" style="--accent:#0d9488;margin-top:16px;">
+      <h3><span class="dot"></span>Club funds</h3>
+      <div class="sub">Dues, donations and expenses of the club, kept apart from your own money.</div>
+      <div id="egFundsList" style="margin-top:14px;"></div>
+      <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.6fr 1fr auto;align-items:end;margin-top:14px;">
+        <div class="field"><label>Date</label><input type="date" id="egFundDate"></div>
+        <div class="field"><label>Type</label><select id="egFundType"><option value="in">Money in</option><option value="out">Money out</option></select></div>
+        <div class="field"><label>Description</label><input type="text" id="egFundDesc" placeholder="e.g. Monthly dues"></div>
+        <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="egFundAmount" onblur="formatCurrencyField(this)"></div>
+        <button class="btn small" onclick="addEagles('funds')">+ Log</button>
+      </div>
+    </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-sales" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Sales log</h3>
+        <div class="sub">Simple revenue entries — log each sale or payment as it comes in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizSalesTotal_eg">₱0.00</div>
+        </div>
+        <div id="bizSalesList_eg" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizSalesDate_eg"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizSalesAmount_eg" onblur="formatCurrencyField(this)"></div>
+          <div class="field"><label>Note</label><input type="text" id="bizSalesNote_eg" placeholder="e.g. Client deposit"></div>
+          <button class="btn small" onclick="addBizSalesEntry('eg')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-marketing" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Marketing log</h3>
+        <div class="sub">Track posts, campaigns, or outreach as they go out</div>
+        <div id="bizMarketingList_eg" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1.4fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizMarketingDate_eg"></div>
+          <div class="field"><label>Title</label><input type="text" id="bizMarketingTitle_eg" placeholder="e.g. Enrollment promo reel"></div>
+          <div class="field"><label>Notes</label><input type="text" id="bizMarketingNotes_eg" placeholder="Optional"></div>
+          <button class="btn small" onclick="addBizMarketingEntry('eg')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-team" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Weekly checklist</h3>
+        <div class="sub">Manual checkboxes for the team's recurring tasks</div>
+        <div id="bizTeamTaskList_eg" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizTeamNewTask_eg" placeholder="e.g. Reply to all DMs"></div>
+          <button class="btn small" onclick="addBizChecklistTask('egTeam','bizTeamNewTask_eg','bizTeamTaskList_eg')">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="--accent:#0d9488;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Team org chart</h3>
+        <div class="sub" id="orgHintText_eg">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_eg" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','eg')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','eg')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','eg')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_eg" onclick="pickOrgPaintColor('eg')">Pick a color</button>
+            <div id="orgPalettePopover_eg" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_eg"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_eg').click();document.getElementById('orgPalettePopover_eg').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'eg')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_eg">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'eg')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('eg')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_eg">
+          <svg id="orgConnectorSvg_eg" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_eg" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_eg" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'eg')">
+      </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-operating" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Operating checklist</h3>
+        <div class="sub">Recurring operational tasks — manual for now</div>
+        <div id="bizOperatingTaskList_eg" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="bizOperatingNewTask_eg" placeholder="e.g. Check compliance"></div>
+          <button class="btn small" onclick="addBizChecklistTask('egOperating','bizOperatingNewTask_eg','bizOperatingTaskList_eg')">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-expenses" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Expenses</h3>
+        <div class="sub">Log operating costs as they come in</div>
+        <div style="margin-top:14px;">
+          <div style="font-size:12px;color:var(--muted);">Total logged</div>
+          <div style="font-family:'IBM Plex Sans',sans-serif;font-size:26px;font-weight:800;margin-top:4px;" id="bizExpensesTotal_eg">₱0.00</div>
+        </div>
+        <div id="bizExpensesList_eg" style="margin-top:16px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr 1.4fr 1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>Date</label><input type="date" id="bizExpensesDate_eg"></div>
+          <div class="field"><label>Category</label><input type="text" id="bizExpensesCategory_eg" placeholder="e.g. Ads, tools, supplies"></div>
+          <div class="field"><label>Amount (₱)</label><input type="text" inputmode="decimal" class="currency-field" id="bizExpensesAmount_eg" onblur="formatCurrencyField(this)"></div>
+          <button class="btn small" onclick="addBizExpensesEntry('eg')">+ Log</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-cashflow" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Cash flow summary</h3>
+        <div class="sub">Auto-rolled up from this period's revenue and logged expenses — no separate entry needed</div>
+        <div class="grid-3" style="margin-top:14px;">
+          <div class="stat"><div class="label">Revenue</div><div class="value" id="bizCfRevenue_eg">₱0.00</div><div class="foot">This period</div></div>
+          <div class="stat"><div class="label">Expenses logged</div><div class="value" id="bizCfExpenses_eg">₱0.00</div><div class="foot">From the Expenses tab</div></div>
+          <div class="stat"><div class="label">Net cash flow</div><div class="value" id="bizCfNet_eg">₱0.00</div><div class="foot">Revenue minus expenses</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="eg-subview" id="egSubview-plana" style="display:none;">
+      <div class="card" style="--accent:#0d9488;">
+        <h3><span class="dot"></span>Plan A</h3>
+        <div class="sub">Manual checkboxes for now</div>
+        <div id="planATaskList_eg" style="margin-top:14px;"></div>
+        <div class="edit-grid" style="grid-template-columns:1fr auto;align-items:end;margin-top:14px;">
+          <div class="field"><label>New task</label><input type="text" id="planANewTask_eg" placeholder="e.g. Review this month's targets"></div>
+          <button class="btn small" onclick="addBizChecklistTask('egPlanA','planANewTask_eg','planATaskList_eg')">+ Add</button>
+        </div>
+      </div>
+
+
+      <div class="card" style="--accent:#0d9488;overflow-x:auto;margin-top:16px;">
+        <h3><span class="dot"></span>Plan A mindmap</h3>
+        <div class="sub" id="orgHintText_egPlanA">Click a name to show its + / ✕ options, double-click to rename</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;">
+          <div id="orgLayoutTabs_egPlanA" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="mb-subtab active" onclick="setOrgLayout('vertical','egPlanA')" data-layout="vertical">Vertical</button>
+            <button class="mb-subtab" onclick="setOrgLayout('horizontal','egPlanA')" data-layout="horizontal">Horizontal</button>
+            <button class="mb-subtab" onclick="setOrgLayout('list','egPlanA')" data-layout="list">List</button>
+          </div>
+          <div style="position:relative;margin-left:auto;">
+            <button class="mb-subtab" id="orgPaintBtn_egPlanA" onclick="pickOrgPaintColor('egPlanA')">Pick a color</button>
+            <div id="orgPalettePopover_egPlanA" style="display:none;position:absolute;top:110%;right:0;z-index:50;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);width:200px;">
+              <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;" id="orgPaletteGrid_egPlanA"></div>
+              <button class="btn secondary small" style="width:100%;margin-top:10px;" onclick="document.getElementById('orgColorPicker_egPlanA').click();document.getElementById('orgPalettePopover_egPlanA').style.display='none';">Custom…</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+          <button class="btn secondary small" onclick="zoomOrgChart(-0.1,'egPlanA')" title="Zoom out">−</button>
+          <span style="font-size:12.5px;color:var(--muted);min-width:42px;text-align:center;" id="orgZoomLabel_egPlanA">100%</span>
+          <button class="btn secondary small" onclick="zoomOrgChart(0.1,'egPlanA')" title="Zoom in">+</button>
+          <button class="btn secondary small" onclick="resetOrgZoom('egPlanA')">Reset</button>
+        </div>
+        <div style="overflow:auto;margin-top:10px;position:relative;" id="orgChartWrapper_egPlanA">
+          <svg id="orgConnectorSvg_egPlanA" style="position:absolute;top:0;left:0;pointer-events:none;"></svg>
+          <div id="orgChartRoot_egPlanA" style="padding-bottom:10px;transform-origin:top left;position:relative;"></div>
+        </div>
+        <input type="color" id="orgColorPicker_egPlanA" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" onchange="setOrgPaintColor(this.value,'egPlanA')">
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT DATA (admin only) -->
   <div class="view" id="editdata">
     <div class="card" style="--accent:#2f6fed">
@@ -3186,6 +3403,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(biz === 'ns') return snap.ns.revenue;
     if(biz === 'pk') return pkRevenue(snap);
     if(biz === 'mbn') return mbnRevenue();
+    if(biz === 'eg') return ((dashboardData.egSales||{}).entries||[]).reduce((a,e)=>a+(e.amount||0),0);
     return 0;
   }
 
@@ -3615,7 +3833,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // Org chart engine — supports multiple independent instances keyed by 'main' (the global
   // Team page) plus one per business ('mb','ns','bw','pk'), each with its own data, layout,
   // zoom, and DOM ids so they don't interfere with each other.
-  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA','mbn','mbnPlanA','fam','famPlanA'];
+  const orgChartKeys = ['main','mb','ns','bw','pk','mbPlanA','pkPlanA','bwPlanA','nsPlanA','mbn','mbnPlanA','fam','famPlanA','eg','egPlanA'];
   function orgDataKeyFor(key){ return key === 'main' ? 'teamOrgChart' : key + 'OrgChart'; }
   function orgTreeFor(key){ return dashboardData[orgDataKeyFor(key)]; }
   function orgDomId(base, key){ return key === 'main' ? base : `${base}_${key}`; }
@@ -4082,6 +4300,61 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ navigator.clipboard.writeText(msg); alert('Reminder copied. Paste it in Messenger or SMS.'); }catch(err){ prompt('Copy this message:', msg); }
   }
 
+  // ---- Eagles Club dashboard (Secretary) ----
+  function esc_eg(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function renderEagles(){
+    const e = dashboardData.eagles; if(!e || !document.getElementById('egMembersList')) return;
+    const today = new Date().toISOString().slice(0,10);
+    const row = (inner, id, kind) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--panel-2);margin-bottom:6px;flex-wrap:wrap;">${inner}<button class="del-btn" onclick="removeEagles('${kind}','${id}')">Remove</button></div>`;
+    const empty = t => `<div class="sub">${t}</div>`;
+    const meets = e.meetings.slice().sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+    document.getElementById('egMeetingsList').innerHTML = meets.length ? meets.map(m => row(
+      `<span style="font-size:11.5px;color:var(--muted);min-width:78px;">${m.date||''}</span><span style="flex:1;min-width:140px;font-size:13.5px;"><b>${esc_eg(m.title)}</b>${m.venue?' <span style="color:var(--muted);">at '+esc_eg(m.venue)+'</span>':''}${m.notes?'<div style="font-size:12px;color:var(--muted);margin-top:3px;">'+esc_eg(m.notes)+'</div>':''}</span><span class="pill ${m.date && m.date<today?'done':'live'}">${m.date && m.date<today?'Past':'Upcoming'}</span>`, m.id, 'meetings')).join('') : empty('No meetings yet');
+    document.getElementById('egMembersList').innerHTML = e.members.length ? e.members.map(m => row(
+      `<span style="flex:1;font-size:13.5px;"><b>${esc_eg(m.name)}</b> <span style="color:var(--muted);">${esc_eg(m.role)}</span></span><span style="font-size:12px;color:var(--muted);">${esc_eg(m.contact)}</span>`, m.id, 'members')).join('') : empty('No members yet');
+    const funds = e.funds.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    document.getElementById('egFundsList').innerHTML = funds.length ? funds.map(f => row(
+      `<span style="font-size:11.5px;color:var(--muted);min-width:78px;">${f.date||''}</span><span style="flex:1;font-size:13.5px;">${esc_eg(f.desc)}</span><b style="font-size:13.5px;color:${f.type==='out'?'#e0453f':'#2f9e5b'};">${f.type==='out'?'-':'+'}${fmtPeso(f.amount)}</b>`, f.id, 'funds')).join('') : empty('No funds logged');
+    const set = (id,v) => { const x=document.getElementById(id); if(x) x.textContent=v; };
+    const upcoming = meets.filter(m => m.date && m.date>=today);
+    set('egMembersStat', e.members.length);
+    set('egMeetingsStat', upcoming.length);
+    set('egNextFoot', upcoming.length ? 'Next: ' + upcoming[0].date + ' · ' + upcoming[0].title : 'None scheduled');
+    set('egFundsStat', fmtPeso(e.funds.reduce((a,f)=>a+(f.type==='out'?-1:1)*(f.amount||0),0)));
+    const tasks = (dashboardData.egTeam && dashboardData.egTeam.tasks) || [];
+    set('egTasksStat', tasks.filter(t=>!t.done).length);
+  }
+  async function persistEagles(){
+    try{ localStorage.setItem(DATA_KEY, JSON.stringify(dashboardData)); }catch(e){}
+    renderEagles();
+    await saveSetting('eagles', dashboardData.eagles);
+  }
+  async function addEagles(kind){
+    const e = dashboardData.eagles, id = 'eg'+Date.now()+Math.floor(Math.random()*1000);
+    const val = i => (document.getElementById(i)||{}).value || '';
+    const clear = ids => ids.forEach(i=>{ const x=document.getElementById(i); if(x) x.value=''; });
+    if(kind==='meetings'){
+      const title = val('egMeetTitle').trim(); if(!title){ alert('Please enter a title.'); return; }
+      e.meetings.push({id, title, date: val('egMeetDate'), venue: val('egMeetVenue').trim(), notes: val('egMeetNotes').trim()});
+      clear(['egMeetTitle','egMeetDate','egMeetVenue','egMeetNotes']);
+    } else if(kind==='members'){
+      const name = val('egMemberName').trim(); if(!name){ alert('Please enter a name.'); return; }
+      e.members.push({id, name, role: val('egMemberRole').trim(), contact: val('egMemberContact').trim()});
+      clear(['egMemberName','egMemberRole','egMemberContact']);
+    } else if(kind==='funds'){
+      const desc = val('egFundDesc').trim(), amount = clampNonNeg(parseCurrency(val('egFundAmount')));
+      if(!desc || !amount){ alert('Please enter a description and amount.'); return; }
+      e.funds.push({id, date: val('egFundDate') || new Date().toISOString().slice(0,10), type: val('egFundType')==='out'?'out':'in', desc, amount});
+      clear(['egFundDesc','egFundAmount','egFundDate']);
+    } else return;
+    await persistEagles(); playChime(920);
+  }
+  async function removeEagles(kind, id){
+    const e = dashboardData.eagles; if(!e[kind]) return;
+    e[kind] = e[kind].filter(x => x.id !== id);
+    await persistEagles();
+  }
+
   async function addWalletAccount(){
     const name = document.getElementById('wallet_name').value.trim();
     const balance = clampNonNeg(parseCurrency(document.getElementById('wallet_balance').value));
@@ -4384,6 +4657,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     { id:'ow_joseph', name:'Joseph', amount:50000, lentDate:'', collectDate:'2026-11-01', payments:[] },
     { id:'ow_john', name:'John', amount:20000, lentDate:'', collectDate:'2026-11-01', payments:[] }
   ] };
+  const defaultEgOrgChart = { id: 'egc_root', name: 'EAGLES CLUB', color: '#0d9488', children: [] };
+  const defaultEgPlanAOrgChart = { id: 'egpa_root', name: 'EAGLES — PLAN A', color: '#0d9488', children: [] };
+  const defaultEagles = { members: [], meetings: [], funds: [] };
   const defaultFamily = { members: [], expenses: [], events: [], goals: [] };
   const defaultPlanAOrgChartByBiz = { mb: defaultMbPlanAOrgChart, pk: defaultPkPlanAOrgChart, bw: defaultBwPlanAOrgChart, ns: defaultNsPlanAOrgChart, mbn: defaultMbnPlanAOrgChart };
 
@@ -4430,12 +4706,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     family: JSON.parse(JSON.stringify(defaultFamily)),
     famOrgChart: JSON.parse(JSON.stringify(defaultFamOrgChart)),
     famPlanAOrgChart: JSON.parse(JSON.stringify(defaultFamPlanAOrgChart)),
-    famTeam: defaultBizChecklist(), famPlanA: defaultBizChecklist()
+    famTeam: defaultBizChecklist(), famPlanA: defaultBizChecklist(),
+    eagles: JSON.parse(JSON.stringify(defaultEagles)),
+    egOrgChart: JSON.parse(JSON.stringify(defaultEgOrgChart)),
+    egPlanAOrgChart: JSON.parse(JSON.stringify(defaultEgPlanAOrgChart)),
+    egTeam: defaultBizChecklist(), egPlanA: defaultBizChecklist(),
+    egSales: defaultBizSales(), egMarketing: defaultBizMarketing(), egExpenses: defaultBizExpenses(), egOperating: defaultBizChecklist()
   };
   let dashboardData = null;
   let charts = {}; // holds live Chart.js instances so they can be destroyed/recreated
-  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora', mbn:'MBN', general:'General / PCEC' };
-  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4', mbn:'#8b5cf6', general:'#2f6fed' };
+  const bizNames = { mb:'Master Baccarat', bw:'Baccarat Win', ns:'Nexstack', pk:'Prokora', mbn:'MBN', eg:'Eagles', general:'General / PCEC' };
+  const bizColors = { mb:'#e0453f', bw:'#b8323a', ns:'#1c9fe0', pk:'#1a4fc4', mbn:'#8b5cf6', eg:'#0d9488', general:'#2f6fed' };
   let calViewDate = new Date(); // which month the calendar is currently showing
 
   // Shared database: every account (admin, masterbaccarat, baccaratwin, nexstack, prokora)
@@ -4550,7 +4831,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.mbnOrgChart){
       parsed.mbnOrgChart = JSON.parse(JSON.stringify(defaultMbnOrgChart));
     }
-    ['pk','bw','ns','mbn'].forEach(biz => {
+    ['pk','bw','ns','mbn','eg'].forEach(biz => {
       if(!parsed[biz+'Sales']) parsed[biz+'Sales'] = defaultBizSales();
       if(!parsed[biz+'Marketing']) parsed[biz+'Marketing'] = defaultBizMarketing();
       if(!parsed[biz+'Expenses']) parsed[biz+'Expenses'] = defaultBizExpenses();
@@ -4567,6 +4848,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if(!parsed.famPlanAOrgChart) parsed.famPlanAOrgChart = JSON.parse(JSON.stringify(defaultFamPlanAOrgChart));
     if(!parsed.famTeam) parsed.famTeam = defaultBizChecklist();
     if(!parsed.famPlanA) parsed.famPlanA = defaultBizChecklist();
+    if(!parsed.eagles) parsed.eagles = JSON.parse(JSON.stringify(defaultEagles));
+    if(!parsed.egOrgChart) parsed.egOrgChart = JSON.parse(JSON.stringify(defaultEgOrgChart));
+    if(!parsed.egPlanAOrgChart) parsed.egPlanAOrgChart = JSON.parse(JSON.stringify(defaultEgPlanAOrgChart));
+    if(!parsed.egTeam) parsed.egTeam = defaultBizChecklist();
+    if(!parsed.egPlanA) parsed.egPlanA = defaultBizChecklist();
+    if(!parsed.egOperating) parsed.egOperating = defaultBizChecklist();
     parsed.dataVersion = 14;
     return parsed;
   }
@@ -4720,7 +5007,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         family: settings.family || JSON.parse(JSON.stringify(defaultFamily)),
         famOrgChart: settings.famOrgChart || JSON.parse(JSON.stringify(defaultFamOrgChart)),
         famPlanAOrgChart: settings.famPlanAOrgChart || JSON.parse(JSON.stringify(defaultFamPlanAOrgChart)),
-        famTeam: settings.famTeam || defaultBizChecklist(), famPlanA: settings.famPlanA || defaultBizChecklist()
+        famTeam: settings.famTeam || defaultBizChecklist(), famPlanA: settings.famPlanA || defaultBizChecklist(),
+        eagles: settings.eagles || JSON.parse(JSON.stringify(defaultEagles)),
+        egOrgChart: settings.egOrgChart || JSON.parse(JSON.stringify(defaultEgOrgChart)),
+        egPlanAOrgChart: settings.egPlanAOrgChart || JSON.parse(JSON.stringify(defaultEgPlanAOrgChart)),
+        egTeam: settings.egTeam || defaultBizChecklist(), egPlanA: settings.egPlanA || defaultBizChecklist(),
+        egSales: settings.egSales || defaultBizSales(), egMarketing: settings.egMarketing || defaultBizMarketing(), egExpenses: settings.egExpenses || defaultBizExpenses(), egOperating: settings.egOperating || defaultBizChecklist()
       };
       try{ localStorage.setItem(DATA_KEY, JSON.stringify(assembled)); }catch(e){} // keep an offline copy
       return assembled;
@@ -5139,6 +5431,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try{ renderMbnOverview(); }catch(e){ renderErrors.push(['mbn overview', e]); }
     try{ renderPendingExpenses(); }catch(e){ renderErrors.push(['pending expenses', e]); }
     try{ renderFamily(); }catch(e){ renderErrors.push(['family', e]); }
+    try{ renderEagles(); }catch(e){ renderErrors.push(['eagles', e]); }
     try{ renderOwed(); }catch(e){ renderErrors.push(['owed to me', e]); }
     try{ renderBwWeeklyWins(); }catch(e){ renderErrors.push(['bw weekly wins', e]); }
     try{
